@@ -20,7 +20,7 @@ node ~/.claude/skills/dev.speculate/scripts/install.js
 This copies the complete Speculate documentation structure to `docs/`:
 - `docs/docs-overview.md` - Overview of all documentation
 - `docs/development.md` - Project development workflows (you'll need to customize this)
-- `docs/general/` - Cross-project rules, shortcuts, templates
+- `docs/general/` - Cross-project rules and templates 
 - `docs/project/` - Project-specific specs, architecture, research
 
 ## Reading Project Context
@@ -29,7 +29,7 @@ This copies the complete Speculate documentation structure to `docs/`:
 
 The docs-overview provides:
 - Navigation to all coding rules (TypeScript, Python, testing, etc.)
-- Available shortcuts for common workflows
+- Shortcut workflows (via dev.shortcuts skill)
 - Project structure and documentation layout
 - Links to project-specific specs and architecture
 
@@ -39,9 +39,10 @@ The docs-overview provides:
 
 For example:
 - `@docs/general/agent-rules/python-rules.md` → `docs/general/agent-rules/python-rules.md`
-- `@shortcut:implement-spec.md` → `docs/general/agent-shortcuts/shortcut:implement-spec.md`
+- `@shortcut:implement-spec.md` → `dev.shortcuts/references/shortcut:implement-spec.md`
 
-When you see these `@docs/...` or `@shortcut:...` references in the documentation, resolve them relative to the project root directory.
+When you see `@docs/...` references in the documentation, resolve them relative to the project root directory.
+When you see `@shortcut:...` references, use the dev.shortcuts skill and read the matching file in `references/`.
 
 ### Reading Strategy
 
@@ -49,7 +50,7 @@ When you see these `@docs/...` or `@shortcut:...` references in the documentatio
 2. **Check development setup**: Read `docs/development.md` for build/test/lint workflows
 3. **Load relevant rules**: Based on the task, read specific rules from `docs/general/agent-rules/`
 4. **Check active specs**: Look in `docs/project/specs/active/` for related work
-5. **Use shortcuts**: Reference shortcuts from `docs/general/agent-shortcuts/` for structured workflows
+5. **Use shortcuts**: Use dev.shortcuts and its `references/` for structured workflows
 
 ## Key Documentation Files
 
@@ -67,7 +68,7 @@ After initialization, these files are available:
 - `convex-rules.md` - Convex database rules
 - And more language/framework specific rules
 
-**Shortcuts** (in `docs/general/agent-shortcuts/`):
+**Shortcuts** (in `dev.shortcuts/references/`):
 - `shortcut:new-plan-spec.md` - Create feature planning document
 - `shortcut:implement-spec.md` - Implement from specification
 - `shortcut:commit-code.md` - Pre-commit validation workflow
@@ -108,7 +109,7 @@ This updates the `docs/general/` folder while preserving:
 ### During Development
 
 - Follow coding rules from `docs/general/agent-rules/`
-- Use shortcuts for structured workflows (planning, implementation, commits, PRs)
+- Use shortcuts for structured workflows (planning, implementation, commits, PRs) via dev.shortcuts
 - Create specs in `docs/project/specs/active/` for new features
 - Document architecture decisions in `docs/project/architecture/`
 - Document new flows in `docs/project/flows/`

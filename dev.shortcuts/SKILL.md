@@ -1,15 +1,12 @@
 ---
 name: dev.shortcuts
-description: Mandatory shortcut trigger and usage guidance. Use whenever a request involves agent shortcuts, shortcut triggers, or applying any shortcut workflow (planning/specs, implementation, cleanup/refactor, precommit/commit/PR, research, architecture/flow docs, reviews).
+description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request. 
 ---
 
 # Shortcut Triggers and Usage
 
 Shortcut files for this skill live in `references/`. Any `@shortcut:...` reference
 resolves to the file with the same name in `references/`.
-
-Before responding to ANY coding or development request, you MUST check if a shortcut
-applies. If a shortcut applies, you MUST use it.
 
 ## Mandatory Check Protocol
 

@@ -116,7 +116,7 @@ function install() {
   console.log('📚 Next steps:');
   console.log('   1. Review docs/docs-overview.md for an overview');
   console.log('   2. Customize docs/development.md for your project');
-  console.log('   3. Start using shortcuts from docs/general/agent-shortcuts/');
+  console.log('   3. Start using shortcuts from the dev.shortcuts skill');
   console.log('');
   console.log('🎯 To update docs later, run:');
   console.log('   node ~/.claude/skills/dev.speculate/scripts/update.js');

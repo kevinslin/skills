@@ -14,7 +14,7 @@ Create a to-do list with the following items then perform all of them:
    if `bd` is not set up yet.
    Check if beads exist for the spec already.
    If not, create them according to
-   @docs/general/agent-shortcuts/shortcut:new-implementation-beads.md
+   shortcut:new-implementation-beads.md
 
 4. Make as much progress as possible, one phase at a time, following all rules and TDD
    workflows, and following @shortcut:precommit-process.md at each phase.

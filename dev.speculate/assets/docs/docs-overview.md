@@ -25,7 +25,7 @@ General rules that apply to all projects:
 - @docs/general/agent-rules/ — General rules for development best practices (general,
   pre-commit, TypeScript, Convex)
 
-- @docs/general/agent-shortcuts/ — Reusable task prompts for agents
+- Shortcut workflows live in the `dev.shortcuts` skill (see its `references/` for files)
 
 - @docs/general/agent-guidelines/ — Guidelines and notes on development practices
 
