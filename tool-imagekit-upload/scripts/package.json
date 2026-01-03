@@ -1,0 +1,22 @@
+{
+  "name": "imagekit-upload-script",
+  "version": "1.0.0",
+  "description": "Upload images to ImageKit from file paths or clipboard",
+  "main": "upload.js",
+  "scripts": {
+    "upload": "node upload.js"
+  },
+  "dependencies": {
+    "imagekit": "^5.2.0",
+    "clipboardy": "^4.0.0",
+    "dotenv": "^16.4.5"
+  },
+  "keywords": [
+    "imagekit",
+    "upload",
+    "cdn",
+    "image"
+  ],
+  "author": "",
+  "license": "MIT"
+}
