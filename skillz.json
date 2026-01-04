@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "targets": [{"destination": "README.md"}],
+  "skillDirectories": [
+    "."
+  ],
+  "additionalSkills": [],
+  "ignore": [],
+  "skillsSectionName": "## Additional Instructions",
+  "defaultEditor": "vim",
+  "autoSyncAfterEdit": true,
+  "template": "readme",
+  "pathStyle": "relative"
+}
