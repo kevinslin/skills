@@ -7,11 +7,9 @@ description: Always use this skill to provide context on the codebase. Automatic
 
 This skill provides comprehensive project context through the Speculate documentation framework. It ensures agents always have access to coding rules, development workflows, and project structure.
 
-## Automatic Initialization
+## Manual Initialization
 
-**IMPORTANT**: Before working on any task, check if the Speculate docs are initialized.
-Look for `docs/docs-overview.md` in the current project.
-If it doesn't exist, initialize now using the install script
+If the user asks to install speculate documentation, then run the following script
 
 ```bash
 node ~/.claude/skills/dev.speculate/scripts/install.js
@@ -35,14 +33,15 @@ The docs-overview provides:
 
 ### Path Convention
 
-**IMPORTANT**: Throughout the Speculate documentation, paths prefixed with `@` indicate paths from the project root.
+**IMPORTANT**: Throughout the Speculate documentation, paths prefixed with `@` indicate paths from the skill root.
 
 For example:
 - `@docs/general/agent-rules/python-rules.md` → `docs/general/agent-rules/python-rules.md`
 - `@shortcut:implement-spec.md` → `dev.shortcuts/references/shortcut:implement-spec.md`
 
-When you see `@docs/...` references in the documentation, resolve them relative to the project root directory.
+When you see `@docs/...` references in the documentation, resolve them relative to the skill root directory.
 When you see `@shortcut:...` references, use the dev.shortcuts skill and read the matching file in `references/`.
+When you see `@docs/project/` referenced in the documentation, resolve them relative to the project root directory.
 
 ### Reading Strategy
 
