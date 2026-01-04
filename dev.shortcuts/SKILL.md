@@ -22,6 +22,7 @@ instructions.
 | If user request involves... | Use shortcut |
 | --- | --- |
 | Implementing a feature from a spec | @shortcut:implement-spec.md |
+| Implementing an execution plan | @shortcut:implement-execution-plan.md |
 | Creating a new feature plan | @shortcut:new-plan-spec.md |
 | Creating an implementation spec | @shortcut:new-implementation-spec.md |
 | Creating a validation/test spec | @shortcut:new-validation-spec.md |
