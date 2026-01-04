@@ -1,0 +1,1 @@
+This skill is copied over from Joshua's Levy's amazing [speculate framework](https://github.com/jlevy/speculate). Currently experimenting with turning them into a skill.

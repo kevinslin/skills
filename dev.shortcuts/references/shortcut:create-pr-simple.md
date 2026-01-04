@@ -1,22 +1,18 @@
-Shortcut: New PR (simple process without precommit and validation planning)
+Shortcut: New PR 
 
 Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
-1. **Confirm feature docs:** Check if a Plan Spec and/or Implementation Spec are in
-   scope or provided by the user.
-   You should find them in @docs/project/specs/active/ with plan- and impl- prefixes
-   (e.g., plan-YYYY-MM-DD-*.md and impl-YYYY-MM-DD-*.md).
-   If isn’t clear, stop and ask!
+1. **Confirm feature docs:** Check if a Plan Spec and/or Implementation Spec are in scope or provided by the user.  You should find them in @docs/project/specs/active/.  If isn’t clear, stop and ask!
 
-2. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is
-   committed. And that you’ve already followed the pre-commit rules before (or at least
-   after) the last commit.
-   If not, follow the full pre-commit review process and commit.
+2. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is committed. And that you’ve already followed the pre-commit rules before (or at least after) the last commit.  If not, follow the full pre-commit review process and commit.
 
-3. **Create or update PR:** Use the GitHub CLI (`gh`) to file or update an existing
+3. **Run tests:** Follow @docs/development.md and ensure all tests pass. If not, fix them and commit changes. Summarize what went wrong and how you fixed it. 
+
+4. **Create or update PR:** Use the GitHub CLI (`gh`) to file or update an existing
    GitHub PR for the current branch.
+
    In the GitHub PR description be sure:
 
    - Give a full overview of changes, referencing the appropriate specs.
@@ -44,5 +40,3 @@ Create a to-do list with the following items then perform all of them:
 
 - You *MUST* make the build pass.
   If you cannot or don’t know how, tell the user and ask for help.
-
-5. Update and sync all beads following the standard process.
