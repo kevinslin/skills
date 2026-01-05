@@ -4,7 +4,9 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
-1. **Confirm feature docs:** Check if a Plan Spec and/or Implementation Spec are in scope or provided by the user.  You should find them in @docs/project/specs/active/.  If isn’t clear, stop and ask!
+1. **Confirm feature docs:** Check if a Plan Spec and/or Implementation Spec are in scope or provided by the user.  You should find them in @docs/project/specs/active/.  If isn’t clear, stop and ask! Only skip this if user has told you there is no spec.
+
+Make sure you are in a separate branch. If not, switch to a branch with name `dev/{name-of-change}`.
 
 2. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is committed. And that you’ve already followed the pre-commit rules before (or at least after) the last commit.  If not, follow the full pre-commit review process and commit.
 

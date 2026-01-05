@@ -32,7 +32,7 @@ alwaysApply: true
 
   - Major functions
 
-  - Convex schemas, functions, actions, mutations, and queries
+  - Prisma schemas
 
   It should NOT cover:
 

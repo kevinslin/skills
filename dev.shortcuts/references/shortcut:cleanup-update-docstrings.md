@@ -13,7 +13,7 @@ Document the following:
 
 - Major functions and methods
 
-- Convex schemas, functions, actions, mutations, and queries
+- Prisma schemas, functions, actions, mutations, and queries
 
 - Non-obvious helper functions
 

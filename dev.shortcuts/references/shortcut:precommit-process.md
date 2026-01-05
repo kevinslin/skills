@@ -48,11 +48,7 @@ Create a to-do list with the following items then perform all of them:
 
      - @docs/general/agent-rules/typescript-rules.md
 
-   - Step 3.3: Ensure code follows framework-specific rules:
-
-     - @docs/general/agent-rules/convex-rules.md
-
-   - Step 3.4: Ensure code follows backward-compatibility rules:
+   - Step 3.3: Ensure code follows backward-compatibility rules:
 
      - @docs/general/agent-rules/backward-compatibility-rules.md
 

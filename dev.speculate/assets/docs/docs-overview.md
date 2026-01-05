@@ -23,7 +23,7 @@ Other docs give background but it includes essential project developer docs.
 General rules that apply to all projects:
 
 - @docs/general/agent-rules/ — General rules for development best practices (general,
-  pre-commit, TypeScript, Convex)
+  pre-commit, TypeScript)
 
 - Shortcut workflows live in the `dev.shortcuts` skill (see its `references/` for files)
 

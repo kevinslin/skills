@@ -1,4 +1,4 @@
-Shortcut: Review Code, Specs, and Docs (including Convex)
+Shortcut: Review Code, Specs, and Docs 
 
 Instructions:
 

@@ -88,6 +88,8 @@ After creating the plan:
 3. Wait for user confirmation before proceeding with implementation
 4. Update the plan as new information emerges during execution
 
+Note: if there are followup questions, check if user has answered it in the execution plan itself before re-prompting the user.
+
 ### 6. User revision (optional)
 
 If the user asks for additional details - write your response into the existing execution plan instead of responding in the conversation. 

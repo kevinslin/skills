@@ -14,3 +14,5 @@ Create a to-do list with the following items then perform all of them:
    @docs/general/agent-setup/github-cli-setup.md if needed).
 
 5. If no remote PR exists, merge the branch locally.
+
+6. Switch back to the main branch. If you merged in a remote PR, make sure to pull from the remote
