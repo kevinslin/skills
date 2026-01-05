@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
+description: Guide for creating or updating skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -23,7 +23,7 @@ equipped with procedural knowledge that no model can fully possess.
 4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
 
 ## Usage
-When creating a skill - skills can be created in three destinations
+When creating or updating a skill - ALWAYS restrict all edits to the following working directories:
 - public: ~/code/skills-public
 - private: ~/code/skills-private
 - local: ./skills
