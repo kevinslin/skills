@@ -2,11 +2,12 @@
   "version": "2.0",
   "targets": [{"destination": "README.md"}],
   "skillDirectories": [
-    "."
+    "active",
+    "draft"
   ],
   "additionalSkills": [],
   "ignore": [],
-  "skillsSectionName": "## Additional Instructions",
+  "skillsSectionName": "## Skills",
   "defaultEditor": "vim",
   "autoSyncAfterEdit": true,
   "template": "readme",
