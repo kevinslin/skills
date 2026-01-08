@@ -4,6 +4,8 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
+0. Check if there are any unstaged commits. If so, use @shortcut:commit-code.md to commit unstaged changes.
+
 1. Check if there is a remote PR open for the current branch. Make sure that all pending checks have passed.
 
 2. Update `CHANGELOG.md` with the changes using Conventional Commits style.
