@@ -2,6 +2,8 @@
 name: dev.exec-plan
 description: This skill should be used for development tasks that require detailed technical planning with persistent documentation. Use when the task involves architectural decisions, multi-phase implementation, external dependencies, or when the user explicitly requests an execution plan.
 version: 2.0.0
+optionalDependencies:
+  - dev.beads
 ---
 
 # Execution Plan Skill
@@ -101,6 +103,13 @@ When the user asks you to proceed with the plan, re-read it to check if anything
 ### 8. Run tests and verify 
 
 After you have finishd executing, run all tests. Fix any errors that come up. Once all tests have passed, notify the user that the task is ready to review
+
+## Beads Integration
+
+If the repo uses bd (beads), track each execution plan phase with beads and keep
+statuses in sync as phases progress. Read project-specific instructions from
+`skills/.config/dev.beads.instructions.md` if present. For detailed guidance and
+commands, see `references/beads.md`.
 
 ## Best Practices
 
