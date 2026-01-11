@@ -15,6 +15,8 @@ Create a to-do list with the following items then perform all of them:
 4. If a remote PR exists, merge it remotely (use `gh` if available; see
    @docs/general/agent-setup/github-cli-setup.md if needed). No need to check for pending checks since we already did that in step 1.
 
-5. If no remote PR exists, merge the branch locally.
+5. If no remote PR exists, merge the branch locally unless you're already on the main branch in which case, do nothing.
 
-6. Switch back to the main branch. If you merged in a remote PR, make sure to pull from the remote
+6. Switch back to the main branch if you are not on it. If you merged in a remote PR, make sure to pull from the remote. Push all changes.
+
+7. Delete the local branch if you switched branches. 

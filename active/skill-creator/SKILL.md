@@ -28,6 +28,8 @@ When creating or updating a skill - ALWAYS restrict all edits to the following w
 - private: ~/code/skills-private
 - local: ./skills
 
+For public skills, skills can be in one of two subdirectories (drafts vs active). Ask the user which one they want skills to go in 
+
 Always ask the user where they want the new skill to be created if they haven't already mentioned it.
 
 When user tells you the name of a skill (eg. `dev.create-foo`), create a skill in a folder with the same name. the `SKILL.md` file within should have the frontmatter name also set to the same name.
