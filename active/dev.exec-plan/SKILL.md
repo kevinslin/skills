@@ -32,7 +32,7 @@ Create the plan using the template from `assets/plan-template.md` in the followi
 {plan-directory}/{YYYY-MM-DD}-{title-in-kebab-case}.md
 ```
 
-Optionally, checkout a new branch with the following name: `dev/{YYYY-MM-DD}-{title-in-kebab-case}`. ONLY do this if user explicitly asks to create plan in a new branch. 
+Checkout a new branch with the following name: `dev/{YYYY-MM-DD}-{title-in-kebab-case}`. 
 
 Example:
 - plan: 2025-12-01-create-new-foo.md
