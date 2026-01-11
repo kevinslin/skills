@@ -22,7 +22,7 @@ equipped with procedural knowledge that no model can fully possess.
 3. Domain expertise - Company-specific knowledge, schemas, business logic
 4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
 
-## Usage
+## Skill File Location
 When creating or updating a skill - ALWAYS restrict all edits to the following working directories:
 - public: ~/code/skills-public
 - private: ~/code/skills-private
@@ -30,6 +30,7 @@ When creating or updating a skill - ALWAYS restrict all edits to the following w
 
 For public skills, skills can be in one of two subdirectories (drafts vs active). Ask the user which one they want skills to go in 
 
+## Usage
 Always ask the user where they want the new skill to be created if they haven't already mentioned it.
 
 When user tells you the name of a skill (eg. `dev.create-foo`), create a skill in a folder with the same name. the `SKILL.md` file within should have the frontmatter name also set to the same name.
@@ -309,7 +310,7 @@ Added scripts must be tested by actually running them to ensure there are no bug
 
 Any example files and directories not needed for the skill should be deleted. The initialization script creates example files in `scripts/`, `references/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
 
-#### Update SKILL.md
+#### Editing SKILL.md
 
 **Writing Guidelines:** Always use imperative/infinitive form.
 
@@ -366,3 +367,16 @@ After testing the skill, users may request improvements. Often this happens righ
 2. Notice struggles or inefficiencies
 3. Identify how SKILL.md or bundled resources should be updated
 4. Implement changes and test again
+
+## Updating a Skill
+
+When a user asks "update this skill to do X":
+
+- Derive the target skill name or path from the request or prior context.
+- Resolve the on-disk path using only the allowed roots in **Skill File Location**.
+  - public: `~/code/skills-public/{drafts|active}/<skill-name>`
+  - private: `~/code/skills-private/<skill-name>`
+  - local: `./skills/<skill-name>`
+- If the location is ambiguous or multiple matches exist, ask which root (and drafts vs active) to use before editing.
+- Do not edit skills outside those roots.
+
