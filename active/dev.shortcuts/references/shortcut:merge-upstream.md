@@ -14,5 +14,4 @@ Create a to-do list with the following items then perform all of them:
 
 5. Do a merge of origin/main into the current branch, resolving all conflicts carefully with the context fully in mind.
 
-6. Be sure the merge is complete and run full formatting, linting, and tests.
-   Fix all issues. Be sure the result is committed.
+6. Be sure the merge is complete and run full formatting, linting, and tests.  Fix all issues. Be sure the result is committed.
