@@ -61,6 +61,7 @@ def validate_skill(skill_path):
         return False, f"Name must be a string, got {type(name).__name__}"
     name = name.strip()
     if name:
+<<<<<<< Updated upstream
         # Check naming convention (lowercase with hyphens and optional dots)
         if not re.match(r'^[a-z0-9][a-z0-9.-]*$', name):
             return False, (
@@ -70,6 +71,25 @@ def validate_skill(skill_path):
             return False, (
                 f"Name '{name}' cannot end with a separator or contain consecutive separators"
             )
+=======
+        # Check naming convention: dot-separated namespaces with hyphen-case segments
+        if not re.match(r'^[a-z0-9.-]+$', name):
+            return False, (
+                f"Name '{name}' must be lowercase and may include digits, hyphens, and dots only"
+            )
+        segments = name.split('.')
+        if any(seg == '' for seg in segments):
+            return False, f"Name '{name}' cannot start/end with dot or contain consecutive dots"
+        for segment in segments:
+            if not re.match(r'^[a-z0-9-]+$', segment):
+                return False, (
+                    f"Name segment '{segment}' must be hyphen-case (lowercase letters, digits, and hyphens only)"
+                )
+            if segment.startswith('-') or segment.endswith('-') or '--' in segment:
+                return False, (
+                    f"Name segment '{segment}' cannot start/end with hyphen or contain consecutive hyphens"
+                )
+>>>>>>> Stashed changes
         # Check name length (max 64 characters per spec)
         if len(name) > 64:
             return False, f"Name is too long ({len(name)} characters). Maximum is 64 characters."
