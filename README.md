@@ -11,6 +11,7 @@ Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-
 - [dev.gh](active/dev.gh/SKILL.md): GitHub CLI operations
 - [dev.lint](active/dev.lint/SKILL.md): lint project
 - [dev.mermaid](active/dev.mermaid/SKILL.md): Generate Mermaid diagrams with proper syntax. Use when creating flowcharts, sequence diagrams, class diagrams, or any other Mermaid visualizations. Ensures correct label quoting to prevent parsing errors.
+- [dev.recipe](active/dev.recipe/SKILL.md): This skill should be used when capturing or applying service-scoped change recipes stored under references/<service>/.
 - [dev.shortcuts](active/dev.shortcuts/SKILL.md): Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request.
 - [find-links](active/find-links/SKILL.md): This skill should be used when the user wants to fill in TODO links, placeholder links, or missing links in markdown files. Invoke when the user mentions "fill links", "TODO links", "find links", or asks to add appropriate links to concepts in a document.
 - [gen-notifier](active/gen-notifier/SKILL.md): Generic desktop notification skill for agents. Send desktop notifications when tasks are complete (or when user input/errors block progress). By default, assume that all jobs will require a notification unless the user says otherwise.
@@ -22,4 +23,3 @@ Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-
 - [tech-doc-writer](active/write-tech-docs/SKILL.md): This skill should be used when writing or reviewing technical documentation such as READMEs, API documentation, quickstart guides, or any user-facing documentation. Apply editorial principles focused on leading with value, cutting redundancy, and creating scannable, actionable content. Use when the user requests help writing docs, improving existing documentation, or creating user guides.
 - [dendron](draft/dendron/SKILL.md): do not use this skill
 - [dev.speculate](draft/dev.speculate/SKILL.md): Always use this skill to provide context on the codebase. Automatically initializes and references the Speculate documentation framework (coding rules, shortcuts, templates, and project specs) to ensure agents understand project structure, development workflows, and coding standards. Use for every task to maintain context and code quality.
-
