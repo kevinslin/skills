@@ -13,10 +13,14 @@ When describe flows, prefer to use typescript like pseudocode to describe logic.
 
 ## How to Use This Skill
 
-- For creating a new flow document, follow the `dev.shortcuts` workflow in
-  `@shortcut:new-flow-doc.md`.
-- For revising an existing flow document, follow the `dev.shortcuts` workflow in
-  `@shortcut:revise-flow-doc.md`.
+- For creating a new flow document, follow the workflow in
+  `./references/shortcuts/shortcut:new-flow-doc.md`.
+- For revising an existing flow document, follow the workflow in
+  `./references/shortcuts/shortcut:revise-flow-doc.md`.
+
+## Shortcuts
+Shortcuts are a small self contained workflow that can be triggered when the user explicitly asks to use a shortcut. 
+You have access to shortcuts mentioned in `./references/shortcuts`
 
 ## Scope Reminders
 
