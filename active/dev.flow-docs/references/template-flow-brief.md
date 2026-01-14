@@ -2,9 +2,6 @@
 
 Last updated: YYYY-MM-DD
 
-Maintenance: When revising this doc you must follow instructions in
-@shortcut:revise-flow-doc.md.
-
 ## Overview
 
 [1-2 sentences describing what this architecture document covers and why it exists]
