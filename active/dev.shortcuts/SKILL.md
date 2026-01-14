@@ -3,6 +3,8 @@ name: dev.shortcuts
 description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request. 
 ---
 
+Shortcuts are a small self contained workflow that can be triggered when the user explicitly asks to use a shortcut. 
+
 # Shortcut Triggers and Usage
 
 Shortcut files for this skill live in `references/`. Any `@shortcut:...` reference
@@ -31,7 +33,7 @@ instructions.
 | Research or technical investigation | @shortcut:new-research-brief.md |
 | Creating architecture documentation | @shortcut:new-architecture-doc.md |
 | Updating/revising architecture docs | @shortcut:revise-architecture-doc.md |
-| Creating flow documentation| @shortcut:new-flow-doc.md |
+| Creating flow documentation| dev.flow-docs + @shortcut:new-flow-doc.md |
 | Exploratory coding / prototype / spike | @shortcut:coding-spike.md |
 | Refining or clarifying an existing spec | @shortcut:refine-spec.md |
 | Updating a spec with new information | @shortcut:update-spec.md |
@@ -40,6 +42,24 @@ instructions.
 | Updating docstrings | @shortcut:cleanup-update-docstrings.md |
 | Merging from upstream | @shortcut:merge-upstream.md |
 | Reviewing code, specs, docs | @shortcut:review-all-code-specs-docs-convex.md |
+
+## Inlining Shortcuts into Other Skills
+
+When the user explicitly asks to inline a shortcut into another skill, inline the
+shortcut logic directly into the target skill they name.
+
+Steps:
+1. Add a **Shortcuts** section to the target skill's `SKILL.md` with the following
+   text (verbatim):
+   ```
+   ## Shortcuts
+   Shortcuts are a small self contained workflow that can be triggered when the user explicitly asks to use a shortcut. 
+   You have access to shortcuts mentioned in `./references/shortcuts`
+   ```
+2. Copy the shortcut file(s) being inlined into the target skill's
+   `./references/shortcuts` directory (create it if missing).
+3. Ensure the inlined shortcuts live with the target skill (do not rely on
+   `dev.shortcuts` references for those inlined workflows).
 
 ## This is NOT Optional
 

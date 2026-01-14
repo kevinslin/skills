@@ -4,6 +4,8 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
+1. Read the `dev.flow-docs` skill to confirm the definition and scope of a flow doc.
+
 1. Read the given document
 
 2. Read all code referenced in the document
