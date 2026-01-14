@@ -8,6 +8,7 @@ Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-
 - [dev.conventional-commits](active/dev.conventional-commits/SKILL.md): Explain and apply the Conventional Commits specification for commit messages, including required format, types/scopes, breaking change notation, and examples. Use when asked to draft, validate, or review commit messages or when a repo wants Conventional Commits adoption.
 - [dev.document](active/dev.document/SKILL.md): document changes made
 - [dev.exec-plan](active/dev.exec-plan/SKILL.md): This skill should be used for development tasks that require detailed technical planning with persistent documentation. Use when the task involves architectural decisions, multi-phase implementation, external dependencies, or when the user explicitly requests an execution plan.
+- [dev.flow-docs](active/dev.flow-docs/SKILL.md): Define and guide creation/revision of flow documentation (mini architecture docs describing the lifecycle of a behavior in the codebase). Use when asked what a flow doc is, or when creating, updating, or reviewing flow docs for a system behavior or request lifecycle.
 - [dev.gh](active/dev.gh/SKILL.md): GitHub CLI operations
 - [dev.lint](active/dev.lint/SKILL.md): lint project
 - [dev.mermaid](active/dev.mermaid/SKILL.md): Generate Mermaid diagrams with proper syntax. Use when creating flowcharts, sequence diagrams, class diagrams, or any other Mermaid visualizations. Ensures correct label quoting to prevent parsing errors.

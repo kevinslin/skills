@@ -81,7 +81,7 @@ After initialization, these files are available:
 - `flows/` - System flows documentation
 - `research/` - Technical research notes
 
-A note on flows. A flow is a like a mini architecture doc that describes the lifecycle of a behavior in the code base. For example, bootstraping a system could be a flow. The lifecylce of a particular API request could be another. Flows are meant to help llms and humans quickly recapture context on a particular part of the code. 
+A note on flows. See the `dev.flow-docs` skill for the definition and guidance on creating or revising flow documentation.
 
 ## Updating Documentation
 
