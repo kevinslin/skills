@@ -45,7 +45,7 @@ repositories, etc.]
 
 #### [Subtopic 1.1]
 
-**Status**: [✅ Complete | ⏳ In Progress | 🔍 Researching]
+**Status**: [Complete | In Progress | Researching]
 
 **Details**:
 
