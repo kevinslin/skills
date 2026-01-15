@@ -30,7 +30,6 @@ instructions.
 | Creating a validation/test spec | @shortcut:new-validation-spec.md |
 | Committing or pushing code | @shortcut:precommit-process.md -> @shortcut:commit-code.md |
 | Creating a PR | @shortcut:precommit-process.md -> @shortcut:create-pr.md |
-| Research or technical investigation | @shortcut:new-research-brief.md |
 | Creating architecture documentation | @shortcut:new-architecture-doc.md |
 | Updating/revising architecture docs | @shortcut:revise-architecture-doc.md |
 | Creating flow documentation| dev.flow-docs + @shortcut:new-flow-doc.md |
