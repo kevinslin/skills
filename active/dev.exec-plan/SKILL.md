@@ -84,6 +84,7 @@ After creating the plan, think about whether you could simplify it further. Cons
 
 ### 5. Review and Confirm
 
+
 After creating the plan:
 1. Present a summary of the plan to the user
 2. Highlight any questions or decisions that need input
@@ -91,6 +92,8 @@ After creating the plan:
 4. Update the plan as new information emerges during execution
 
 Note: if there are followup questions, check if user has answered it in the execution plan itself before re-prompting the user.
+
+**IMPORTANT**: If the user asks you to implement without asking for input, then answer any outstanding questions yourself to the best of your judgement. Only ask the user for input if you are really stuck. 
 
 ### 6. User revision (optional)
 

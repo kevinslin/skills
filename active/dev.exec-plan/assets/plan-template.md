@@ -50,18 +50,16 @@
 - [ ] Step 2
 - [ ] Step 3
 
-### Phase 2: [Name]
-- [ ] Step 1
-- [ ] Step 2
-- [ ] Step 3
-
-### Phase 3: [Name]
-- [ ] Step 1
-- [ ] Step 2
-- [ ] Step 3
+[Add more phases as needed]
 
 **Dependencies between phases:**
 - [List any phase dependencies or prerequisites]
+
+---
+
+## Testing
+
+[List out any tests that need to be added or updated]
 
 ---
 
