@@ -11,7 +11,7 @@ Shortcut files for this skill live in `references/`. Any `@shortcut:...` or `tri
 
 ## Mandatory Check Protocol
 
-1. Scan shortcuts in `references/` for applicable workflows
+1. Scan shortcuts in the `./references/` folder of this skill. 
 2. If a shortcut matches -> Announce: "Using [shortcut name]"
 3. Follow the shortcut exactly
 
