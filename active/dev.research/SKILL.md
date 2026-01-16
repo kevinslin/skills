@@ -19,6 +19,10 @@ Use this skill when:
 - Creating formal research artifacts that can be shared with the team
 - Documenting the lifecycle of a behavior or request flow in the codebase
 
+## Root Directory
+
+All filepaths mentioned is relative to the $ROOT_DIR. Unless overridden elsewhere, the $ROOT_DIR is `./docs` (relative to the project root directorey)
+
 ## Available Document Types
 
 ### Research Briefs
@@ -32,7 +36,7 @@ Research briefs are comprehensive documents for technical investigations. Use th
 
 **Template**: `@references/research-brief.md`
 
-**Output location**: `docs/research/{YYYY-MM-DD}-research-{topic}.md`
+**Output location**: `$ROOT_DIR/research/{YYYY-MM-DD}-research-{topic}.md`
 
 ### Flow Docs
 
@@ -47,7 +51,7 @@ When describing flows, prefer TypeScript-like pseudocode to describe logic. Alwa
 
 **Template**: `@references/flow-doc.md`
 
-**Output location**: `docs/flows/{YYYY-MM-DD}-flow-{topic}.md`
+**Output location**: `$ROOT_DIR/flows/{YYYY-MM-DD}-flow-{topic}.md`
 
 ## Shortcuts
 
@@ -57,9 +61,9 @@ Shortcuts are self-contained workflows triggered when the user explicitly asks t
 
 Create a to-do list with the following items then perform all of them:
 
-1. Review `docs/research/` to see the list of recent research briefs
+1. Review `$ROOT_DIR/research/` to see the list of recent research briefs
 
-2. Copy `@references/research-brief.md` to `docs/research/{YYYY-MM-DD}-research-{topic-slug}.md`
+2. Copy `@references/research-brief.md` to `$ROOT_DIR/research/{YYYY-MM-DD}-research-{topic-slug}.md`
    - Use kebab-case for the topic slug (e.g., `2025-01-15-research-auth-strategies.md`)
 
 3. Begin to fill in the new research brief based on the user's instructions, stopping and asking for clarifications as soon as you need them
@@ -70,9 +74,9 @@ Create a to-do list with the following items then perform all of them:
 
 1. Review existing architecture documents and understand the relevant architectural patterns used in the project
 
-2. Review existing flow documents in `docs/flows/` and understand the relevant flows used in this project
+2. Review existing flow documents in `$ROOT_DIR/flows/` and understand the relevant flows used in this project
 
-3. Copy `@references/flow-doc.md` to `docs/flows/{YYYY-MM-DD}-flow-{topic-slug}.md`
+3. Copy `@references/flow-doc.md` to `$ROOT_DIR/flows/{YYYY-MM-DD}-flow-{topic-slug}.md`
    - Use kebab-case for the topic slug (e.g., `2025-01-15-flow-api-request-lifecycle.md`)
 
 4. Begin to fill in the new flow document based on the user's instructions, stopping and asking for clarifications as soon as you need them
@@ -116,7 +120,7 @@ Create a to-do list with the following items then perform all of them:
 Research documentation lives in the project's docs folder:
 
 ```
-docs/
+$ROOT_DIR/
   research/          # Research briefs
     {date}-research-{topic}.md
   flows/             # Flow documentation
@@ -135,4 +139,4 @@ Throughout this skill, paths prefixed with `@` indicate paths from the skill roo
 - `@references/research-brief.md` -> `dev.research/references/research-brief.md`
 - `@references/flow-doc.md` -> `dev.research/references/flow-doc.md`
 
-When you see `docs/` referenced, resolve them relative to the project root directory.
+When you see `$ROOT_DIR/` referenced, resolve them relative to the project root directory.
