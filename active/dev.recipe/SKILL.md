@@ -14,8 +14,11 @@ Use this skill when the user:
 - asks to use or apply a named recipe
 - requests a change that clearly matches an existing recipe
 
+## Root Directory
+All filepaths mentioned is relative to the $ROOT_DIR. Unless overridden elsewhere, the $ROOT_DIR is `./docs` (relative to the project root directorey)
+
 ## Recipe format and location
-- Path: `references/<service>/<recipe-name>.md`
+- Path: `$ROOT_DIR/recipes/<recipe-name>.md`
 - Naming: kebab-case filenames ending in `.md` (example: `extract-connector-id.md`)
 - Required frontmatter fields:
   - `commit`: current `HEAD` commit hash
