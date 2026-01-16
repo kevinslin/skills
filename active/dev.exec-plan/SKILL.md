@@ -21,11 +21,15 @@ Use this skill when:
 
 **Do not use** for simple tasks better suited to TodoWrite (quick 3-5 step tasks without complex dependencies).
 
+## Root Directory
+
+All filepaths mentioned is relative to the $ROOT_DIR. Unless overridden elsewhere, the $ROOT_DIR is `./docs` (relative to the project root directorey)
+
 ## Creating the Execution Plan
 
 ### 1. Determine Plan Location
 
-By default, the output of a plan should be in `docs/project/specs/active`
+By default, the output of a plan should be in `$ROOT_DIR/specs/active`
 
 ### 2. Create Plan File and optionally, checkout a new branch
 
@@ -54,7 +58,6 @@ For detailed guidance on creating effective plans, consult `references/effective
 - Key constraints or limitations
 
 **Technical Approach** - High-level architectural or implementation strategy
-- Technology choices and rationale
 - Design patterns or methodologies
 - Integration points
 
@@ -62,6 +65,8 @@ For detailed guidance on creating effective plans, consult `references/effective
 - Break down into milestones or phases
 - Include research, implementation, testing, and deployment steps
 - Note dependencies between steps
+
+**IMPORTANT**: Always specify tests. We prefer integration tests over unit tests whenever possible. 
 
 **Dependencies** - External resources, APIs, libraries, or tools needed
 - Third-party services or integrations
@@ -84,7 +89,6 @@ After creating the plan, think about whether you could simplify it further. Cons
 
 ### 5. Review and Confirm
 
-
 After creating the plan:
 1. Present a summary of the plan to the user
 2. Highlight any questions or decisions that need input
@@ -93,7 +97,7 @@ After creating the plan:
 
 Note: if there are followup questions, check if user has answered it in the execution plan itself before re-prompting the user.
 
-**IMPORTANT**: If the user asks you to implement without asking for input, then answer any outstanding questions yourself to the best of your judgement. Only ask the user for input if you are really stuck. 
+**IMPORTANT**: If the user asks you to implement without asking for input, then answer any outstanding questions yourself to the best of your judgement. Only ask the user for input if you are really stuck but otherwise, proceed with impementation.
 
 ### 6. User revision (optional)
 
