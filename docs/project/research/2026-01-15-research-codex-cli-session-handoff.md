@@ -1,6 +1,6 @@
 # Research Brief: Codex CLI Session Handoffs & Context Management (with Claude Code comparison)
 
-**Last Updated**: 2026-01-15
+**Last Updated**: 2026-01-15 (Corrected `codex exec resume` usage; added programmatic reset patterns)
 
 **Status**: Complete
 
@@ -17,7 +17,7 @@ When a Codex CLI chat is getting “full” (context window pressure), the pract
 
 1. **Compress what’s already in the thread** using `/compact` so you can keep going without losing critical constraints and decisions.
 2. **Start a fresh conversation** using `/new` and paste a concise handoff summary (ideally pointing to repo artifacts instead of re-pasting large blobs).
-3. **Exit and restart** (`/exit` or Ctrl+C) if you want to end the interactive process entirely, then start a new run (optionally resuming prior state via `codex resume` / `codex exec --resume ...`).
+3. **Exit and restart** (`/exit` or Ctrl+C) if you want to end the interactive process entirely, then start a new run (optionally resuming prior state via `codex resume` / `codex exec resume ...`).
 
 The best “agent handoff” pattern is less about the tool and more about the artifact: a short, structured **handoff note** (goal, current state, decisions, open questions, next steps, commands/tests run, and pointers to files/PRs) that can be pasted into a new session or used by another agent/human. Codex CLI’s `/diff`, `/fork`, `/status`, `/compact`, and `/new` make it easier to keep chats small and create clean breakpoints.
 
@@ -117,7 +117,7 @@ Claude Code (Anthropic) supports a very similar workflow: `/compact` to summariz
 
 * * *
 
-#### 1.5 Resume / continue work later (`codex resume`, `codex exec --resume ...`)
+#### 1.5 Resume / continue work later (`codex resume`, `codex exec resume ...`)
 
 **Status**: Complete
 
@@ -125,7 +125,7 @@ Claude Code (Anthropic) supports a very similar workflow: `/compact` to summariz
 
 - Codex stores session transcripts locally under `~/.codex/sessions/`.
 - You can resume the last (or a specific) session using `codex resume --last` or `codex resume <SESSION_ID>`.
-- You can also run non-interactively while resuming context using `codex exec --resume <SESSION_ID> "..."` or `codex exec --resume --last "..."`.
+- You can also run non-interactively while resuming context using `codex exec resume <SESSION_ID> "..."` or `codex exec resume --last "..."`.
 
 **Assessment**: Strong for long-running work; pairs well with handoff notes when context is large or tasks are paused mid-stream.
 
@@ -133,6 +133,31 @@ Claude Code (Anthropic) supports a very similar workflow: `/compact` to summariz
 
 - OpenAI Codex CLI docs (features + transcripts + resume): https://developers.openai.com/codex/cli/
 - OpenAI Codex CLI docs (command-line options; `codex resume`): https://developers.openai.com/codex/cli/#command-line-options
+
+* * *
+
+#### 1.6 Programmatically clear context / start a new session
+
+**Status**: Complete
+
+**Details**:
+
+The most reliable “programmatic clear” is to **start a new session that does not resume** a prior one:
+
+- **New interactive session (fresh context)**: start a new process (do *not* use `codex resume` / `codex fork`).
+  - Example: `codex "Start fresh. Here is the handoff: ..."`
+- **New non-interactive run (fresh context)**: use `codex exec ...` (do *not* use `codex exec resume ...`).
+  - Example: `codex exec "Start fresh. Use only the repository state + this prompt. Task: ..."`
+  - Example (stdin): `cat handoff.md | codex exec -`
+
+If you specifically want to reset a **currently running interactive** session without killing the process, use `/new` (human-driven). If you need that in automation, the pattern is usually to drive the terminal with a PTY tool (e.g., `tmux send-keys "/new" Enter`) or simply terminate and restart `codex`; there isn’t a separate `codex new` subcommand in the CLI help output.
+
+**Assessment**: For automation (scripts/CI), prefer `codex exec` “fresh runs” and treat `resume` as an explicit opt-in. For interactive, `/new` is the simplest manual reset.
+
+**References**:
+
+- OpenAI Codex CLI docs (command-line options): https://developers.openai.com/codex/cli/#command-line-options
+- Codex CLI built-in help output: `codex --help`, `codex exec --help`, `codex exec resume --help`
 
 * * *
 
@@ -259,8 +284,8 @@ Codex CLI can store transcripts, but the most reliable handoff is an explicit ar
 | Monitor context usage | `/status` (token usage) | `/context` |
 | Quit interactive session | `/exit` or Ctrl+C | `/exit` |
 | Branch/fork conversation | `/fork` | (No direct equivalent in CLI docs; SDK supports sessions) |
-| Resume prior work | `codex resume ...`, `codex exec --resume ...` | `-c`, `-r`, `/resume` |
-| Export transcript | (Transcripts stored under `~/.codex/sessions/`; `codex resume --json` exists) | `/export` |
+| Resume prior work | `codex resume ...`, `codex exec resume ...` | `-c`, `-r`, `/resume` |
+| Export transcript | (Transcripts stored under `~/.codex/sessions/`; `codex exec --output-last-message` / `--json` can help for automation) | `/export` |
 
 **Strengths/Weaknesses Summary**:
 
@@ -300,6 +325,7 @@ For “context full” situations in Codex CLI, prefer **`/compact` → `/new` (
 2. Run **`/compact`** with instructions tailored for handoff (decisions, constraints, current state, next steps, commands run).
 3. If you still want a clean slate, run **`/new`** and paste your handoff note at the top of the new conversation.
 4. If you are done for now, **`/exit`** and later use `codex resume --last` (or `codex resume <ID>`) to continue, plus your handoff note to avoid re-deriving intent.
+5. If you want a programmatic “hard reset” outside the REPL, start a fresh run (`codex ...` or `codex exec ...`) and avoid `resume` commands.
 
 **Rationale**:
 
@@ -356,4 +382,3 @@ For “context full” situations in Codex CLI, prefer **`/compact` → `/new` (
 ### Open Questions
 - ...
 ```
-
