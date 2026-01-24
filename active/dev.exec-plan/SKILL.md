@@ -111,13 +111,6 @@ When the user asks you to proceed with the plan, re-read it to check if anything
 
 After you have finishd executing, run all tests. Fix any errors that come up. Once all tests have passed, notify the user that the task is ready to review
 
-## Beads Integration
-
-If the repo uses bd (beads), track each execution plan phase with beads and keep
-statuses in sync as phases progress. Read project-specific instructions from
-`skills/.config/dev.beads.instructions.md` if present. For detailed guidance and
-commands, see `references/beads.md`.
-
 ## Best Practices
 
 - Keep plans focused and actionable - avoid unnecessary verbosity
