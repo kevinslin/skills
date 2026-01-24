@@ -24,11 +24,10 @@ equipped with procedural knowledge that no model can fully possess.
 
 ## Skill File Location
 When creating or updating a skill - ALWAYS restrict all edits to the following working directories:
-- public: ~/code/skills-public
+- public: ~/code/skills/active
+- public-draft: ~/code/skills/active/drafts
 - private: ~/code/skills-private
 - local: ./skills
-
-For public skills, skills can be in one of two subdirectories (drafts vs active). Ask the user which one they want skills to go in 
 
 ## Usage
 Always ask the user where they want the new skill to be created if they haven't already mentioned it.
