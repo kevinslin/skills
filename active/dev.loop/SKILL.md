@@ -1,6 +1,6 @@
 ---
 name: dev.loop
-description: Drive a development task end-to-end from a user-stated goal through planning, execution, verification, and cleanup. Use when the user asks to run a dev loop, drive a task to completion, or wants a plan-execute-verify workflow with phased commits and CI verification.
+description: Drive a development task end-to-end from a user-stated goal through planning, execution, verification, and cleanup. Use when the user asks to run a devloop,  drive a task to completion, or wants a plan-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop (eg. cleanup)
 ---
 
 # Dev Loop
