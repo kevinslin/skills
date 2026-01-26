@@ -76,8 +76,8 @@ Create a to-do list with the following items then perform all of them:
 
 2. Review existing flow documents in `$ROOT_DIR/flows/` and understand the relevant flows used in this project
 
-3. Copy `@references/flow-doc.md` to `$ROOT_DIR/flows/{YYYY-MM-DD}-flow-{topic-slug}.md`
-   - Use kebab-case for the topic slug (e.g., `2025-01-15-flow-api-request-lifecycle.md`)
+3. Copy `@references/flow-doc.md` to `$ROOT_DIR/flows/{YYYY-MM-DD}-{topic-slug}.md`
+   - Use kebab-case for the topic slug (e.g., `flows/2025-01-15-api-request-lifecycle.md`)
 
 4. Begin to fill in the new flow document based on the user's instructions, stopping and asking for clarifications as soon as you need them
 
