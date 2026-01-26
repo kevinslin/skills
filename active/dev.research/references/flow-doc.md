@@ -27,3 +27,9 @@ Last updated: YYYY-MM-DD
 ```
 [ASCII diagram showing component relationships and data flow]
 ```
+
+## Metrics
+[list of key metrics and what they mean]
+
+## Logs
+[list of key log lines and where they are emitted]
