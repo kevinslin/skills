@@ -23,11 +23,13 @@ equipped with procedural knowledge that no model can fully possess.
 4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
 
 ## Skill File Location
-When creating or updating a skill - ALWAYS restrict all edits to the following working directories:
+When creating or updating a skill - ALWAYS restrict all edits to the following working directories unless overridden elsewhere:
 - public: ~/code/skills/active
 - public-draft: ~/code/skills/active/drafts
 - private: ~/code/skills-private
 - local: ./skills
+
+NEVER directly make updates to skills in ~/.codex or ~/.claude.
 
 ## Usage
 Always ask the user where they want the new skill to be created if they haven't already mentioned it.
