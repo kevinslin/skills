@@ -38,3 +38,5 @@ Create a to-do list with the following items then perform all of them:
 
 - You *MUST* make the build pass.
   If you cannot or don’t know how, tell the user and ask for help.
+
+5. **Print PR URL**: Return the url of the PR you just created
