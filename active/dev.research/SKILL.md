@@ -2,6 +2,7 @@
 name: dev.research
 description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, and frequently asked questions (FAQ)
 version: 1.0.0
+dependencies: [dev.llm-session]
 ---
 
 # Research Documentation
@@ -64,6 +65,22 @@ When describing flows, prefer TypeScript-like pseudocode to describe logic. Alwa
 **Template**: `@references/faq-doc.md`
 
 **Output location**: `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic}.md`
+
+## Required Ending Sections (All Docs)
+
+Every document created or revised using this skill must end with the following sections,
+verbatim and in this order. Keep the Manual Notes content unchanged across edits.
+
+```
+## Manual Notes 
+
+[keep this for the user to add notes. do not change between edits]
+
+## Changelog
+- [date]: [description of update] ([agent session id])
+```
+
+For the session id, use `dev.llm-session` skill to find session id of current conversation.
 
 ## Shortcuts
 

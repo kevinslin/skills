@@ -12,3 +12,10 @@ Last updated: YYYY-MM-DD
 
 ## Related Documents
 - [Links to related architecture docs, flow docs, faqs, and research briefs docs. Okay for this to be empty if nothing applicable]
+
+## Manual Notes 
+
+[keep this for the user to add notes. do not change between edits]
+
+## Changelog
+- [date]: [description of update] ([codex session id])
