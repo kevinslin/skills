@@ -4,15 +4,11 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
-1. **Confirm feature docs:** Check if a Plan Spec and/or Implementation Spec are in scope or provided by the user.  You should find them in @docs/project/specs/active/.  If isn’t clear, stop and ask! Only skip this if user has told you there is no spec.
+1. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is committed. And that you’ve already followed the pre-commit rules before (or at least after) the last commit.  If not, follow the full pre-commit review process and commit.
 
-Make sure you are in a separate branch. If not, switch to a branch with name `dev/{name-of-change}`.
+2. **Run tests:** Follow @docs/development.md and ensure all tests pass. If not, fix them and commit changes. Summarize what went wrong and how you fixed it. 
 
-2. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is committed. And that you’ve already followed the pre-commit rules before (or at least after) the last commit.  If not, follow the full pre-commit review process and commit.
-
-3. **Run tests:** Follow @docs/development.md and ensure all tests pass. If not, fix them and commit changes. Summarize what went wrong and how you fixed it. 
-
-4. **Create or update PR:** Use the GitHub CLI (`gh`) to file or update an existing
+3. **Create or update PR:** Use the GitHub CLI (`gh`) to file or update an existing
    GitHub PR for the current branch.
 
    In the GitHub PR description be sure:
