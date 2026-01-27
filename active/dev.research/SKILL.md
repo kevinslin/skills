@@ -1,6 +1,6 @@
 ---
 name: dev.research
-description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations.
+description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, and frequently asked questions (FAQ)
 version: 1.0.0
 ---
 
@@ -51,7 +51,19 @@ When describing flows, prefer TypeScript-like pseudocode to describe logic. Alwa
 
 **Template**: `@references/flow-doc.md`
 
-**Output location**: `$ROOT_DIR/flows/{YYYY-MM-DD}-flow-{topic}.md`
+**Output location**: `$ROOT_DIR/flows/{YYYY-MM-DD}-{topic}.md`
+
+### Frequently Asked Questions (faq)
+
+FAQ are focused questions on a particular part of logic. Use them when:
+- the user asks to save the current conversation as a faq
+- user explicitly mentions `@faq` "eg. @faq: how does X work"
+
+When describing flows, prefer TypeScript-like pseudocode to describe logic. Always include citations to files where logic occurs.
+
+**Template**: `@references/faq-doc.md`
+
+**Output location**: `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic}.md`
 
 ## Shortcuts
 
