@@ -16,6 +16,7 @@ Last updated: YYYY-MM-DD
 ## Flow
 
 ### [DESCRIPTION OF INITIAL STATE]
+
 - `path/to/file`
 ```
 [PSEUDO Code going over flow logic]
@@ -33,3 +34,10 @@ Last updated: YYYY-MM-DD
 
 ## Logs
 [list of key log lines and where they are emitted]
+
+## Manual Notes 
+
+[keep this for the user to add notes. do not change between edits]
+
+## Changelog
+- [date]: [description of update] ([codex session id])

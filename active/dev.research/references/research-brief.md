@@ -157,3 +157,10 @@ repositories, etc.]
 ### Appendix B: [Topic]
 
 [Additional data, code examples, or documentation]
+
+## Manual Notes 
+
+[keep this for the user to add notes. do not change between edits]
+
+## Changelog
+- [date]: [description of update] ([codex session id])
