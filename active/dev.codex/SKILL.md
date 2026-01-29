@@ -1,6 +1,6 @@
 ---
 name: dev.codex
-description: Codex self-management workflows. Use when Codex needs to modify its own configuration, skills, prompts, or runtime settings, including managing MCP servers (add/remove/disable, config.toml).
+“Codex runtime/config management (MCP servers, config.toml, session setup). Use only for Codex self‑configuration. Do not use for creating or updating skills or SKILL.md content; use skill‑creator for that.”
 ---
 
 # dev.codex

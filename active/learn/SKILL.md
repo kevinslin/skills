@@ -11,8 +11,29 @@ Learn from current session
 ## Capabilities
 
 - consolidate learnings from conversation and persist it in learnings log
-- organize learnings into the appropriate skill
+- identify mistakes or uncertainty points in the current conversation
 
-## Guidelines
+## Workflow
+1. Review the full conversation and list any points where you made a mistake or were uncertain.
+2. For each item, write a short analysis using the required template.
+3. If there are no mistakes or uncertainties, state that explicitly.
 
-1. summarize key learnings
+## Required Output Template
+
+Use this exact structure for each item to create a numbered list:
+
+```
+## [number] Mistake or Uncertainty
+[describe the mistake]
+
+### Why
+[describe why]
+
+### Learning
+[what you learned]
+
+### Recommendations
+[what to remember to not make this mistake again]
+```
+
+Write learnings to $HOME/.llm/skills/learn/learnings-[agent-session-id].md. Use `dev.llm-session` skill to get session id. If `$HOME/.llm/skills/learn` does not exist, create it.
