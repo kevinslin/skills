@@ -9,11 +9,9 @@ Create a to-do list with the following items then perform all of them:
 1. **Confirm spec is in sync:**
 
    If the work has been done using a feature spec or bugfix spec (typically in
-   @docs/project/specs/active/) review and make any updates to the spec to be sure it is
-   current with respect to the current code.
+   @docs/project/specs/active/) review and make any updates to the spec to be sure it is current with respect to the current code.
 
-   Add any status updates to the spec to include accomplished tasks and remaining tasks,
-   if any.
+   Add any status updates to the spec to include accomplished tasks and remaining tasks, if any.
 
 2. **Code style enforcement:**
 
@@ -54,8 +52,7 @@ Create a to-do list with the following items then perform all of them:
 
 4. **Unit testing and integration testing:**
 
-   BE SURE YOU RUN ALL TESTS (npm run precommit) as this includes codegen, formatting,
-   linting, unit tests and integration tests.
+   BE SURE YOU RUN ALL TESTS (npm run precommit) as this includes codegen, formatting, linting, unit tests and integration tests.
 
    Read @docs/development.md for additional background on test workflows.
 

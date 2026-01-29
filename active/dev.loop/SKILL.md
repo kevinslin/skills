@@ -1,6 +1,7 @@
 ---
 name: dev.loop
 description: Drive a development task end-to-end from a user-stated goal through planning, execution, verification, and cleanup. Use when the user asks to run a devloop,  drive a task to completion, or wants a plan-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop (eg. cleanup)
+dependencies: [dev.shortcuts, dev.exec-plan]
 ---
 
 # Dev Loop
@@ -8,7 +9,7 @@ description: Drive a development task end-to-end from a user-stated goal through
 ## Workflow Phases
 
 ### 1. Goal
-- Require the user to state the goal.
+- Require the user to state the goal
 
 ### 2. Plan
 - Invoke the `dev.exec-plan` skill to create the execution plan.
@@ -24,14 +25,17 @@ description: Drive a development task end-to-end from a user-stated goal through
   - `{prefix}-progress.md` for status updates, decisions, and blockers.
   - `{prefix}-learnings.md` for mistakes, lessons, and adjustments.
 
-### 4. Verify
+### 4. Polish
+- If there is user facing documentation like README.md, ARCHITECTURE.md or the like, make sure to update it
+
+### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
-- After tests pass, create a new review branch from the verified HEAD (default `review/{prefix}` unless the user specifies otherwise) and push it.
+- After tests pass, create a PR and push it
 - Verify CI for the pushed branch is green; if it fails, fix, re-run tests, and push updates.
 - Address review feedback from coding agents; apply fixes, re-run tests, push, and re-check CI.
 - Notify the user when the work is ready.
 
-### 5. Cleanup (user-requested only)
+### 6. Cleanup (user-requested only)
 - Only perform cleanup if the user explicitly requests it.
 - Merge the remote review branch.
 - Switch local to `main`, pull latest, and merge the approved changes.
