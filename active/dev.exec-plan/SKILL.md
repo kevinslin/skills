@@ -40,6 +40,8 @@ Create the plan using the template from `assets/plan-template.md` in the followi
 
 Checkout a new branch with the following name: `dev/{YYYY-MM-DD}-{title-in-kebab-case}`. 
 
+If user is asking for a worktree - checkout the branch in a worktree. Only do this if user explicitly asks for a new worktree. 
+
 Example:
 - plan: 2025-12-01-create-new-foo.md
 - branch-name: `dev/2025-12-01-create-new-foo`
@@ -60,6 +62,7 @@ For detailed guidance on creating effective plans, consult `references/effective
 **Technical Approach** - High-level architectural or implementation strategy
 - Design patterns or methodologies
 - Integration points
+- Important Context
 
 **Steps** - Detailed implementation phases in logical order
 - Break down into milestones or phases
@@ -68,10 +71,13 @@ For detailed guidance on creating effective plans, consult `references/effective
 
 **IMPORTANT**: Always specify tests. We prefer integration tests over unit tests whenever possible. 
 
+**Important Context**
+
 **Dependencies** - External resources, APIs, libraries, or tools needed
 - Third-party services or integrations
 - Required access or credentials
 - Documentation references
+- Additional context needed
 
 **Risks & Mitigations** - Potential blockers and how to address them
 - Technical risks
@@ -87,7 +93,11 @@ For detailed guidance on creating effective plans, consult `references/effective
 
 After creating the plan, think about whether you could simplify it further. Consult `DESIGN.md` file if it exists as well as last 5 commits to understand recent changes for context. If you identify ways that the plan can be made simpler, do the simplification. Add any simplifications done in the `# Notes` section of the execution plan.
 
-### 5. Review and Confirm
+### 5. Fill in gaps
+
+For important context needed for this project - kick off scoped research tasks to fetch the context and fill it in under `Technical Approach` under `Important Context`
+
+### 6. Review and Confirm
 
 After creating the plan:
 1. Present a summary of the plan to the user
@@ -99,17 +109,14 @@ Note: if there are followup questions, check if user has answered it in the exec
 
 **IMPORTANT**: If the user asks you to implement without asking for input, then answer any outstanding questions yourself to the best of your judgement. Only ask the user for input if you are really stuck but otherwise, proceed with impementation.
 
-### 6. User revision (optional)
+### 7. User revision (optional)
 
 If the user asks for additional details - write your response into the existing execution plan instead of responding in the conversation. 
 
-### 7. Proceeding with the plan
+### 8. Proceeding with the plan
 
 When the user asks you to proceed with the plan, re-read it to check if anything has changed. Also make sure that all questions that were asked are answered by the user (user will have checked off the question box and added an answer as a bullet point below). If not, prompt the user for answers before proceeding.
 
-### 8. Run tests and verify 
-
-After you have finishd executing, run all tests. Fix any errors that come up. Once all tests have passed, notify the user that the task is ready to review
 
 ## Best Practices
 
