@@ -35,4 +35,3 @@ are the extra shortcuts beyond the repo skills.
 - If a workflow is Codex-only or personal, implement it as a custom prompt and treat
   it as an additional shortcut.
 - If the workflow should be shared or invoked implicitly, add a skill instead.
-
