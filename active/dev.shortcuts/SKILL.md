@@ -3,43 +3,36 @@ name: dev.shortcuts
 description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request. 
 ---
 
+## Context
 Shortcuts are a small self contained workflow that can be triggered when the user explicitly asks to use a shortcut. 
 
-# Shortcut Triggers and Usage
+## Shortcut Location
+Shortcuts can be in the following locations
 
-Shortcut files for this skill live in `references/`. Any `@shortcut:...` or `trigger:[shortcut]` reference resolves to the file with the same name in `references/`.
+1. Under `./shortcuts/`
+2. Inlined in agent instructions under `## Shortcuts`
+Examples
+```
+## Shortcuts
+
+### Foo 
+Invokes a foo
+```
+
+## Shortcut Trigger and Usage
+Any `@shortcut:[shortcut]` or `trigger:[shortcut]` invokes a shortcut and resolves either to the file with the same name in `./references/shortcuts/[shortcut].md` or inlined in the agent instruction. 
+
+## Shortcut Chaining
+This involves using multiple shortcuts in sequence. Shortcut chaining is denoted by [shortcut1] -> [shortcut2]
+
+Example:
+`@shortcut:precommit-process.md -> @shortcut:create-pr.md`
 
 ## Mandatory Check Protocol
 
-1. Scan shortcuts in the `./references/` folder of this skill. 
+1. Scan shortcuts in the `./shortcuts` folder. 
 2. If a shortcut matches -> Announce: "Using [shortcut name]"
 3. Follow the shortcut exactly
-
-## Agent-Specific References
-
-Additional shortcut or skill guidance may live in agent-specific references at the
-repo root: `references/<agent>.md`.
-
-- **Codex agent:** See `references/codex.md` for extra shortcut guidance and where
-  to find custom prompt shortcuts.
-
-## Inlining Shortcuts into Other Skills
-
-When the user explicitly asks to inline a shortcut into another skill, inline the
-shortcut logic directly into the target skill they name.
-
-Steps:
-1. Add a **Shortcuts** section to the target skill's `SKILL.md` with the following
-   text (verbatim):
-   ```
-   ## Shortcuts
-   Shortcuts are a small self contained workflow that can be triggered when the user explicitly asks to use a shortcut. 
-   You have access to shortcuts mentioned in `./references/shortcuts`
-   ```
-2. Copy the shortcut file(s) being inlined into the target skill's
-   `./references/shortcuts` directory (create it if missing).
-3. Ensure the inlined shortcuts live with the target skill (do not rely on
-   `dev.shortcuts` references for those inlined workflows).
 
 ## This is NOT Optional
 
@@ -51,8 +44,3 @@ Common rationalizations to avoid:
 - "I know how to do this" -> WRONG. The shortcut may have steps you'll forget.
 - "The user didn't ask for a shortcut" -> WRONG. Shortcuts are mandatory when applicable.
 - "The shortcut is overkill" -> WRONG. Shortcuts ensure consistency and quality.
-
-## Shortcut Chaining
-
-Some workflows require multiple shortcuts in sequence:
-Always complete the full chain when applicable.
