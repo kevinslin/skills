@@ -156,11 +156,6 @@ $ROOT_DIR/
     {date}-flow-{topic}.md
 ```
 
-## Integration with Other Skills
-
-- **dev.speculate**: Research briefs inform specs and implementation planning
-- **dev.exec-plan**: Research findings can drive execution plan creation
-
 ## Path Convention
 
 Throughout this skill, paths prefixed with `@` indicate paths from the skill root:
