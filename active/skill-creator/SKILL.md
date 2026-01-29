@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Guide for creating or updating skills. This skill should be used when users want to create a new skill or update an existing skill that extends agent capabilities with specialized knowledge, workflows, or tool integrations.
+description: Guide for creating or updating skills and SKILL.md content, including edits to existing skills, adding workflows/tools, or changing triggers. Use whenever a user asks to create/update a skill or mentions a skill name and requests changes (e.g., ‘update $learn skill’, ‘edit skill description’), even if the skill currently lives outside allowed roots.
 license: Complete terms in LICENSE.txt
 ---
 
