@@ -12,6 +12,7 @@ Learn from current session
 
 - consolidate learnings from conversation and persist it in learnings log
 - identify mistakes or uncertainty points in the current conversation
+- identify areas of optimization that could improve the speed or quality of this task in the future
 
 ## Workflow
 1. Review the full conversation and list any points where you made a mistake or were uncertain.
@@ -23,8 +24,8 @@ Learn from current session
 Use this exact structure for each item to create a numbered list:
 
 ```
-## [number] Mistake or Uncertainty
-[describe the mistake]
+## [number] Improvement Opportunity
+[describe the mistake or optimization opportunity]
 
 ### Why
 [describe why]
