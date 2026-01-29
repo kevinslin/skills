@@ -10,13 +10,12 @@ Shortcuts are a small self contained workflow that can be triggered when the use
 Shortcuts can be in the following locations
 
 1. Under `./shortcuts/`
-2. Inlined in agent instructions under `## Shortcuts`
-Examples
+2. Inlined in agent instructions under `## Shortcuts`. Shortcut is header text. Can be followed by a space with argument hints enclosed in `[arg_name]`
 ```
 ## Shortcuts
 
-### Foo 
-Invokes a foo
+### Foo [arg1] [arg2]
+Invokes a foo with [arg1] and [arg2]
 ```
 
 ## Shortcut Trigger and Usage
