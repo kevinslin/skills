@@ -21,6 +21,8 @@ Invokes a foo with [arg1] and [arg2]
 ## Shortcut Trigger and Usage
 Any `@shortcut:[shortcut]` or `trigger:[shortcut]` invokes a shortcut and resolves either to the file with the same name in `./references/shortcuts/[shortcut].md` or inlined in the agent instruction. 
 
+If a shortcut doesn’t resolve, quickly scan the most relevant skill for similarly-named shortcuts before doing broader repo-wide searches.
+
 ## Shortcut Chaining
 This involves using multiple shortcuts in sequence. Shortcut chaining is denoted by [shortcut1] -> [shortcut2]
 
