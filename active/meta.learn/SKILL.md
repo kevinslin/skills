@@ -1,5 +1,5 @@
 ---
-name: learn
+name: meta.learn
 description: learn from the current session
 version: 0.0.0
 ---
@@ -37,4 +37,4 @@ Use this exact structure for each item to create a numbered list:
 [what to remember to not make this mistake again]
 ```
 
-Write learnings to $HOME/.llm/skills/learn/learnings-[agent-session-id].md. Use `dev.llm-session` skill to get session id. If `$HOME/.llm/skills/learn` does not exist, create it.
+Write learnings to $HOME/.llm/skills/learn/{skillname}-{YYYY-MM-DD}-[agent-session-id].md. Use `dev.llm-session` skill to get session id. If `$HOME/.llm/skills/learn` does not exist, create it.
