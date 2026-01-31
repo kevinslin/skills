@@ -1,0 +1,2 @@
+- [ ] examine past skill runs to find improvements
+- [ ] examine learning files
