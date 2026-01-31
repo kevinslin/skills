@@ -13,6 +13,8 @@ instructions.
 | Creating a validation/test spec | @shortcut:new-validation-spec.md |
 | Committing or pushing code | @shortcut:precommit-process.md -> @shortcut:commit-code.md |
 | Creating a PR | @shortcut:precommit-process.md -> @shortcut:create-pr.md |
+| Checking CI status | @shortcut:check-ci.md |
+| Fixing a PR from review comments | @shortcut:fix-pr.md |
 | Creating architecture documentation | @shortcut:new-architecture-doc.md |
 | Updating/revising architecture docs | @shortcut:revise-architecture-doc.md |
 | Creating flow documentation| dev.flow-docs + @shortcut:new-flow-doc.md |
