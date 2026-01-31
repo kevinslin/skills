@@ -39,5 +39,8 @@ Last updated: YYYY-MM-DD
 
 [keep this for the user to add notes. do not change between edits]
 
+## FAQ
+[keep this in case user asks followup questions - should be added here]
+
 ## Changelog
 - [date]: [description of update] ([codex session id])
