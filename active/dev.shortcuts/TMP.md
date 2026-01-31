@@ -9,6 +9,7 @@ instructions.
 | Implementing a feature from a spec | @shortcut:implement-spec.md |
 | Implementing an execution plan | @shortcut:implement-execution-plan.md |
 | Creating a new feature plan | @shortcut:new-plan-spec.md |
+| Promoting a shortcut to a skill | @shortcut:promote-shortcut-to-skill.md |
 | Creating an implementation spec | @shortcut:new-implementation-spec.md |
 | Creating a validation/test spec | @shortcut:new-validation-spec.md |
 | Committing or pushing code | @shortcut:precommit-process.md -> @shortcut:commit-code.md |
