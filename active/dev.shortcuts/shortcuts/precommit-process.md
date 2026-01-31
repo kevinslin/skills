@@ -30,7 +30,7 @@ BE SURE YOU RUN ALL TESTS (npm run precommit) as this includes codegen, formatti
 
 Read @docs/development.md for additional background on test workflows.
 
-After any significant changes, ALWAYS run the precommit check:
+If you are in a node repo and there is a `precommit` check, then ALWAYS run the precommit check:
 
 ```
 npm run precommit  # Runs: codegen, format, lint, test:unit, test:integration
