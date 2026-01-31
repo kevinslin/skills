@@ -36,9 +36,7 @@ dependencies: [dev.shortcuts, dev.exec-plan]
 - Notify the user when the work is ready.
 
 ### 6. Cleanup (user-requested only)
-- Only perform cleanup if the user explicitly requests it.
-- Merge the remote review branch.
-- Switch local to `main`, pull latest, and merge the approved changes.
+invoke:cleanup
 
 ## Usage
 Users can invoke all steps of the workflow by asking for "devloop" (eg. use devloop to do X...)
