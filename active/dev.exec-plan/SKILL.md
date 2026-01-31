@@ -2,8 +2,6 @@
 name: dev.exec-plan
 description: This skill should be used for development tasks that require detailed technical planning with persistent documentation. Use when the task involves architectural decisions, multi-phase implementation, external dependencies, or when the user explicitly requests an execution plan.
 version: 2.0.0
-optionalDependencies:
-  - dev.beads
 ---
 
 # Execution Plan Skill
