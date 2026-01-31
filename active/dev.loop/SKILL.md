@@ -6,6 +6,10 @@ dependencies: [dev.shortcuts, dev.exec-plan]
 
 # Dev Loop
 
+## Setup
+Do this only once per repo.
+Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
+
 ## Workflow Phases
 
 ### 1. Goal
