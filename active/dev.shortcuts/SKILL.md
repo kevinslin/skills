@@ -9,8 +9,9 @@ Shortcuts are a small self contained workflow that can be triggered when the use
 ## Shortcut Location
 Shortcuts can be in the following locations
 
-1. Under `./shortcuts/`
+1. Under [shortcuts](./shortcuts/) (either from `dev.shortcuts` or from project root)
 2. Inlined in agent instructions under `## Shortcuts`. Shortcut is header text. Can be followed by a space with argument hints enclosed in `[arg_name]`
+Examples
 ```
 ## Shortcuts
 
