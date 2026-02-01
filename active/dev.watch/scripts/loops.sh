@@ -50,7 +50,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 PROMPT_FILE="${CODEX_PROMPT_FILE:-$REPO_ROOT/references/codex.md}"
-CODEX_CMD="${CODEX_CMD:-codex exec --full-auto}"
+CODEX_CMD="${CODEX_CMD:-codex exec --yolo}"
 
 if [[ ! -f "$PROMPT_FILE" ]]; then
   echo "Error: prompt file not found: $PROMPT_FILE" >&2
