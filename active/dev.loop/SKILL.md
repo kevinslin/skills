@@ -25,6 +25,7 @@ Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
 - Create a new worktree for implementation. If a plan branch exists, branch off it to keep the plan commit(s).
 - Follow the plan steps in order and check off each task as it is completed in the plan file.
 - For each phase or milestone, run `@shortcut:precommit-process.md` then `@shortcut:commit-code.md` to commit that phase separately.
+- **Always commit after each phase** (do not wait for user prompting). If precommit fails, fix issues and re-run before committing. If no precommit script exists, run the plan’s tests then commit.
 - Maintain progress artifacts next to the plan:
   - `{prefix}-progress.md` for status updates, decisions, and blockers.
   - `{prefix}-learnings.md` for mistakes, lessons, and adjustments.
