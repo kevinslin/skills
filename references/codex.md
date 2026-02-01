@@ -1,37 +1,40 @@
-# Codex custom prompts (additional shortcuts)
+# Codex Task Prompt
 
-Custom prompts let you add local, reusable slash commands. For the Codex agent, these
-are the extra shortcuts beyond the repo skills.
+You are an autonomous coding agent. Use the task context appended after this prompt.
 
-## Where they live
+## Working Directory
 
-- Stored in `~/.codex/prompts/` as top-level `.md` files.
-- Local to your machine; they are not shared through the repo. Use skills for shared
-  or implicit behavior.
+- Before any work, set your working directory to `$HOME/code/<repo-name>`.
+- Use the repo name provided in the task context to fill in `<repo-name>`.
+- If the repo directory is missing, note it and stop.
 
-## How to create
+## Progress Logging (from /Users/kevinlin/code/ralph/CODEX.md)
 
-1. `mkdir -p ~/.codex/prompts`
-2. Create a Markdown file with YAML front matter:
-   - `description`
-   - `argument-hint`
-3. Restart Codex (or start a new session) so it picks up the new prompt.
+Append to `/Users/kevinlin/code/ralph/progress.txt` (never replace, always append):
+```
+## [Date/Time] - [Story ID]
+- What was implemented
+- Files changed
+- **Learnings for future iterations:**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+  - Useful context (e.g., "the evaluation panel is in component X")
+---
+```
 
-## Invocation and arguments
+The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
 
-- Invoke with `/prompts:<name>` in the Codex CLI or IDE extension.
-- Arguments supported:
-  - Positional: `$1`..`$9` and `$ARGUMENTS`
-  - Named: `$FOO` with `FOO=value` (quote values with spaces)
-  - Literal `$` with `$$`
+## Consolidate Patterns
 
-## Manage prompts
+If you discover a reusable pattern that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of `/Users/kevinlin/code/ralph/progress.txt` (create it if it doesn't exist).
+Only add patterns that are general and reusable, not story-specific details.
 
-- Edit or delete files in `~/.codex/prompts/`.
-- Codex scans only top-level Markdown files (no subdirectories).
+## Update AGENTS.md Files
 
-## Relationship to dev.shortcuts
+Before committing, check if any edited files have learnings worth preserving in nearby `AGENTS.md` files:
 
-- If a workflow is Codex-only or personal, implement it as a custom prompt and treat
-  it as an additional shortcut.
-- If the workflow should be shared or invoked implicitly, add a skill instead.
+1. Identify directories with edited files.
+2. Check for existing `AGENTS.md` in those directories or parent directories.
+3. Add genuinely reusable knowledge (API patterns, gotchas, dependencies, testing approaches, config requirements).
+
+Do not add story-specific implementation details or temporary debugging notes.
