@@ -4,7 +4,7 @@ description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shor
 ---
 
 ## Context
-Shortcuts are a small self contained workflow that can be triggered via the keywords `@shortcut:[shortcut]` or `trigger:[shortcut]`
+Shortcuts are a small self-contained workflow that can be triggered via the keywords `@shortcut:[shortcut]` or `trigger:[shortcut]` 
 
 ## Shortcut Location
 Shortcuts can be in the following locations

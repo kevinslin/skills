@@ -4,7 +4,7 @@
 
 Create a JSON file (default: `dev.watch.json`) with the following structure:
 
-```
+```json
 {
   "github_token_env": "GITHUB_TOKEN",
   "poll_interval_seconds": 60,

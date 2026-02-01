@@ -163,3 +163,4 @@ The watcher currently emits JSON for Todo transitions but does not kick off any 
 
 - No DESIGN.md found; last 5 commits reviewed for context.
 - Plan kept minimal; no further simplification identified.
+- Post-review cleanup: doc wording, guard save_json for bare filenames, validate loops.sh --repo args.

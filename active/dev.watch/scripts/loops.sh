@@ -14,7 +14,11 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --repo)
-      REPO_NAME="${2:-}"
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --repo requires a value." >&2
+        exit 2
+      fi
+      REPO_NAME="$2"
       shift 2
       ;;
     --repo=*)
