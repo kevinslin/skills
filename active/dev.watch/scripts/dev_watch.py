@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -63,13 +64,11 @@ DEFAULT_TOKEN_ENV = "GITHUB_TOKEN"
 DEFAULT_STATE_FILE = "~/.llm/skills/dev.watch/state.json"
 DEFAULT_POLL_INTERVAL = 60
 DEFAULT_LOOPS_PARALLEL = False
+TOKEN_PREFIXES = ("ghp_", "gho_", "ghu_", "ghs_", "github_pat_")
 
 
 def eprint(message):
     print(message, file=sys.stderr)
-
-def pprint(message):
-    print(message)
 
 def expand_path(path):
     return os.path.expandvars(os.path.expanduser(path))
@@ -295,9 +294,18 @@ def run_loops(event, config):
         cmd.extend(["--repo", repo_name])
     cmd.append(task)
 
+    env = os.environ.copy()
+    token = config.get("_token")
+    if token:
+        env.setdefault("GITHUB_TOKEN", token)
+        env.setdefault("GH_TOKEN", token)
+        token_env = config.get("github_token_env", DEFAULT_TOKEN_ENV)
+        if token_env and re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", token_env):
+            env.setdefault(token_env, token)
+
     try:
-        pprint(f"running {cmd}")
-        subprocess.run(cmd, check=False, stdout=sys.stderr, stderr=sys.stderr)
+        eprint(f"running {cmd}")
+        subprocess.run(cmd, check=False, stdout=sys.stderr, stderr=sys.stderr, env=env)
     except OSError as err:
         eprint(f"Failed to run loops.sh: {err}")
         return 1
@@ -317,8 +325,9 @@ def main():
         return 2
 
     token_env = config.get("github_token_env", DEFAULT_TOKEN_ENV)
-    # TODO: don't store in config
-    token = token_env or os.getenv(token_env)
+    token = os.getenv(token_env)
+    if not token and token_env.startswith(TOKEN_PREFIXES):
+        token = token_env
     if not token:
         eprint(f"Missing GitHub token in env var: {token_env}")
         return 2
