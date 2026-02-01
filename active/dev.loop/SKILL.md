@@ -20,7 +20,7 @@ User will ask you to run dev.loop. Go through each phase under Workflow phases.
 
 ### 2. Plan
 - Invoke the `dev.exec-plan` skill to create the execution plan.
-- Bias toward answering plan questions yourself; only ask the user when blocked.
+- Bias toward answering plan questions yourself; only ask the user when blocked or when user tells you to check with them.
 - Ensure the plan includes explicit tests (prefer integration tests).
 - Capture the plan prefix from the plan filename: `{YYYY-MM-DD}-{title-in-kebab-case}`.
 
@@ -40,7 +40,7 @@ User will ask you to run dev.loop. Go through each phase under Workflow phases.
 - Run the tests specified in the plan and ensure they pass.
 - After tests pass, make sure everything is commited. `trigger:push-pr`
 - Verify CI for the pushed branch is green. `trigger:check-ci`
-- Address review feedback from coding agents; apply fixes, re-run tests, push, and re-check CI.
+- Address review feedback from coding agents and humans; apply fixes, re-run tests, push, and re-check CI.
 - Notify the user when the work is ready.
 
 ### 6. Cleanup (user-requested only)
