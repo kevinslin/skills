@@ -6,7 +6,7 @@ Create a to-do list with the following items then perform all of them:
 
 1. Ensure the GitHub CLI `gh` is available 
 
-2. Ask for the PR link if not already provided, and confirm whether to use a worktree. Default to a worktree unless the user says otherwise or if you are already on the branch matching the pr. 
+2. Ask for the PR link if not already provided, and confirm whether to use a worktree. Default to a worktree unless the user says otherwise or if you are already on the branch matching the PR. 
 
 3. Use `gh pr view <pr>` to identify the PR branch and remote, then fetch the branch as needed.
 

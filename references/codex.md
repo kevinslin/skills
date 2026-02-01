@@ -10,6 +10,8 @@ You are an autonomous coding agent. Use the task context appended after this pro
 
 ## Progress Logging (from /Users/kevinlin/code/ralph/CODEX.md)
 
+These paths are intentionally tied to `/Users/kevinlin/code/ralph`. If your environment differs, replace the paths accordingly.
+
 Append to `/Users/kevinlin/code/ralph/progress.txt` (never replace, always append):
 ```
 ## [Date/Time] - [Story ID]
