@@ -10,6 +10,9 @@ dependencies: [dev.shortcuts, dev.exec-plan]
 Do this only once per repo.
 Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
 
+## Usage
+User will ask you to run dev.loop. Go through each phase under Workflow phases.
+
 ## Workflow Phases
 
 ### 1. Goal
@@ -22,7 +25,7 @@ Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
 - Capture the plan prefix from the plan filename: `{YYYY-MM-DD}-{title-in-kebab-case}`.
 
 ### 3. Execute
-- Create a new worktree for implementation. If a plan branch exists, branch off it to keep the plan commit(s).
+- Create a new branch for implementation. If user explicitly asks for worktree, create worktree. If a plan branch exists, branch off it to keep the plan commit(s).
 - Follow the plan steps in order and check off each task as it is completed in the plan file.
 - For each phase or milestone, run `@shortcut:precommit-process.md` then `@shortcut:commit-code.md` to commit that phase separately.
 - **Always commit after each phase** (do not wait for user prompting). If precommit fails, fix issues and re-run before committing. If no precommit script exists, run the plan’s tests then commit.
