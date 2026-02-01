@@ -35,7 +35,11 @@ Drive a single dev task from intake to completion: parse the task input, gather 
 ### 4) Execute with dev.loop
 
 - Invoke the dev.loop skill to plan, implement, verify, and cleanup.
+- If the task came in as a git issue, update the `Status` label to `In progress`
 - Pass along the task summary, relevant files, and any constraints/acceptance criteria.
+
+### 5) Cleanup
+- If the task came in as a git issue and user invokes the merge-pr shortcut, update the `Status` label to `Done` 
 
 ## Output expectations
 
