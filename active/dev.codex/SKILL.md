@@ -1,6 +1,6 @@
 ---
 name: dev.codex
-“Codex runtime/config management (MCP servers, config.toml, session setup). Use only for Codex self‑configuration. Do not use for creating or updating skills or SKILL.md content; use skill‑creator for that.”
+description: “Codex runtime/config management (MCP servers, config.toml, session setup). Use only for Codex self‑configuration. Do not use for creating or updating skills or SKILL.md content; use skill‑creator for that.”
 ---
 
 # dev.codex
