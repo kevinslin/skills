@@ -66,6 +66,27 @@ When describing flows, prefer TypeScript-like pseudocode to describe logic. Alwa
 
 **Output location**: `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic}.md`
 
+### Vendor Docs
+
+Vendor docs are local summaries of third-party libraries used by the project. Use them when you need to:
+
+- Capture only the parts of a vendor library that the project actually uses
+- Summarize official documentation with limited direct quotes
+- Provide a quick, local reference for the team
+
+**Template**: `@references/vendor-doc.md`
+
+**Output location**: `$ROOT_DIR/vendor/{library}/README.md`
+
+**Structure requirements**:
+
+- Files must live under `$ROOT_DIR/vendor/{library}` (aka `$LIB_ROOT`).
+- Docs must include: **Quickstart**, **Core Concepts**, **API Reference**, **Topics**.
+- API reference content goes in `$LIB_ROOT/reference/[docs].md`.
+- Topic deep-dives go in `$LIB_ROOT/topics/[name].md`.
+- Everything else goes in `$LIB_ROOT/README.md`.
+- All vendor doc files must end with the required ending sections.
+
 ## Required Ending Sections (All Docs)
 
 Every document created or revised using this skill must end with the following sections,
@@ -126,6 +147,20 @@ Create a to-do list with the following items then perform all of them:
    - **Open Questions**: List any possible bugs, issues, or areas of uncertainty around the design
    - **Potential Improvements**: List any ideas for future improvements or enhancements to the architecture
 
+### New Vendor Docs
+
+Create a to-do list with the following items then perform all of them:
+
+1. Review `$ROOT_DIR/vendor/` to see existing vendor docs and naming conventions.
+
+2. Identify which parts of the vendor library are actually used by the project (scan code, configs, and docs).
+
+3. Create `$ROOT_DIR/vendor/{library}/` with `reference/` and `topics/` subfolders.
+
+4. Copy `@references/vendor-doc.md` to `$ROOT_DIR/vendor/{library}/README.md`.
+
+5. Populate `reference/` and `topics/` files per the template, summarizing official docs with limited direct quotes.
+
 ## Best Practices
 
 ### Research Briefs
@@ -154,6 +189,13 @@ $ROOT_DIR/
     {date}-research-{topic}.md
   flows/             # Flow documentation
     {date}-flow-{topic}.md
+  vendor/            # Vendor documentation
+    {library}/
+      README.md
+      reference/
+        {docs}.md
+      topics/
+        {name}.md
 ```
 
 ## Path Convention
@@ -162,5 +204,6 @@ Throughout this skill, paths prefixed with `@` indicate paths from the skill roo
 
 - `@references/research-brief.md` -> `dev.research/references/research-brief.md`
 - `@references/flow-doc.md` -> `dev.research/references/flow-doc.md`
+- `@references/vendor-doc.md` -> `dev.research/references/vendor-doc.md`
 
 When you see `$ROOT_DIR/` referenced, resolve them relative to the project root directory.
