@@ -7,14 +7,14 @@
 
 ## Goal
 
-Extend the `dev.research` skill to support creating local vendor documentation (stored under `docs/vendor/{library}`) with required sections and file placement rules from issue #4.
+Extend the `dev.research` skill to support creating local vendor documentation (stored under `docs/vendor/{library}`) with required sections, input workflow, and file placement rules from issue #4.
 
 ---
 
 ## Context
 
 ### Background
-Issue #4 requests that the `dev.research` skill support creation of vendor docs (e.g., local vendor docs in `docs/vendor`). The docs should focus on what the project uses, summarize official documentation with limited direct quotes, and use a specific directory/file structure.
+Issue #4 requests that the `dev.research` skill support creation of vendor docs (e.g., local vendor docs in `docs/vendor`). The workflow takes a docs URL endpoint and a library name (infer if missing), summarizes official docs with limited direct quotes, and requires sections for installation, quickstart, gotchas, concepts, topics, and API reference with specific file placement rules.
 
 ### Current State
 The `dev.research` skill currently supports research briefs, flow docs, and FAQs with associated templates. There is no guidance or template for vendor docs or `docs/vendor` structure.
@@ -28,7 +28,7 @@ The `dev.research` skill currently supports research briefs, flow docs, and FAQs
 ## Technical Approach
 
 ### Architecture/Design
-Add a new “Vendor Docs” document type to `active/dev.research/SKILL.md`, including directory layout, required sections, and file placement rules. Introduce a new template under `active/dev.research/references/` to standardize vendor docs. Update directory structure and path convention sections accordingly.
+Add a new “Vendor Docs” document type to `active/dev.research/SKILL.md`, including input workflow (docs URL + library name), DOC_ROOT/LIB_ROOT definitions, required sections, and file placement rules. Introduce a new template under `active/dev.research/references/` to standardize vendor docs. Update directory structure and path convention sections accordingly.
 
 ### Technology Stack
 - Markdown documentation only.

@@ -14,23 +14,27 @@
 
 ---
 
+## Installation
+
+[How to install/setup for this project]
+
+---
+
 ## Quickstart
 
 [Minimal setup + first successful usage for this project]
 
 ---
 
-## Core Concepts
+## Gotchas
 
-[Key concepts the project relies on]
+[Key pitfalls, defaults, or surprises relevant to the project]
 
 ---
 
-## API Reference
+## Concepts
 
-[High-level overview + links to reference files]
-
-- `reference/[doc].md`: [What it covers]
+[Key concepts the project relies on]
 
 ---
 
@@ -39,6 +43,14 @@
 [High-level overview + links to topic files]
 
 - `topics/[name].md`: [What it covers]
+
+---
+
+## API Reference
+
+[High-level overview + links to reference files]
+
+- `reference/[doc].md`: [What it covers]
 
 ---
 
