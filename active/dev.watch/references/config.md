@@ -2,6 +2,9 @@
 
 ## JSON format
 
+SKILL_ROOT by located in ~/.llm/skills/dev.watch unless overridden elsewhere. 
+The dev.watch config can be found in $SKILL_ROOT/config.json
+
 Create a JSON file (default: `dev.watch.json`) with the following structure:
 
 ```json
