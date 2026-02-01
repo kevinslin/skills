@@ -66,6 +66,29 @@ When describing flows, prefer TypeScript-like pseudocode to describe logic. Alwa
 
 **Output location**: `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic}.md`
 
+### Vendor Docs
+
+Vendor docs are local summaries of third-party libraries used by the project. This workflow takes a docs URL endpoint and a library name (infer the name from the docs if not provided) to generate a concise, local reference. Use them when you need to:
+
+- Capture only the parts of a vendor library that the project actually uses
+- Summarize official documentation with limited direct quotes
+- Provide a quick, local reference for the team
+
+**Template**: `@references/vendor-doc.md`
+
+**Output location**: `$DOC_ROOT/vendor/{library}/README.md`
+
+**DOC_ROOT**: the root of where docs are stored (default to `$ROOT_DIR`, which is `./docs` unless overridden).
+
+**Structure requirements**:
+
+- Local bundles must include these sections: **Installation**, **Quickstart**, **Gotchas**, **Concepts**, **Topics**, **API Reference**.
+- Files must live under `$DOC_ROOT/vendor/{library}` (aka `$LIB_ROOT`).
+- API reference content goes in `$LIB_ROOT/reference/[docs].md`.
+- Topic deep-dives go in `$LIB_ROOT/topics/[name].md`.
+- Everything else goes in `$LIB_ROOT/README.md`.
+- All vendor doc files must end with the required ending sections.
+
 ## Required Ending Sections (All Docs)
 
 Every document created or revised using this skill must end with the following sections,
@@ -126,6 +149,22 @@ Create a to-do list with the following items then perform all of them:
    - **Open Questions**: List any possible bugs, issues, or areas of uncertainty around the design
    - **Potential Improvements**: List any ideas for future improvements or enhancements to the architecture
 
+### New Vendor Docs
+
+Create a to-do list with the following items then perform all of them:
+
+1. Collect the vendor docs URL endpoint and library name (infer the name from the docs if not provided).
+
+2. Review `$DOC_ROOT/vendor/` to see existing vendor docs and naming conventions.
+
+3. Identify which parts of the vendor library are actually used by the project (scan code, configs, and docs).
+
+4. Create `$DOC_ROOT/vendor/{library}/` with `reference/` and `topics/` subfolders.
+
+5. Copy `@references/vendor-doc.md` to `$DOC_ROOT/vendor/{library}/README.md`.
+
+6. Populate `reference/` and `topics/` files per the template, summarizing official docs with limited direct quotes and ensuring required sections exist.
+
 ## Best Practices
 
 ### Research Briefs
@@ -154,6 +193,13 @@ $ROOT_DIR/
     {date}-research-{topic}.md
   flows/             # Flow documentation
     {date}-flow-{topic}.md
+  vendor/            # Vendor documentation
+    {library}/
+      README.md
+      reference/
+        {docs}.md
+      topics/
+        {name}.md
 ```
 
 ## Path Convention
@@ -162,5 +208,6 @@ Throughout this skill, paths prefixed with `@` indicate paths from the skill roo
 
 - `@references/research-brief.md` -> `dev.research/references/research-brief.md`
 - `@references/flow-doc.md` -> `dev.research/references/flow-doc.md`
+- `@references/vendor-doc.md` -> `dev.research/references/vendor-doc.md`
 
 When you see `$ROOT_DIR/` referenced, resolve them relative to the project root directory.
