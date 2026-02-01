@@ -60,7 +60,7 @@ DEFAULT_STATUS_FIELD = "Status"
 DEFAULT_TODO_STATUS = "Todo"
 DEFAULT_CONFIG_PATH = "dev.watch.json"
 DEFAULT_TOKEN_ENV = "GITHUB_TOKEN"
-DEFAULT_STATE_FILE = "~/.dev-watch/state.json"
+DEFAULT_STATE_FILE = "~/.llm/skills/dev.watch/state.json"
 DEFAULT_POLL_INTERVAL = 60
 DEFAULT_LOOPS_PARALLEL = False
 
@@ -310,7 +310,8 @@ def main():
         return 2
 
     token_env = config.get("github_token_env", DEFAULT_TOKEN_ENV)
-    token = os.getenv(token_env)
+    # TODO: don't store in config
+    token = token_env or os.getenv(token_env)
     if not token:
         eprint(f"Missing GitHub token in env var: {token_env}")
         return 2

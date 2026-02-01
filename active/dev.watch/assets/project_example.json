@@ -1,0 +1,178 @@
+[
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9FczgkmjzE",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDORF0dd87nTXSB",
+            "url": "https://github.com/kevinslin/notion-agent-skill/issues/1",
+            "title": "sync should support syncing to relation fields",
+            "number": 1,
+            "repository": {"nameWithOwner": "kevinslin/notion-agent-skill"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Backlog",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+            ]
+        },
+    },
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9Fczgknw2o",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDORF0dd87naQQm",
+            "url": "https://github.com/kevinslin/notion-agent-skill/issues/8",
+            "title": "Add integration test for testing filter with `fetch` command",
+            "number": 8,
+            "repository": {"nameWithOwner": "kevinslin/notion-agent-skill"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Backlog",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+            ]
+        },
+    },
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9FczgkmxoA",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDORF0dd87nVSgg",
+            "url": "https://github.com/kevinslin/notion-agent-skill/issues/5",
+            "title": "support fetch command",
+            "number": 5,
+            "repository": {"nameWithOwner": "kevinslin/notion-agent-skill"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {"__typename": "ProjectV2ItemFieldLabelValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Done",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+            ]
+        },
+    },
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9FczgkmW9Y",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDOQyyzWs7nR7-t",
+            "url": "https://github.com/kevinslin/skills/issues/4",
+            "title": "Support doc from vendor notes",
+            "number": 4,
+            "repository": {"nameWithOwner": "kevinslin/skills"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Done",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+            ]
+        },
+    },
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9FczgkmBPA",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDOQyyzWs7nP1vx",
+            "url": "https://github.com/kevinslin/skills/issues/1",
+            "title": "Support promoting shortcut to skill",
+            "number": 1,
+            "repository": {"nameWithOwner": "kevinslin/skills"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Backlog",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+            ]
+        },
+    },
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9Fczgknw9E",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDOQyyzWs7naRUe",
+            "url": "https://github.com/kevinslin/skills/issues/8",
+            "title": "dev.do auto mode",
+            "number": 8,
+            "repository": {"nameWithOwner": "kevinslin/skills"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Backlog",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+            ]
+        },
+    },
+    {
+        "id": "PVTI_lAHOAAY-6c4BN9Fczgkm_zE",
+        "content": {
+            "__typename": "Issue",
+            "id": "I_kwDOQyyzWs7nWoYS",
+            "url": "https://github.com/kevinslin/skills/issues/7",
+            "title": "Test Issue",
+            "number": 7,
+            "repository": {"nameWithOwner": "kevinslin/skills"},
+        },
+        "fieldValues": {
+            "nodes": [
+                {"__typename": "ProjectV2ItemFieldRepositoryValue"},
+                {
+                    "__typename": "ProjectV2ItemFieldSingleSelectValue",
+                    "name": "Todo",
+                    "field": {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "name": "Status",
+                    },
+                },
+                {"__typename": "ProjectV2ItemFieldTextValue"},
+            ]
+        },
+    }
+]
