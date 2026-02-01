@@ -68,6 +68,8 @@ DEFAULT_LOOPS_PARALLEL = False
 def eprint(message):
     print(message, file=sys.stderr)
 
+def pprint(message):
+    print(message)
 
 def expand_path(path):
     return os.path.expandvars(os.path.expanduser(path))
@@ -181,7 +183,7 @@ def extract_issue(item):
     }
 
 
-def collect_events(config, state, emit_on_first_run):
+def collect_events(config, state, emit_on_first_run, force):
     events = []
     errors = []
     projects_state = state.setdefault("projects", {})
@@ -207,6 +209,9 @@ def collect_events(config, state, emit_on_first_run):
 
         prior_state = projects_state.get(project_key, {})
         initialized = project_key in projects_state
+        if force:
+            prior_state = {}
+            initialized = True
         next_state = {}
 
         for item in items:
@@ -248,6 +253,7 @@ def parse_args():
     parser.add_argument("--watch", action="store_true", help="Poll continuously.")
     parser.add_argument("--interval", type=int, help="Override poll interval in seconds.")
     parser.add_argument("--emit-on-first-run", action="store_true", help="Emit Todo transitions without existing state.")
+    parser.add_argument("--force", action="store_true", help="Ignore state file when determining eligibility.")
     return parser.parse_args()
 
 
@@ -290,6 +296,7 @@ def run_loops(event, config):
     cmd.append(task)
 
     try:
+        pprint(f"running {cmd}")
         subprocess.run(cmd, check=False, stdout=sys.stderr, stderr=sys.stderr)
     except OSError as err:
         eprint(f"Failed to run loops.sh: {err}")
@@ -329,7 +336,7 @@ def main():
     exit_code = 0
     while True:
         timestamp = datetime.now(timezone.utc).isoformat()
-        events, errors = collect_events(config, state, emit_on_first_run)
+        events, errors = collect_events(config, state, emit_on_first_run, args.force)
         payload = {
             "timestamp": timestamp,
             "events": events,
