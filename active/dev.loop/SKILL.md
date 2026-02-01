@@ -38,8 +38,8 @@ User will ask you to run dev.loop. Go through each phase under Workflow phases.
 
 ### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
-- After tests pass, create a PR and push it
-- Verify CI for the pushed branch is green; if it fails, fix, re-run tests, and push updates.
+- After tests pass, make sure everything is commited. `trigger:push-pr`
+- Verify CI for the pushed branch is green. `trigger:check-ci`
 - Address review feedback from coding agents; apply fixes, re-run tests, push, and re-check CI.
 - Notify the user when the work is ready.
 
