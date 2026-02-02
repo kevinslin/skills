@@ -301,6 +301,7 @@ def run_loops(event, config):
         env.setdefault("GH_TOKEN", token)
         token_env = config.get("github_token_env", DEFAULT_TOKEN_ENV)
         if token_env and re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", token_env):
+            print(f"bondy. set token: {token_env}: {token}")
             env.setdefault(token_env, token)
 
     try:
