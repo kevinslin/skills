@@ -1,6 +1,7 @@
 ---
 name: dev.watch
 description: Monitor GitHub Projects for issues moved to a Todo status and kick off dev.do intake. Use when asked to watch or subscribe to GitHub project board changes, triage issues moved into Todo, or automate task intake from project URLs.
+dependencies: [dev.do]
 ---
 
 # dev.watch
