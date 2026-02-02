@@ -1,7 +1,7 @@
 ---
 name: dev.research
-description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, and frequently asked questions (FAQ)
-version: 1.0.0
+description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, and frequently asked questions (FAQ)
+version: 1.1.0
 dependencies: [dev.llm-session]
 ---
 
@@ -19,6 +19,7 @@ Use this skill when:
 - Documenting findings for future reference
 - Creating formal research artifacts that can be shared with the team
 - Documenting the lifecycle of a behavior or request flow in the codebase
+- Drafting staff-level service design docs for new systems or services
 
 ## Root Directory
 
@@ -53,6 +54,19 @@ When describing flows, prefer TypeScript-like pseudocode to describe logic. Alwa
 **Template**: `@references/flow-doc.md`
 
 **Output location**: `$ROOT_DIR/flows/{YYYY-MM-DD}-{topic}.md`
+
+### Service Design Docs
+
+Service design docs are staff-level design documents for a new system or service. Use them when you need to:
+
+- Propose a new service or major system change
+- Define scope, users, and use cases
+- Document architecture, API surface, data, and reliability expectations
+- Capture security, risks, and open questions
+
+**Template**: `@references/design-doc.md`
+
+**Output location**: `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic}.md`
 
 ### Frequently Asked Questions (faq)
 
@@ -191,6 +205,8 @@ Research documentation lives in the project's docs folder:
 $ROOT_DIR/
   research/          # Research briefs
     {date}-research-{topic}.md
+  design/            # Service design docs
+    {date}-design-{topic}.md
   flows/             # Flow documentation
     {date}-flow-{topic}.md
   vendor/            # Vendor documentation
@@ -208,6 +224,7 @@ Throughout this skill, paths prefixed with `@` indicate paths from the skill roo
 
 - `@references/research-brief.md` -> `dev.research/references/research-brief.md`
 - `@references/flow-doc.md` -> `dev.research/references/flow-doc.md`
+- `@references/design-doc.md` -> `dev.research/references/design-doc.md`
 - `@references/vendor-doc.md` -> `dev.research/references/vendor-doc.md`
 
 When you see `$ROOT_DIR/` referenced, resolve them relative to the project root directory.
