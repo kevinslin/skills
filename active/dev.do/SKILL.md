@@ -1,6 +1,7 @@
 ---
 name: dev.do
 description: End-to-end development task intake and execution. Use when the user gives a dev task (feature/bug/refactor) as a file path, pasted description, or git issue and wants it completed; this skill gathers context, asks clarifying questions if needed, then runs the dev.loop workflow to deliver the change.
+dependencies: dev.llm-session
 ---
 
 # dev.do
@@ -15,6 +16,7 @@ Drive a single dev task from intake to completion: parse the task input, gather 
 
 - Identify the input type: file path, pasted description, or git issue/issue URL.
 - Capture the goal and any acceptance criteria or constraints.
+- If the task came in as a git issue, update the `Status` to `In progress`. Add the following comment: `Starting task in session [llm_session]`. Use dev.llm-session skill to get llm session id
 
 ### 2) Gather context
 
@@ -35,7 +37,6 @@ Drive a single dev task from intake to completion: parse the task input, gather 
 ### 4) Execute with dev.loop
 
 - Invoke the dev.loop skill to plan, implement, verify, and cleanup.
-- If the task came in as a git issue, update the `Status` to `In progress`
 - Pass along the task summary, relevant files, and any constraints/acceptance criteria.
 - When creating the PR, be sure to include the issue URL so that the PR can be linked to the issue
 
