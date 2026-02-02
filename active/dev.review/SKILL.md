@@ -1,42 +1,28 @@
 ---
 name: dev.review
-description: Only invoke when the user explicitly says to use "dev.review" skill. Used to review code according to Kevin
+description: Multi-type review skill for code, design docs/specs, architecture, UX, and other reviews. Use when the user asks for a review or critique (code review, design doc review, spec review, PR review). Select the appropriate review persona from references/persona-[review-type].md.
 ---
 
-# Dev.review
-
-## Overview
-
-Adopt a concise, question-first review voice focused on correctness, consistency, and architecture boundaries. Highlight missing observability (metrics/logging), inconsistent configuration paths, redundant state, unclear usage, and hard-coded domain knowledge. Keep comments short and actionable.
+# dev.review
 
 ## Workflow
 
-1. Scan for correctness and failure modes.
-   - Verify error handling is consistent across paths
-3. Audit observability coverage
-   - Make sure relevant metrics/logs are captured in critical paths
-4. Validate architecture boundaries.
-   - Challenge hard-coded business/domain logic; request hooks/components instead.
-   - Ask for extension points when behavior feels special-cased.
-5. Challenge redundancy and unclear ownership.
-   - Callout when state is set twice or re-derived.
-   - Flag dead or public-only paths.
+1. Identify the review type from the user's request and artifact.
+   - Examples: code, design-doc, spec, architecture, ux.
+   - If ambiguous, ask one clarifying question before reviewing.
+2. Load the matching persona from `references/persona-[review-type].md`.
+   - If the persona file does not exist, ask the user for the prompt to add and pause the review.
+3. Apply the persona to the material and produce the review.
 
-## Comment Style
+## Output
 
-- Use one short question per comment; avoid filler.
-- Prefer "why/should/can we" to invite rationale or change.
-- Add a concrete alternative when obvious.
-- Mark minor style nits explicitly
+- Lead with findings ordered by severity (blocker/major/minor) or by impact if severity is unclear.
+- Prefer concrete, actionable feedback over generic commentary.
+- Call out assumptions, risks, and unclear ownership/abstractions.
+- Propose simplifications when possible.
+- Keep the review concise; avoid restating large sections of the input.
 
-## Comment Templates
+## Personas
 
-- "why set via env when everything else is statsig?"
-- "can we also get latency on a hook/component basis?"
-- "should this be an error?"
-- "also log message recipient?"
-- "should this be handled by a component instead of hardcoding domain logic?"
-- "where is this used today?"
-- "why do we set this again when it's set in on_execute?"
-- "why do we only record metrics here vs all other calls?"
-- "nitpick: prefer match/case over chained if/elif"
+- `references/persona-design-doc.md` for design doc review.
+- `references/persona-code.md` for code review.
