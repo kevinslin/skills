@@ -1,7 +1,7 @@
 ---
 name: dev.research
 description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, and frequently asked questions (FAQ)
-version: 1.1.0
+version: 1.2.0
 dependencies: [dev.llm-session]
 ---
 
@@ -67,6 +67,20 @@ Service design docs are staff-level design documents for a new system or service
 **Template**: `@references/design-doc.md`
 
 **Output location**: `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic}.md`
+
+### Validation Specs
+
+Validation specs capture what testing has been completed and what validation still needs to be done for a spec. Use them when you need to:
+
+- Pair with a plan/implementation spec to review test coverage
+- Document remaining automated validation work
+- Provide a clear, manual validation checklist for the user
+
+Validation specs should always reference the plan and implementation specs being validated.
+
+**Template**: `@references/validation-spec.md`
+
+**Output location**: `$ROOT_DIR/project/specs/active/valid-{YYYY-MM-DD}-{topic}.md` (match the plan spec filename stem)
 
 ### Frequently Asked Questions (faq)
 
@@ -209,6 +223,10 @@ $ROOT_DIR/
     {date}-design-{topic}.md
   flows/             # Flow documentation
     {date}-flow-{topic}.md
+  project/
+    specs/
+      active/
+        valid-{date}-{topic}.md
   vendor/            # Vendor documentation
     {library}/
       README.md
@@ -225,6 +243,7 @@ Throughout this skill, paths prefixed with `@` indicate paths from the skill roo
 - `@references/research-brief.md` -> `dev.research/references/research-brief.md`
 - `@references/flow-doc.md` -> `dev.research/references/flow-doc.md`
 - `@references/design-doc.md` -> `dev.research/references/design-doc.md`
+- `@references/validation-spec.md` -> `dev.research/references/validation-spec.md`
 - `@references/vendor-doc.md` -> `dev.research/references/vendor-doc.md`
 
 When you see `$ROOT_DIR/` referenced, resolve them relative to the project root directory.
