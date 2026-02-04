@@ -1,7 +1,7 @@
 ---
 name: dev.research
 description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, and frequently asked questions (FAQ)
-version: 1.2.0
+version: 1.3.0
 dependencies: [dev.llm-session]
 ---
 
@@ -40,9 +40,9 @@ Research briefs are comprehensive documents for technical investigations. Use th
 
 **Output location**: `$ROOT_DIR/research/{YYYY-MM-DD}-research-{topic}.md`
 
-### Flow Docs
+### Flow Docs (Normal)
 
-Flow docs are mini architecture documents that describe the lifecycle of a behavior in the codebase. Use them when you need to:
+Normal flow docs are mini architecture documents that describe the lifecycle of a behavior in the codebase. Use them when you need to:
 
 - Document how a system bootstraps or initializes
 - Describe the lifecycle of an API request
@@ -56,6 +56,27 @@ Any lines that have `// manual` at the end - keep the line consistent across upd
 
 **Output location**: `$ROOT_DIR/flows/{YYYY-MM-DD}-{topic}.md`
 
+### Flow Docs (End2End)
+
+End2End flow docs are extremely detailed lifecycle documents with a full inventory of every logic step from the beginning of a lifecycle to the end. Use them when you need to:
+
+- Perform deep debugging where missing a single branch can cause incorrect conclusions
+- Create audit-grade lifecycle documentation for handoffs or incident analysis
+- Capture all branching, retries, validation gates, and failure paths
+- Trace every meaningful state mutation and external side effect
+
+End2End requirements:
+
+- Cover the full lifecycle boundary: entrypoint(s), terminal states, and out-of-scope boundaries
+- Include a complete logic inventory with step IDs and source citations
+- Document all conditional branches, retry loops, and error handling paths
+- Capture data/state mutations, external calls, metrics, and logs for each step where applicable
+- Use TypeScript-like pseudocode and cite every referenced logic source
+
+**Template**: `@references/flow-doc-end2end.md`
+
+**Output location**: `$ROOT_DIR/flows/{YYYY-MM-DD}-end2end-{topic}.md`
+
 ### Service Design Docs
 
 Service design docs are staff-level design documents for a new system or service. Use them when you need to:
@@ -68,6 +89,13 @@ Service design docs are staff-level design documents for a new system or service
 **Template**: `@references/design-doc.md`
 
 **Output location**: `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic}.md`
+
+**Required for implementation handoff**:
+
+- Include `Work Packages` with stable IDs (for example: `WP-01`).
+- For each package, include In Scope, Out of Scope, Acceptance Criteria, and Dependencies.
+- Include both a Mermaid dependency graph and a machine-readable handoff manifest (YAML).
+- Keep package decomposition atomic; downstream execution plans must consume this decomposition directly.
 
 ### Validation Specs
 
@@ -149,7 +177,7 @@ Create a to-do list with the following items then perform all of them:
 
 3. Begin to fill in the new research brief based on the user's instructions, stopping and asking for clarifications as soon as you need them
 
-### New Flow Doc
+### New Flow Doc (Normal)
 
 Create a to-do list with the following items then perform all of them:
 
@@ -161,6 +189,21 @@ Create a to-do list with the following items then perform all of them:
    - Use kebab-case for the topic slug (e.g., `flows/2025-01-15-api-request-lifecycle.md`)
 
 4. Begin to fill in the new flow document based on the user's instructions, stopping and asking for clarifications as soon as you need them
+
+### New End2End Flow Doc
+
+Create a to-do list with the following items then perform all of them:
+
+1. Review existing architecture documents and understand the relevant architectural patterns used in the project
+
+2. Review existing flow documents in `$ROOT_DIR/flows/` and understand the relevant flows used in this project
+
+3. Copy `@references/flow-doc-end2end.md` to `$ROOT_DIR/flows/{YYYY-MM-DD}-end2end-{topic-slug}.md`
+   - Use kebab-case for the topic slug (e.g., `flows/2025-01-15-end2end-api-request-lifecycle.md`)
+
+4. Perform a comprehensive code walk across the full lifecycle so every logic step is inventoried
+
+5. Begin to fill in the new end2end flow document based on the user's instructions, stopping and asking for clarifications as soon as you need them
 
 ### Revise Flow Doc
 
@@ -174,7 +217,9 @@ Create a to-do list with the following items then perform all of them:
 
 4. Revise the document to ensure it is accurate and complete, reflecting the current state of the codebase and flow. Preserve the structure and style as closely as possible but revise all needed portions.
 
-5. At the end include a "Future Considerations" section with the following subsections:
+5. If the document is an end2end flow doc, verify it has an explicit complete inventory of every logic step from lifecycle start to lifecycle end, including all branch/retry/error paths.
+
+6. At the end include a "Future Considerations" section with the following subsections:
    - **Open Questions**: List any possible bugs, issues, or areas of uncertainty around the design
    - **Potential Improvements**: List any ideas for future improvements or enhancements to the architecture
 
@@ -204,13 +249,21 @@ Create a to-do list with the following items then perform all of them:
 - **Be objective**: Present pros and cons fairly in comparative analysis
 - **Summarize actionably**: Recommendations should be clear and implementable
 
-### Flow Docs
+### Flow Docs (Normal)
 
 - **Focus on lifecycle**: Emphasize execution sequence, not just static component structure
 - **Link related docs**: Reference architecture docs, specs, or research notes when available
 - **Keep it narrow**: One behavior or lifecycle per document
 - **Use pseudocode**: TypeScript-like pseudocode makes logic clear
 - **Cite files**: Always include file paths where logic occurs
+
+### Flow Docs (End2End)
+
+- **Inventory first**: Include a complete step-by-step inventory with stable step IDs
+- **No skipped logic**: Include every meaningful branch, retry, validation, and error path
+- **Lifecycle complete**: Start at explicit entrypoint(s) and end at all terminal states
+- **Capture side effects**: Record state mutations, external calls, metrics, and logs with citations
+- **Make verification easy**: Ensure each inventory row maps directly to source files and pseudocode
 
 ## Directory Structure
 
@@ -223,7 +276,8 @@ $ROOT_DIR/
   design/            # Service design docs
     {date}-design-{topic}.md
   flows/             # Flow documentation
-    {date}-flow-{topic}.md
+    {date}-{topic}.md
+    {date}-end2end-{topic}.md
   project/
     specs/
       active/
@@ -243,6 +297,7 @@ Throughout this skill, paths prefixed with `@` indicate paths from the skill roo
 
 - `@references/research-brief.md` -> `dev.research/references/research-brief.md`
 - `@references/flow-doc.md` -> `dev.research/references/flow-doc.md`
+- `@references/flow-doc-end2end.md` -> `dev.research/references/flow-doc-end2end.md`
 - `@references/design-doc.md` -> `dev.research/references/design-doc.md`
 - `@references/validation-spec.md` -> `dev.research/references/validation-spec.md`
 - `@references/vendor-doc.md` -> `dev.research/references/vendor-doc.md`
