@@ -50,6 +50,7 @@ Flow docs are mini architecture documents that describe the lifecycle of a behav
 - Help LLMs and humans quickly recapture context on a particular part of the code
 
 When describing flows, prefer TypeScript-like pseudocode to describe logic. Always include citations to files where logic occurs.
+Any lines that have `// manual` at the end - keep the line consistent across updates of the flow doc.
 
 **Template**: `@references/flow-doc.md`
 
