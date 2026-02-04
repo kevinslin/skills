@@ -54,7 +54,7 @@
 
 ---
 
-## 4. API / Interface
+## 4. API / Interface 
 
 * Interface type: REST / gRPC / Events / Queue
 * Versioning approach
@@ -82,20 +82,7 @@ POST /v1/...
 
 ---
 
-## 6. Scale & Reliability (Answer honestly)
-
-* Expected QPS (now / 6 months)
-* Latency target (p95)
-* Availability target (best effort / 99.9 / etc.)
-
-**Failure Behavior**
-
-* What happens if dependencies fail?
-* What breaks first?
-
----
-
-## 7. Security & Safety (Brief)
+## 6. Security & Safety (Brief)
 
 * AuthN / AuthZ model
 * Any PII or sensitive data?
@@ -121,6 +108,29 @@ POST /v1/...
 ## 10. MVP
 
 [What does mvp look like]
+
+## 11. Testing
+
+[Comprehensive testing plan. Both automatic and Manual]
+
+## 12. FAQ
+
+[Any additional questions to change]
+
+## Additional Sections (Optional - only include this if user has asked for it )
+
+### Scale & Reliability (Answer honestly) 
+
+* Expected QPS (now / 6 months)
+* Latency target (p95)
+* Availability target (best effort / 99.9 / etc.)
+
+**Failure Behavior**
+
+* What happens if dependencies fail?
+* What breaks first?
+
+---
 
 ## Appendix (Optional)
 
