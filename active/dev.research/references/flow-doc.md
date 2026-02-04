@@ -17,7 +17,7 @@ Last updated: YYYY-MM-DD
 
 ### [DESCRIPTION OF INITIAL STATE]
 
-- `path/to/file`
+- `path/to/file` ([approximate line range])
 ```
 [PSEUDO Code going over flow logic]
 ```
