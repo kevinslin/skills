@@ -13,13 +13,19 @@ Create a to-do list with the following items then perform all of them:
 4. If using a worktree, create one for the PR branch (for example `../<repo>-pr-<number>`)
    and check out the branch there. Otherwise, check out the PR branch in the current repo.
 
-5. Review PR comments and requested changes using `gh pr view <pr> --comments` and
-   `gh pr diff <pr>`. Ask the user if any feedback is unclear.
+5. Review PR comments and requested changes:
+   - Use `gh pr view <pr> --comments` and `gh pr diff <pr>` for general context.
+   - Enumerate inline review threads explicitly (do not rely only on `gh pr view --comments`).
+     Preferred: `gh api graphql` to list `reviewThreads` (includes thread ids + isResolved).
+     Alternative: `gh api repos/<owner>/<repo>/pulls/<n>/comments` for inline comments.
+   - Avoid `gh pr view --json reviewThreads` (unsupported).
+   Ask the user if any feedback is unclear.
 
 6. Address all requested changes (including tests/docs when relevant).
 
-7. trigger:commit-code
+7. trigger:commit-code -> trigger:push-pr
 
-8. Push the branch updates to the PR remote.
+8. Resolve addressed review threads (via `resolveReviewThread` GraphQL mutation or reply)
+   and leave comments for any outstanding work.
 
 9. trigger:check-ci
