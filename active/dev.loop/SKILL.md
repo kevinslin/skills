@@ -40,6 +40,7 @@ User will ask you to run dev.loop. Go through each phase under Workflow phases.
 - Run the tests specified in the plan and ensure they pass.
 - After tests pass, make sure everything is committed. `trigger:push-pr`
 - Verify CI for the pushed branch is green. `trigger:check-ci`
+- Use $dev.review skill to do a critical code review of changes. Add findings as comments to the PR
 - Address review feedback from coding agents and humans; apply fixes, re-run tests, push, and re-check CI.
 - Notify the user when the work is ready.
 
