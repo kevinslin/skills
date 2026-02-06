@@ -23,7 +23,7 @@
 - Capture state/data mutations, external calls, metrics, and logs where applicable.
 - Use TypeScript-like pseudocode and cite every referenced logic source.
 
-## Shortcut
+## Instructions
 
 1. Review architecture docs and relevant project patterns.
 2. Review existing flow docs in `$ROOT_DIR/flows/`.

@@ -15,7 +15,7 @@
 
 - `$ROOT_DIR/research/{YYYY-MM-DD}-research-{topic}.md`
 
-## Shortcut
+## Instructions
 
 1. Review `$ROOT_DIR/research/` to see recent research briefs.
 2. Copy `@references/research-brief/template.md` to `$ROOT_DIR/research/{YYYY-MM-DD}-research-{topic-slug}.md`.

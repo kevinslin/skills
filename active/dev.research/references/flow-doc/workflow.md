@@ -21,7 +21,7 @@
 - Cite files where logic occurs.
 - Preserve any line ending with `// manual` exactly across updates.
 
-## Shortcut
+## Instructions
 
 1. Review existing architecture documents and relevant patterns used in the project.
 2. Review existing flow docs in `$ROOT_DIR/flows/` for consistency.
@@ -29,7 +29,7 @@
 4. Use kebab-case for the topic slug (for example: `flows/2025-01-15-api-request-lifecycle.md`).
 5. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
 
-## Shortcut: Revise Flow Doc
+## Instructions: Revise Flow Doc
 
 1. Read the given flow document.
 2. Read all code referenced in the document.

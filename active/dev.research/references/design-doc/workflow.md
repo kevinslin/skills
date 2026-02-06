@@ -15,7 +15,7 @@
 
 - `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic}.md`
 
-## Shortcut
+## Instructions
 
 1. Review existing design docs under `$ROOT_DIR/design/` to align with local conventions.
 2. Copy `@references/design-doc/template.md` to `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic-slug}.md`.
