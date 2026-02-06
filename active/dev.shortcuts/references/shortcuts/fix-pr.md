@@ -23,7 +23,7 @@ Create a to-do list with the following items then perform all of them:
 
 6. Address all requested changes (including tests/docs when relevant).
 
-7. trigger:commit-code -> trigger:push-pr
+7. trigger:commit-code -> trigger:push-code
 
 8. Resolve addressed review threads (via `resolveReviewThread` GraphQL mutation or reply)
    and leave comments for any outstanding work.
