@@ -13,7 +13,7 @@ Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-
 - [dev.gh](active/dev.gh/SKILL.md): GitHub CLI operations
 - [dev.lint](active/dev.lint/SKILL.md): lint project
 - [dev.mermaid](active/dev.mermaid/SKILL.md): Generate Mermaid diagrams with proper syntax. Use when creating flowcharts, sequence diagrams, class diagrams, or any other Mermaid visualizations. Ensures correct label quoting to prevent parsing errors.
-- [dev.recipe](active/dev.recipe/SKILL.md): This skill should be used when capturing or applying service-scoped change recipes stored under references/<service>/.
+- [dev.recipe](active/dev.recipe/SKILL.md): Legacy compatibility wrapper for recipe requests. Recipes are now a document type in dev.research.
 - [dev.shortcuts](active/dev.shortcuts/SKILL.md): Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request.
 - [find-links](active/find-links/SKILL.md): This skill should be used when the user wants to fill in TODO links, placeholder links, or missing links in markdown files. Invoke when the user mentions "fill links", "TODO links", "find links", or asks to add appropriate links to concepts in a document.
 - [gen-notifier](active/gen-notifier/SKILL.md): Generic desktop notification skill for agents. Send desktop notifications when tasks are complete (or when user input/errors block progress). By default, assume that all jobs will require a notification unless the user says otherwise.
