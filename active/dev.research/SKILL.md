@@ -1,7 +1,7 @@
 ---
 name: dev.research
 description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, and frequently asked questions (FAQ)
-version: 1.4.1
+version: 1.4.2
 dependencies: [dev.llm-session]
 ---
 
@@ -41,7 +41,7 @@ Document types are listed here. Read each document type workflow for details, re
 ## Common Instructions (All Doc Types)
 
 1. Find the requested doc type workflow at `@references/[doc-type]/workflow.md`.
-2. Follow the `Shortcut` header in that workflow to do the implementation.
+2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `@references/[doc-type]/template.md` to the requested output location before filling in content.
 
 ## Shared References
@@ -71,24 +71,24 @@ When invoked, follow the mapped workflow section exactly.
 
 ### New Research Brief
 
-- Follow `@references/research-brief/workflow.md` section `Shortcut`.
+- Follow `@references/research-brief/workflow.md` section `Instructions`.
 
 ### New Flow Doc (Normal)
 
-- Follow `@references/flow-doc/workflow.md` section `Shortcut`.
+- Follow `@references/flow-doc/workflow.md` section `Instructions`.
 
 ### New End2End Flow Doc
 
-- Follow `@references/flow-doc-end2end/workflow.md` section `Shortcut`.
+- Follow `@references/flow-doc-end2end/workflow.md` section `Instructions`.
 
 ### Revise Flow Doc
 
-- Follow `@references/flow-doc/workflow.md` section `Shortcut: Revise Flow Doc`.
+- Follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
 - If the doc is end2end, also apply `@references/flow-doc-end2end/workflow.md` section `Revision Requirements`.
 
 ### New Vendor Docs
 
-- Follow `@references/vendor-doc/workflow.md` section `Shortcut`.
+- Follow `@references/vendor-doc/workflow.md` section `Instructions`.
 
 ## Best Practices
 

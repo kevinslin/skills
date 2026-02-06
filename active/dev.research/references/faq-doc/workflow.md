@@ -13,7 +13,7 @@
 
 - `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic}.md`
 
-## Shortcut
+## Instructions
 
 1. Capture the question being asked and gather supporting code references.
 2. Copy `@references/faq-doc/template.md` to `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic-slug}.md`.

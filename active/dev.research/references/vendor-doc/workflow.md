@@ -27,7 +27,7 @@
 - Place overview content in `$LIB_ROOT/README.md`.
 - Ensure all vendor doc files end with required ending sections.
 
-## Shortcut
+## Instructions
 
 1. Collect docs URL endpoint and library name (infer name if omitted).
 2. Review `$DOC_ROOT/vendor/` for existing naming conventions.
