@@ -1,7 +1,7 @@
 ---
 name: dev.research
-description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, and frequently asked questions (FAQ)
-version: 1.4.2
+description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, recipes, and frequently asked questions (FAQ)
+version: 1.5.0
 dependencies: [dev.llm-session]
 ---
 
@@ -20,6 +20,7 @@ Use this skill when:
 - Creating formal research artifacts that can be shared with the team
 - Documenting the lifecycle of a behavior or request flow in the codebase
 - Drafting staff-level service design docs for new systems or services
+- Capturing reproducible change recipes from a current conversation or PR
 
 ## Root Directory
 
@@ -35,6 +36,7 @@ Document types are listed here. Read each document type workflow for details, re
 - Flow Docs (End2End): `@references/flow-doc-end2end/workflow.md`
 - Service Design Docs: `@references/design-doc/workflow.md`
 - Validation Specs: `@references/validation-spec/workflow.md`
+- Recipes: `@references/recipe/workflow.md`
 - Frequently Asked Questions (FAQ): `@references/faq-doc/workflow.md`
 - Vendor Docs: `@references/vendor-doc/workflow.md`
 
@@ -86,6 +88,10 @@ When invoked, follow the mapped workflow section exactly.
 - Follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
 - If the doc is end2end, also apply `@references/flow-doc-end2end/workflow.md` section `Revision Requirements`.
 
+### New Recipe
+
+- Follow `@references/recipe/workflow.md` section `Instructions`.
+
 ### New Vendor Docs
 
 - Follow `@references/vendor-doc/workflow.md` section `Instructions`.
@@ -109,6 +115,8 @@ $ROOT_DIR/
   flows/             # Flow documentation
     {date}-{topic}.md
     {date}-end2end-{topic}.md
+  recipes/           # Change recipes
+    {recipe-name}.md
   project/
     specs/
       active/
@@ -138,6 +146,8 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/design-doc/template.md` -> `dev.research/references/design-doc/template.md`
 - `@references/validation-spec/workflow.md` -> `dev.research/references/validation-spec/workflow.md`
 - `@references/validation-spec/template.md` -> `dev.research/references/validation-spec/template.md`
+- `@references/recipe/workflow.md` -> `dev.research/references/recipe/workflow.md`
+- `@references/recipe/template.md` -> `dev.research/references/recipe/template.md`
 - `@references/faq-doc/workflow.md` -> `dev.research/references/faq-doc/workflow.md`
 - `@references/faq-doc/template.md` -> `dev.research/references/faq-doc/template.md`
 - `@references/vendor-doc/workflow.md` -> `dev.research/references/vendor-doc/workflow.md`
