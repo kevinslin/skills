@@ -18,7 +18,7 @@ Use this skill when the user:
 All filepaths mentioned is relative to the $ROOT_DIR. Unless overridden elsewhere, the $ROOT_DIR is `./docs` (relative to the project root directorey)
 
 ## Recipe format and location
-- Path: `$ROOT_DIR/recipes/<recipe-name>.md`
+- $RECIPES_ROOT:`$ROOT_DIR/recipes/<recipe-name>.md`
 - Naming: kebab-case filenames ending in `.md` (example: `extract-connector-id.md`)
 - Required frontmatter fields:
   - `commit`: current `HEAD` commit hash
@@ -55,7 +55,7 @@ files:
    - use `git diff` or file inspection to capture the actual changes
 3. Gather required metadata:
    - `commit`: `git rev-parse HEAD`
-   - `agent_session_id`: read from an available session env var (`CODEX_SESSION_ID`, `AGENT_SESSION_ID`, or similar). If none is present, ask the user; if unavailable, use `unknown`.
+   - `agent_session_id`: use $dev.llm-session skill to discover
    - `updated`: `date -u +%Y-%m-%dT%H:%M:%SZ`
    - `files`: list only the files the recipe modifies
 4. Create the recipe file at `references/<service>/<recipe-name>.md`.
