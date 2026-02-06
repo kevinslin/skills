@@ -1,12 +1,12 @@
 ---
 name: meta.learn
-description: learn from the current session
+description: learn from the current session or run a time-bounded review across sessions
 version: 0.0.0
 ---
 
 # Learn
 
-Learn from current session
+Learn from the current session, or run a multi-session review over a time interval.
 
 ## Capabilities
 
@@ -15,9 +15,17 @@ Learn from current session
 - identify areas of optimization that could improve the speed or quality of this task in the future
 
 ## Workflow
+### Default (current session)
 1. Review the full conversation and list any points where you made a mistake or were uncertain.
 2. For each item, write a short analysis using the required template.
 3. If there are no mistakes or uncertainties, state that explicitly.
+
+### Review mode: `review [time interval] [path]`
+Use this mode when the user asks to "review [time interval] [path]".
+1. Use `dev.llm-session` to find all sessions in the requested time interval.
+2. If `[path]` is provided, filter to sessions whose working directory is within that path (prefix match on absolute paths). If the interval or path is ambiguous, ask a clarifying question before proceeding.
+3. For each matching session, repeat the Default workflow and produce a separate output file per session.
+4. If no sessions match, state that explicitly.
 
 ## Required Output Template
 
@@ -37,4 +45,4 @@ Use this exact structure for each item to create a numbered list:
 [what to remember to not make this mistake again]
 ```
 
-Write learnings to $HOME/.llm/skills/learn/{skillname}-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task].md. Use `dev.llm-session` skill to get session id. If `$HOME/.llm/skills/learn` does not exist, create it.
+Write learnings to $HOME/.llm/skills/learn/{skillname}-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task].md. Use `dev.llm-session` skill to get session id(s). If `$HOME/.llm/skills/learn` does not exist, create it.
