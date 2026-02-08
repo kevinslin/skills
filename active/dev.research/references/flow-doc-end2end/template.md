@@ -21,11 +21,16 @@ Last updated: YYYY-MM-DD
 
 ## Full Logic Inventory
 
-| Step ID | Stage | Logic Summary | Condition/Branch | Inputs | Outputs/State Mutation | Side Effects (calls/metrics/logs) | Source |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| E2E-001 | [Stage name] | [What logic happens] | [If/else/retry predicate] | [Input data] | [Mutations/results] | [Calls, metrics, logs] | `path/to/file.ts` ([line range]) |
+### E2E-001 - [Stage name]
 
-[Add rows until every meaningful logic step from entrypoint to terminal states is represented.]
+- **Logic Summary:** [What logic happens]
+- **Condition/Branch:** [If/else/retry predicate]
+- **Inputs:** [Input data]
+- **Outputs/State Mutation:** [Mutations/results]
+- **Side Effects (calls/metrics/logs):** [Calls, metrics, logs]
+- **Source:** `path/to/file.ts` ([line range])
+
+[Add sections until every meaningful logic step from entrypoint to terminal states is represented.]
 
 ## Detailed Flow Pseudocode
 
