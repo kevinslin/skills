@@ -29,3 +29,5 @@ Create a to-do list with the following items then perform all of them:
    and leave comments for any outstanding work.
 
 9. trigger:check-ci
+
+10. Summarize changes made
