@@ -57,16 +57,15 @@
 ## 4. API / Interface 
 
 * Interface type: REST / gRPC / Events / Queue
-* Versioning approach
 
-**Endpoints / Contracts**
+**Endpoints / Contracts** (Optional - add if necessary)
 
 ```text
 GET  /v1/...
 POST /v1/...
 ```
 
-**Notable Decisions**
+**Notable Decisions** (Optional - add if necessary)
 
 * Idempotency?
 * Retries?
@@ -82,7 +81,7 @@ POST /v1/...
 
 ---
 
-## 6. Security & Safety (Brief)
+## 6. Security & Safety (Brief - add if necessary)
 
 * AuthN / AuthZ model
 * Any PII or sensitive data?
@@ -97,7 +96,7 @@ POST /v1/...
 
 ---
 
-## 9. Risks & Open Questions
+## 9. Risks & Open Questions (Add if necessary)
 
 * Known risks
 * Unknowns
