@@ -4,11 +4,11 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
-1. Review @docs/project/specs/active/ to see the list of recent feature specs, feature
+1. Review @docs/project/sepcs/ to see the list of recent feature specs, feature
    plans, and implementation spec docs.
 
 2. Copy @docs/project/specs/template-plan-spec.md to
-   @docs/project/specs/active/plan-YYYY-MM-DD-feature-some-description.md (filling in
+   @docs/project/sepcs/plan-YYYY-MM-DD-feature-some-description.md (filling in
    the date and an appropriate description of the feature)
 
 3. Begin to fill in the new feature plan doc based on the user’s instructions, stopping

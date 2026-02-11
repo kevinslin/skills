@@ -9,7 +9,7 @@ Create a to-do list with the following items then perform all of them:
 1. **Confirm spec is in sync:**
 
    If the work has been done using a feature spec or bugfix spec (typically in
-   @docs/project/specs/active/) review and make any updates to the spec to be sure it is current with respect to the current code.
+   @docs/project/sepcs/) review and make any updates to the spec to be sure it is current with respect to the current code.
 
    Add any status updates to the spec to include accomplished tasks and remaining tasks, if any.
 
