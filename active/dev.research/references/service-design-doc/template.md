@@ -105,9 +105,38 @@ POST /v1/...
 
 ---
 
-## 10. MVP
+## 10. Planning & Milestones
 
-[What does mvp look like]
+Every milestone must ship a significant and verifiable piece of functionality.
+
+### Milestone 1: {name}
+
+**Shipped functionality:** [one sentence]
+
+Tasks:
+- [concrete task]
+- [concrete task]
+
+Verification:
+- [explicit verification]
+- [explicit verification]
+
+### Milestone 2: {name}
+
+**Shipped functionality:** [one sentence]
+
+Tasks:
+- [concrete task]
+- [concrete task]
+
+Verification:
+- [explicit verification]
+- [explicit verification]
+
+### Milestone dependencies
+
+- [M2 depends on M1]
+- [parallelizable work]
 
 ## 11. Testing
 
