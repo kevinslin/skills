@@ -1,6 +1,6 @@
-# Beads Usage with Execution Plans
+# Beads Usage with Feature Specs
 
-Use beads to track each phase of the execution plan so progress and dependencies are
+Use beads to track each phase of the feature spec so progress and dependencies are
 durable across sessions.
 
 ## Read project instructions first

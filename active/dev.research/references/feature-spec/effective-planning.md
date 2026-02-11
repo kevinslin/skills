@@ -1,6 +1,6 @@
 # Effective Planning Guide
 
-This reference provides guidance for creating high-quality execution plans that maximize clarity and effectiveness.
+This reference provides guidance for creating high-quality feature specs (execution plans) that maximize clarity and effectiveness.
 
 ## Principles of Effective Planning
 
@@ -158,7 +158,7 @@ The standard template is comprehensive but should be adapted:
 
 ## Integration with Development Workflow
 
-Effective execution plans integrate with development practices:
+Effective feature specs integrate with development practices:
 - **Version control**: Commit plans with code for traceability
 - **Reference in commits**: Link commits to plan sections
 - **Update in PRs**: Note plan updates in pull request descriptions
