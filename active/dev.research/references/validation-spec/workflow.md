@@ -10,15 +10,14 @@
 
 - `@references/validation-spec/template.md`
 
-## Output Location
-
-- `$ROOT_DIR/project/specs/active/valid-{YYYY-MM-DD}-{topic}.md`
-- Match the plan spec filename stem.
+## Constants
+- %%OUTPUT_DIR: $ROOT_DIR/specs/
+- %%OUTPUT_FILE: %%OUTPUT_DIR/validation-{YYYY-MM-DD}-{topic}.md
 
 ## Instructions
 
 1. Identify the plan and implementation specs being validated.
-2. Copy `@references/validation-spec/template.md` to `$ROOT_DIR/project/specs/active/valid-{YYYY-MM-DD}-{topic}.md`.
+2. Copy `@references/validation-spec/template.md` to %%OUTPUT_FILE.
 3. Fill in validation status and remaining manual checks based on current implementation and tests.
 
 ## Authoring Requirements
