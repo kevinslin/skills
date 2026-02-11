@@ -32,7 +32,7 @@
 [High-level design or architectural approach]
 
 ### Technology Stack
-- [Languages, frameworks, libraries to be used]
+- [frameworks, libraries to be used]
 
 ### Integration Points
 [How this work integrates with existing systems or services]
@@ -49,8 +49,7 @@
 
 ### Phase 1: [Name]
 - [ ] Step 1
-- [ ] Step 2
-- [ ] Step 3
+- ...
 
 [Add more phases as needed]
 
