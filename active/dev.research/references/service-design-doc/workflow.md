@@ -1,4 +1,4 @@
-# Service Design Workflow
+# Service Design Doc Workflow
 
 ## Use When
 
@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/design-doc/template.md`
+- `@references/service-design-doc/template.md`
 
 ## Output Location
 
@@ -18,7 +18,7 @@
 ## Instructions
 
 1. Review existing design docs under `$ROOT_DIR/design/` to align with local conventions.
-2. Copy `@references/design-doc/template.md` to `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic-slug}.md`.
+2. Copy `@references/service-design-doc/template.md` to `$ROOT_DIR/design/{YYYY-MM-DD}-design-{topic-slug}.md`.
 3. Fill in the design doc based on user requirements, stopping for clarifications when needed.
 
 ## Required for Implementation Handoff
