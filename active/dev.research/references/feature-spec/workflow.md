@@ -13,11 +13,11 @@
 
 ## Output Location
 
-- `$ROOT_DIR/specs/active/{YYYY-MM-DD}-{title-in-kebab-case}.md`
+- `$ROOT_DIR/sepcs/{YYYY-MM-DD}-{title-in-kebab-case}.md`
 
 ## Instructions
 
-1. Review related docs under `$ROOT_DIR/specs/active/`, `$ROOT_DIR/specs/`, and `$ROOT_DIR/flows/` to align naming and known behavior.
+1. Review related docs under `$ROOT_DIR/sepcs/`, `$ROOT_DIR/specs/`, and `$ROOT_DIR/flows/` to align naming and known behavior.
 2. Copy `@references/feature-spec/template.md` to the output location.
 3. Fill all sections with concrete, source-backed details from the repository and current task context.
 4. Use `@references/feature-spec/effective-planning.md` for planning quality standards.
