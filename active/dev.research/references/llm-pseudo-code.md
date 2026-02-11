@@ -13,6 +13,7 @@ LPC has high level operators that should be used regardless of the underlying la
 ## Additional Notes
 - remove unecessary `()` functions that take no arguments
 - remove `;` from end of lines
+- NEVER CHANGE the name of variables or functions when writing in pseudocode. we want to be be able to still find the original code via `rg` 
 
 ## Example
 
