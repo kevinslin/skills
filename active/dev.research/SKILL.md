@@ -13,6 +13,7 @@ This skill creates structured research artifacts for codebase exploration and fe
 
 Use this skill when:
 
+- Creating or updating any of the avilable document types
 - Investigating a new technology, library, or approach before implementation
 - Exploring unfamiliar parts of a codebase
 - Comparing multiple solutions or approaches
@@ -99,9 +100,17 @@ When invoked, follow the mapped workflow section exactly.
 
 - Follow `@references/feature-spec/workflow.md` section `Instructions`.
 
-### Revise Flow Doc
+### Revise or Updating Flow Docs
 
-- Follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
+When updating existing flow docs, use a preservation-first revision style.
+
+1. Preserve existing structure and detail by default; do not rewrite large sections unless required.
+2. Prefer additive edits: add targeted clarifications, corrections, and cross-references.
+3. If the user asked specific questions, answer them in focused subsections tied to concrete file citations.
+4. Keep `## Manual Notes` and its content unchanged across revisions.
+5. Before finalizing, run a scope check: if the diff removes unrelated detail or broadens beyond request, reduce to a minimal targeted patch.
+
+- For more details, follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
 - If the doc is end2end, also apply `@references/flow-doc-end2end/workflow.md` section `Revision Requirements`.
 
 ### New Recipe

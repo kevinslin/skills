@@ -34,9 +34,13 @@
 1. Read the given flow document.
 2. Read all code referenced in the document.
 3. Systematically review related code to identify gaps, inaccuracies, and stale sections.
-4. Revise the doc so it matches current code while preserving style and structure where possible.
-5. If the document is end2end, verify explicit lifecycle-complete inventory coverage across branch, retry, and error paths.
-6. Add a `Future Considerations` section with `Open Questions` and `Potential Improvements`.
+4. Revise the doc so it matches current code while preserving style, structure, and existing useful detail where possible.
+5. Prefer additive edits over broad rewrites; remove or reshape major sections only when they are inaccurate or explicitly requested.
+6. Keep `## Manual Notes` and its content unchanged across revisions.
+7. If the request includes specific questions, add focused clarifications that answer each question directly with file citations.
+8. If the document is end2end, verify explicit lifecycle-complete inventory coverage across branch, retry, and error paths.
+9. Add a `Future Considerations` section with `Open Questions` and `Potential Improvements`.
+10. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
 
 ## Best Practices
 
