@@ -1,6 +1,6 @@
 ---
 name: dev.loop
-description: Drive a development task end-to-end from a user-stated goal through planning, execution, verification, and cleanup. Use when the user asks to run a devloop,  drive a task to completion, or wants a plan-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop (eg. cleanup)
+description: Drive a development task end-to-end from a user-stated goal through planning, execution, verification. Use when the user asks to run a devloop,  drive a task to completion, or wants a plan-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop
 dependencies: [dev.shortcuts, dev.research]
 ---
 
@@ -13,6 +13,7 @@ Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
 ## Usage
 User will ask you to run dev.loop. This is usually with either an existing design spec or a stated goal. 
 Go through each phase under Workflow phases.
+In addition to running the whole dev.loop, users can also invoke an individual phase of the dev.loop by referring to it (eg. re-run the "verify" phase)
 
 ## Workflow Phases
 
@@ -44,12 +45,8 @@ Go through each phase under Workflow phases.
 - Address review feedback from coding agents and humans; apply fixes, re-run tests, push, and re-check CI.
 - Notify the user when the work is ready.
 
-### 5. Cleanup (user-requested only)
-invoke:cleanup
-
-## Usage
-Users can invoke all steps of the workflow by asking for "devloop" (eg. use devloop to do X...)
-In addition, users can also invoke each individual phase of a devloop by referring to it (eg. re-run the "verify" phase)
+## Important Reminders
+- unless you require user input, don't stop until you finish EVERY phase of the dev.loop
 
 ## Phase Overrides
 Users can substitute any phase in the dev loop by mentioning they would like to override a particular phase with another set of instrctions. 
