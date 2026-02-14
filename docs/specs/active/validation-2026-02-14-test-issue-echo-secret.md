@@ -7,7 +7,7 @@ by the user to confirm the feature implementation and testing is adequate.
 
 **Feature Plan:** `docs/specs/active/2026-02-14-test-issue-echo-secret.md`
 
-**Implementation Plan:** `docs/specs/active/2026-02-14-test-issue-echo-secret.md`
+**Implementation Plan:** `scripts/echo-secret.sh`
 
 ## Stage 4: Validation Stage
 

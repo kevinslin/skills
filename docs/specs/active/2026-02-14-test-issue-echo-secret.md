@@ -32,7 +32,7 @@ The repository does not include a dedicated script that echoes this value.
 Add a shell script at `scripts/echo-secret.sh` that prints `42` and exits successfully.
 
 ### Technology Stack
-- POSIX shell script
+- Bash script (`set -euo pipefail`).
 
 ### Integration Points
 - N/A (standalone utility script)
