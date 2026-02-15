@@ -50,6 +50,30 @@ Document types are listed here. Read each document type workflow for details, re
 2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `@references/[doc-type]/template.md` to the requested output location before filling in content.
 
+## Context Triage Gate (Required Before Drafting)
+
+Before drafting any research artifact, run a short temporal-context check:
+
+1. Identify 3-7 critical state values or flags for the behavior being documented.
+2. For each value, capture:
+   - source of truth
+   - representation (for example id vs name)
+   - initialization point
+   - snapshot/capture point
+   - first consumer
+3. Answer: "Is the value initialized before the consuming context is captured?"
+4. If any answer is `no` or `unknown`, investigate ordering first before expanding downstream analysis.
+
+### Flow Docs in Isolated Scope (Bootstrap vs Runtime)
+
+Flow docs in this skill are often intentionally isolated (for example `apitool-bootstrap` vs `apitool-runtime`).
+Do not force all phases into one document. Instead, each isolated flow doc must include boundary contracts:
+
+1. Entry assumptions: what state/context already exists at flow entry.
+2. Snapshot points: where state is copied/frozen inside this flow.
+3. Exit/handoff: what this flow produces for the next flow.
+4. Adjacent flow links: explicit references to related phase docs.
+
 ## Shared References
 
 - Whenever you need to write pseudocode, reference LLM pseudocode conventions: `@references/llm-pseudo-code.md`
@@ -126,6 +150,7 @@ When updating existing flow docs, use a preservation-first revision style.
 - Read only the workflow(s) relevant to the document type requested.
 - Preserve stable IDs and manually maintained sections when revising existing docs.
 - Keep source citations explicit and actionable.
+- Prioritize temporal correctness before topology: verify ordering and snapshot semantics before deep downstream tracing.
 
 ## Directory Structure
 

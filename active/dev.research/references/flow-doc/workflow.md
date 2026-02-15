@@ -13,7 +13,14 @@
 
 ## Output Location
 
-- `$ROOT_DIR/flows/{YYYY-MM-DD}-{topic}.md`
+- `$ROOT_DIR/flows/{flow-name}.md`
+
+## Flow Naming Contract
+
+- Canonical bootstrap flow must be named `bootstrap.md`.
+- Canonical runtime invocation flow must be named `runtime_invoke.md`.
+- All non-canonical flows must be named `ref.{name-of-flow}.md`.
+- `{name-of-flow}` should be concise and kebab-case.
 
 ## Authoring Requirements
 
@@ -25,8 +32,11 @@
 
 1. Review existing architecture documents and relevant patterns used in the project.
 2. Review existing flow docs in `$ROOT_DIR/flows/` for consistency.
-3. Copy `@references/flow-doc/template.md` to `$ROOT_DIR/flows/{YYYY-MM-DD}-{topic-slug}.md`.
-4. Use kebab-case for the topic slug (for example: `flows/2025-01-15-api-request-lifecycle.md`).
+3. Choose `{flow-name}` using the naming contract:
+   - `bootstrap` for initial build/context-establishment lifecycle.
+   - `runtime_invoke` for steady-state invocation lifecycle.
+   - `ref.{name-of-flow}` for all other flows.
+4. Copy `@references/flow-doc/template.md` to `$ROOT_DIR/flows/{flow-name}.md`.
 5. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
 
 ## Instructions: Revise Flow Doc
