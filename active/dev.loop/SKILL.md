@@ -11,18 +11,20 @@ Do this only once per repo.
 Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
 
 ## Usage
-User will ask you to run dev.loop. This is usually with either an existing design spec or a stated goal. 
-Go through each phase under Workflow phases.
+User will ask you to run dev.loop. This is usually with either an existing design spec or a stated goal.  
+
+If user gives you an existing spec - go straight step 2 (Execute). Otherwise, start at step 1 (Plan).
+
 In addition to running the whole dev.loop, users can also invoke an individual phase of the dev.loop by referring to it (eg. re-run the "verify" phase)
 
 ## Workflow Phases
 
 ### 1. Plan
-- Invoke the `dev.research` skill and use the `Feature Spec` document type to create the execution plan.
+- Use $dev.research to create a feature spec 
 - Bias toward answering plan questions yourself; only ask the user when blocked or when user tells you to check with them.
 - Ensure the plan includes explicit tests (prefer integration tests).
 - Capture the plan prefix from the plan filename: `{YYYY-MM-DD}-{title-in-kebab-case}`.
-- use $dev.research to create a validation spec based on the features
+- use $dev.research to create validation spec against the feature spec
 
 ### 2. Execute
 - Create a new branch for implementation unless given explicit instructions not to. If user explicitly asks for worktree, create worktree. If a plan branch exists, branch off it to keep the plan commit(s).
