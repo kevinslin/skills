@@ -32,7 +32,7 @@ Use this mode when the user asks to "review [time interval] [path]".
 3. For each matching session, repeat the Default workflow and produce a separate output file per session.
 4. If no sessions match, state that explicitly.
 
-### PR mode: `code`
+### Code mode: `code`
 Use this mode when the user asks to learn from the current coding session
 1. Review the current coding session, and if a PR was submitted, any review comments that were addressed.
 2. Read each changed file in the current codebase (post-merge state).
