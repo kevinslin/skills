@@ -13,6 +13,28 @@ Last updated: YYYY-MM-DD
 
 [Define key terms or link to docs that define them]
 
+## Config
+
+[List user-settable configuration that impacts this flow. Include Statsig and env vars. If none, write `None identified`.]
+
+### Statsig
+
+| Name | Type | Where Read | Effect on Flow |
+|---|---|---|---|
+| [e.g., migrate_gmail] | [gate/config/experiment/layer] | `path/to/file.ts` | [behavior change] |
+
+### Environment Variables
+
+| Name | Where Read | Default | Effect on Flow |
+|---|---|---|---|
+| [e.g., FEATURE_X_ENABLED] | `path/to/file.ts` | [default or unknown] | [behavior change] |
+
+### Other User-Settable Inputs
+
+| Name | Type | Where Read | Effect on Flow |
+|---|---|---|---|
+| [e.g., request param/header/tool toggle] | [field/header/query/tool setting] | `path/to/file.ts` | [behavior change] |
+
 ## Flow
 
 ### [DESCRIPTION OF INITIAL STATE]
