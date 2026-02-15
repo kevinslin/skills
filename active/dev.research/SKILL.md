@@ -168,7 +168,7 @@ $ROOT_DIR/
   design/            # Service design docs
     {date}-design-{topic}.md
   specs/             # Feature design doc projects
-    active/          # Feature specs / execution plans
+    active/          # Feature specs 
       {YYYY-MM-DD}-{topic}.md
     investigation-{YYYY-MM-DD}-{topic}.md
     {YYYY-MM}-{feature-slug}/
