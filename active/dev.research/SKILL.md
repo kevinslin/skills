@@ -1,7 +1,7 @@
 ---
 name: dev.research
-description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, feature design docs, feature specs (execution plans), validation specs, recipes, vendor docs, and frequently asked questions (FAQ).
-version: 1.7.0
+description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, service design docs, feature design docs, feature specs (execution plans), investigation specs, validation specs, recipes, vendor docs, and frequently asked questions (FAQ).
+version: 1.8.0
 dependencies: [dev.llm-session]
 ---
 
@@ -39,6 +39,7 @@ Document types are listed here. Read each document type workflow for details, re
 - Service Design Docs: `@references/service-design-doc/workflow.md`
 - Feature Design Docs: `@references/feature-design-doc/workflow.md`
 - Feature Specs (Execution Plans): `@references/feature-spec/workflow.md`
+- Investigation Specs: `@references/investigation-spec/workflow.md`
 - Validation Specs: `@references/validation-spec/workflow.md`
 - Recipes: `@references/recipe/workflow.md`
 - Frequently Asked Questions (FAQ): `@references/faq-doc/workflow.md`
@@ -124,6 +125,10 @@ When invoked, follow the mapped workflow section exactly.
 
 - Follow `@references/feature-spec/workflow.md` section `Instructions`.
 
+### New Investigation Spec
+
+- Follow `@references/investigation-spec/workflow.md` section `Instructions`.
+
 ### Revise or Updating Flow Docs
 
 When updating existing flow docs, use a preservation-first revision style.
@@ -165,6 +170,7 @@ $ROOT_DIR/
   specs/             # Feature design doc projects
     active/          # Feature specs / execution plans
       {YYYY-MM-DD}-{topic}.md
+    investigation-{YYYY-MM-DD}-{topic}.md
     {YYYY-MM}-{feature-slug}/
       README.md
       design.md
@@ -206,6 +212,8 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/feature-spec/template.md` -> `dev.research/references/feature-spec/template.md`
 - `@references/feature-spec/effective-planning.md` -> `dev.research/references/feature-spec/effective-planning.md`
 - `@references/feature-spec/beads.md` -> `dev.research/references/feature-spec/beads.md`
+- `@references/investigation-spec/workflow.md` -> `dev.research/references/investigation-spec/workflow.md`
+- `@references/investigation-spec/template.md` -> `dev.research/references/investigation-spec/template.md`
 - `@references/validation-spec/workflow.md` -> `dev.research/references/validation-spec/workflow.md`
 - `@references/validation-spec/template.md` -> `dev.research/references/validation-spec/template.md`
 - `@references/recipe/workflow.md` -> `dev.research/references/recipe/workflow.md`
