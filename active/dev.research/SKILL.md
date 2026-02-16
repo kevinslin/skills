@@ -101,35 +101,35 @@ For the session id, use `dev.llm-session` to find the current conversation sessi
 Shortcuts are self-contained workflows triggered only when the user explicitly asks to use one.
 When invoked, follow the mapped workflow section exactly.
 
-### New Research Brief
+### new-research-brief
 
 - Follow `@references/research-brief/workflow.md` section `Instructions`.
 
-### New Flow Doc (Normal)
+### new-flow-doc-normal
 
 - Follow `@references/flow-doc/workflow.md` section `Instructions`.
 
-### New End2End Flow Doc
+### new-end2end-flow-doc
 
 - Follow `@references/flow-doc-end2end/workflow.md` section `Instructions`.
 
-### New Service Design Doc
+### new-service-design-doc
 
 - Follow `@references/service-design-doc/workflow.md` section `Instructions`.
 
-### New Feature Design Doc
+### new-feature-design-doc
 
 - Follow `@references/feature-design-doc/workflow.md` section `Instructions`.
 
-### New Feature Spec
+### new-feature-spec
 
 - Follow `@references/feature-spec/workflow.md` section `Instructions`.
 
-### New Investigation Spec
+### new-investigation-spec
 
 - Follow `@references/investigation-spec/workflow.md` section `Instructions`.
 
-### Revise or Updating Flow Docs
+### update-flow-doc
 
 When updating existing flow docs, use a preservation-first revision style.
 
@@ -142,11 +142,11 @@ When updating existing flow docs, use a preservation-first revision style.
 - For more details, follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
 - If the doc is end2end, also apply `@references/flow-doc-end2end/workflow.md` section `Revision Requirements`.
 
-### New Recipe
+### new-recipe
 
 - Follow `@references/recipe/workflow.md` section `Instructions`.
 
-### New Vendor Docs
+### new-vendor-docs
 
 - Follow `@references/vendor-doc/workflow.md` section `Instructions`.
 
