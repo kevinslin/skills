@@ -13,6 +13,7 @@ Learn from the current session, or run a multi-session review over a time interv
 - consolidate learnings from conversation and persist it in learnings log
 - identify mistakes or uncertainty points in the current conversation
 - identify areas of optimization that could improve the speed or quality of this task in the future
+- identify desires you have to make things better next time
 
 ## Constants
 
