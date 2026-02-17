@@ -16,3 +16,5 @@ Create a to-do list with the following items then perform all of them:
 4. Switch back to the main branch locally if you are not on it. Pull from the remote. Push all changes.
 
 5. Delete the local branch if you switched branches. 
+
+6. Use $meta.learn in code mode to learn from this session and what could be done better 
