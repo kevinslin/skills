@@ -77,7 +77,7 @@ Do not force all phases into one document. Instead, each isolated flow doc must 
 
 ## Shared References
 
-- Whenever you need to write sudocode, reference SudoCode conventions: `@references/sudo_code.md`
+- Whenever you need to write sudocode, use the [$sudocode](/Users/kevinlin/code/skills/active/sudocode/SKILL.md) skill.
 
 
 ## Required Ending Sections (All Docs)
