@@ -21,5 +21,5 @@
 
 ## Authoring Requirements
 
-- Prefer TypeScript-like pseudocode when describing logic.
+- Prefer TypeScript-like sudocode when describing logic.
 - Cite files where logic occurs.

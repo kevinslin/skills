@@ -28,7 +28,7 @@
 - Include a complete logic inventory with stable step IDs and source citations.
 - Document all conditional branches, retries, and error handling paths.
 - Capture state/data mutations, external calls, metrics, and logs where applicable.
-- Use TypeScript-like pseudocode and cite every referenced logic source.
+- Use TypeScript-like sudocode and cite every referenced logic source.
 - Include a `State Timeline Table` for critical values:
   `value | write step | snapshot step | read step | ordering valid?`.
 - Include a required `Config` section that captures user-settable configuration impacting the flow:
@@ -45,7 +45,7 @@
    - `ref.{name-of-flow}` for all other flows.
 4. Copy `@references/flow-doc-end2end/template.md` to `$ROOT_DIR/flows/{flow-name}.md`.
 5. Fill the required `Config` section with user-settable configuration that affects behavior.
-6. Build the `State Timeline Table` for critical values before drafting pseudocode.
+6. Build the `State Timeline Table` for critical values before drafting sudocode.
 7. Perform a comprehensive code walk so every lifecycle step is inventoried.
 8. Fill in the document based on user instructions, stopping for clarifications when needed.
 
@@ -58,7 +58,7 @@
 
 ## Best Practices
 
-- Inventory first; do not write pseudocode before coverage is known.
+- Inventory first; do not write sudocode before coverage is known.
 - Include every meaningful branch, retry, validation, and error path.
 - Ensure each inventory row maps directly to cited source.
 - Keep side effects explicit (calls, metrics, logs, mutations).

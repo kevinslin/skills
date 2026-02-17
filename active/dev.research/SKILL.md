@@ -77,7 +77,7 @@ Do not force all phases into one document. Instead, each isolated flow doc must 
 
 ## Shared References
 
-- Whenever you need to write pseudocode, reference LLM pseudocode conventions: `@references/llm-pseudo-code.md`
+- Whenever you need to write sudocode, reference SudoCode conventions: `@references/sudo_code.md`
 
 
 ## Required Ending Sections (All Docs)

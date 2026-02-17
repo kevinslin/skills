@@ -1,6 +1,6 @@
-# LLM Pseudo Code (LPC)
+# SudoCode
 
-LPC is a compact pseudocode style for describing real code paths. Keep it grepable, linear, and behavior-accurate.
+SudoCode is a compact sudocode style for describing real code paths. Keep it grepable, linear, and behavior-accurate.
 
 ## Basic Concepts
 
@@ -18,13 +18,13 @@ LPC is a compact pseudocode style for describing real code paths. Keep it grepab
 - Keep symbols grepable.
   - Use exact function names, variable names, and field names from source code.
   - Never rename identifiers to stylistic aliases.
-- Keep pseudocode lightweight.
+- Keep sudocode lightweight.
   - Remove unnecessary `()` for no-arg calls when clarity remains.
   - Remove trailing `;`.
   - Do not add type hints.
 - Keep execution linear.
   - Prioritize the main path and key branch points.
-  - Preserve runtime ordering in the pseudocode ordering.
+  - Preserve runtime ordering in the sudocode ordering.
 
 ## Simplification Rules
 
@@ -40,7 +40,7 @@ LPC is a compact pseudocode style for describing real code paths. Keep it grepab
 
 ## Inlining Code (Callsite Syntax)
 
-Use inlining to keep pseudocode readable in one linear pass.
+Use inlining to keep sudocode readable in one linear pass.
 
 When to inline:
 
@@ -94,7 +94,7 @@ runner.run_forever(limit=limit) {
 
 ## Review Checklist
 
-- Can each pseudocode line be mapped back with `rg`?
+- Can each sudocode line be mapped back with `rg`?
 - Is the main flow readable top-to-bottom without jumping?
 - Did I remove only plumbing and keep behavior?
 - Are key branches and side effects still explicit?

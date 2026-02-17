@@ -24,7 +24,7 @@
 
 ## Authoring Requirements
 
-- Prefer TypeScript-like pseudocode.
+- Prefer TypeScript-like sudocode.
 - Cite files where logic occurs.
 - Preserve any line ending with `// manual` exactly across updates.
 - For context/state-sensitive behavior, include a `State Timeline Table` with:
@@ -43,7 +43,7 @@
    - `ref.{name-of-flow}` for all other flows.
 4. Copy `@references/flow-doc/template.md` to `$ROOT_DIR/flows/{flow-name}.md`.
 5. Fill the required `Config` section with user-settable configuration that affects behavior.
-6. When behavior depends on propagated state/context, add a `State Timeline Table` before drafting pseudocode.
+6. When behavior depends on propagated state/context, add a `State Timeline Table` before drafting sudocode.
 7. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
 
 ## Instructions: Revise Flow Doc
@@ -66,4 +66,4 @@
 - Focus on lifecycle and execution sequence, not only static architecture.
 - Link related docs where available.
 - Keep one lifecycle/behavior per document.
-- Keep pseudocode readable and source-cited.
+- Keep sudocode readable and source-cited.

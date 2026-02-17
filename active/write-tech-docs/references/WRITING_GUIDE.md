@@ -95,7 +95,7 @@ skillz sync
 
 ### Code Examples
 
-1. **Show real, runnable examples** - no pseudocode or placeholders unless necessary
+1. **Show real, runnable examples** - no sudocode or placeholders unless necessary
 2. **Use comments sparingly** - only when adding genuine context
 3. **Prefer `sh` or `bash` for shell blocks** - be explicit about the language
 4. **One conceptual unit per code block** - don't mix bash commands with JSON config examples

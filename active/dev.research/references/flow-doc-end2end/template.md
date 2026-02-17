@@ -54,34 +54,34 @@ Last updated: YYYY-MM-DD
 
 [Add sections until every meaningful logic step from entrypoint to terminal states is represented.]
 
-## Detailed Flow Pseudocode
+## Detailed Flow sudocode
 
 ### Entry and Initialization
 
 - `path/to/file` ([approximate line range])
 ```ts
-[PSEUDOCODE for entry and setup]
+[sudocode for entry and setup]
 ```
 
 ### Main Execution Path
 
 - `path/to/file` ([approximate line range])
 ```ts
-[PSEUDOCODE for core happy path]
+[sudocode for core happy path]
 ```
 
 ### Branches, Retries, and Recovery Paths
 
 - `path/to/file` ([approximate line range])
 ```ts
-[PSEUDOCODE for branches/retries/fallbacks]
+[sudocode for branches/retries/fallbacks]
 ```
 
 ### Failure and Terminal Paths
 
 - `path/to/file` ([approximate line range])
 ```ts
-[PSEUDOCODE for terminal success/failure exits]
+[sudocode for terminal success/failure exits]
 ```
 
 ## Step-to-Source Coverage Check

@@ -1,6 +1,6 @@
 
 
-- [ ] expand on llm-pseudo-code and use in flow-doc
+- [ ] expand on SudoCode and use in flow-doc
 
 ### [ ] should be part of a larger specs skill
 

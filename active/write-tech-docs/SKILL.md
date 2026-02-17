@@ -80,7 +80,7 @@ Choose the appropriate structure based on content type:
 - Use active voice: "The CLI stores" not "Settings are stored"
 
 ### Code Examples
-- Show real, runnable examples (no pseudocode unless necessary)
+- Show real, runnable examples (no sudocode unless necessary)
 - Use comments sparingly (only when adding genuine context)
 - Specify language explicitly (`sh`, `bash`, `python`)
 - One conceptual unit per code block
