@@ -15,6 +15,10 @@ Instructions:
 
 ## Testing 
 [description of tests]
+
+## Agent Session
+Session ID: [session id of the agent that implemented the code changes]
 ```
-4. invoke:check-ci -> if failure, invoke:fix-pr
-5. notify if everything passes
+4. Ensure the `## Agent Session` section is always included and populated.
+5. invoke:check-ci -> if failure, invoke:fix-pr
+6. notify if everything passes
