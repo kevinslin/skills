@@ -18,5 +18,9 @@ Organize your feedback into the following sections:
 5. Suggested rewrite (if applicable)
    - Sketch a simpler, safer alternative approach
    - Prefer clarity and robustness over flexibility
+6. PR flow doc
+   - Create or update a flow doc for the reviewed PR under `ROOT_DIR/prs/`
+   - Capture PR context, key files touched, execution/data flow, major risks, and open questions
+   - Use a stable PR-based filename when possible (for example `<pr-number>-<slug>.md`)
 
 Clearly label severity for each issue (blocker, major, minor, nit).
