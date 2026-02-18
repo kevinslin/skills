@@ -1,6 +1,6 @@
 ---
 name: dev.loop
-description: Drive a development task end-to-end from a user-stated goal through planning, execution, verification. Use when the user asks to run a devloop,  drive a task to completion, or wants a plan-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop
+description: Drive a development task end-to-end from a user-stated goal through planning, context gathering, execution, verification. Use when the user asks to run a devloop, drive a task to completion, or wants a plan-gather-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop
 dependencies: [dev.shortcuts, dev.research]
 ---
 
@@ -13,7 +13,7 @@ Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
 ## Usage
 User will ask you to run dev.loop. This is usually with either an existing design spec or a stated goal.  
 
-If user gives you an existing spec - go straight step 2 (Execute). Otherwise, start at step 1 (Plan).
+If user gives you an existing spec - go straight to step 2 (Gather Context). Otherwise, start at step 1 (Plan).
 
 In addition to running the whole dev.loop, users can also invoke an individual phase of the dev.loop by referring to it (eg. re-run the "verify" phase)
 
@@ -26,7 +26,19 @@ In addition to running the whole dev.loop, users can also invoke an individual p
 - Capture the plan prefix from the plan filename: `{YYYY-MM-DD}-{title-in-kebab-case}`.
 - use $dev.research to create validation spec against the feature spec
 
-### 2. Execute
+### 2. Gather Context
+- Given the spec/plan, identify remaining ambiguities, gaps, and unresolved assumptions.
+- Explicitly answer:
+  - What ambiguities or gaps are still left?
+  - Are there missing flow docs that, once created, would resolve those ambiguities?
+- If there are questions for the user, ask them before continuing.
+- If flow docs are missing, propose which flow docs should be generated (title, scope, and why each one resolves a specific gap).
+- Summarize this phase in three sections:
+  - `Ambiguities/Gaps`
+  - `Questions for User`
+  - `Proposed Flow Docs`
+
+### 3. Execute
 - Create a new branch for implementation unless given explicit instructions not to. If user explicitly asks for worktree, create worktree. If a plan branch exists, branch off it to keep the plan commit(s).
 - Follow the plan steps in order and check off each task as it is completed in the plan file.
 - For each phase or milestone, run `@shortcut:precommit-process.md` then `@shortcut:commit-code.md` to commit that phase separately.
@@ -35,10 +47,10 @@ In addition to running the whole dev.loop, users can also invoke an individual p
   - `{prefix}-progress.md` for status updates, decisions, and blockers.
   - `{prefix}-learnings.md` for mistakes, lessons, and adjustments.
 
-### 3. Polish
+### 4. Polish
 - If there is user facing documentation like README.md, ARCHITECTURE.md or the like, make sure to update it
 
-### 4. Verify
+### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
 - Check features against validation plan and ensure existing tests pass
 - After tests pass, make sure everything is committed. `trigger:push-pr` - in PR body, make sure to add manual testing steps that need to be done with checkboxes
