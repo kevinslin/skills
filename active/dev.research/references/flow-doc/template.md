@@ -4,7 +4,7 @@ Last updated: YYYY-MM-DD
 
 ## Overview
 
-[1-2 sentences describing what this architecture document covers and why it exists]
+[1-2 sentences describing what this flow document covers and why it exists]
 
 **Related Documents:**
 - [Links to related architecture docs, flow docs, feature specs, and research briefs docs]
@@ -17,19 +17,19 @@ Last updated: YYYY-MM-DD
 
 [List user-settable configuration that impacts this flow. Include Statsig and env vars. If none, write `None identified`.]
 
-### Statsig
+### Statsig 
 
 | Name | Type | Where Read | Effect on Flow |
 |---|---|---|---|
 | [e.g., migrate_gmail] | [gate/config/experiment/layer] | `path/to/file.ts` | [behavior change] |
 
-### Environment Variables
+### Environment Variables (omit if none identified)
 
 | Name | Where Read | Default | Effect on Flow |
 |---|---|---|---|
 | [e.g., FEATURE_X_ENABLED] | `path/to/file.ts` | [default or unknown] | [behavior change] |
 
-### Other User-Settable Inputs
+### Other User-Settable Inputs (omit if none identified)
 
 | Name | Type | Where Read | Effect on Flow |
 |---|---|---|---|
@@ -41,9 +41,16 @@ Last updated: YYYY-MM-DD
 
 - `path/to/file` ([approximate line range])
 ```
-[PSEUDO Code going over flow logic]
+[sudocode going over flow logic. see $sudocode skill for details]
 ```
-**File(s)**: `path/to/main/file.ts`
+
+### [NEXT STATE TRANSITION]
+- `path/to/file` ([approximate line range])
+```
+[sudocode going over flow logic. see $sudocode skill for details]
+```
+
+### ... [add more state transitions as needed]
 
 ## Architecture Diagram
 
