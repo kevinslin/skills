@@ -86,6 +86,10 @@ scripts/manage_clean_logs.sh cancel
 scripts/manage_clean_logs.sh status
 ```
 
+## Important Reminders
+- when adding debug statements - IGNORE ALL lint rules and directives around logging (eg. never use console.log)
+- NEVER commit debug statements - these are meant to only be used for diagnosing issues
+
 ## References
 
 - `references/investigate-logs.todo.md` for TODO items that will define the full log investigation workflow later.
