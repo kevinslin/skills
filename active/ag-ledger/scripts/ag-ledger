@@ -1,0 +1,304 @@
+#!/usr/bin/env python3
+"""CLI for append-only agent activity ledger files."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from datetime import datetime, time
+from pathlib import Path
+from typing import Iterable
+
+
+ENTRY_TIME_FORMAT = "%Y-%m-%d %H:%M"
+DEFAULT_ROOT = Path("~/.llm/ag-ledger").expanduser()
+ENV_META_LEDGER_ROOT = "META_LEDGER_ROOT"
+BLOCK_START = "<!-- ag-ledger:begin -->"
+BLOCK_END = "<!-- ag-ledger:end -->"
+
+
+def resolve_root(cli_root: str | None) -> Path:
+    if cli_root:
+        return Path(cli_root).expanduser().resolve()
+    env_root = os.environ.get(ENV_META_LEDGER_ROOT)
+    if env_root:
+        return Path(env_root).expanduser().resolve()
+    return DEFAULT_ROOT.resolve()
+
+
+def data_dir(root: Path) -> Path:
+    return root / "data"
+
+
+def ledger_path_for_now(root: Path, now: datetime) -> Path:
+    return data_dir(root) / f"ledger-{now.strftime('%Y-%m-%d')}.md"
+
+
+def parse_time(value_parts: list[str] | None, *, is_to: bool = False) -> datetime | None:
+    if not value_parts:
+        return None
+
+    raw = " ".join(value_parts).strip()
+    if not raw:
+        return None
+
+    for fmt in (ENTRY_TIME_FORMAT, "%Y-%m-%d"):
+        try:
+            parsed = datetime.strptime(raw, fmt)
+            if fmt == "%Y-%m-%d":
+                if is_to:
+                    return datetime.combine(parsed.date(), time(hour=23, minute=59))
+                return datetime.combine(parsed.date(), time(hour=0, minute=0))
+            return parsed
+        except ValueError:
+            continue
+
+    raise ValueError(
+        f"Invalid time '{raw}'. Use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM'."
+    )
+
+
+def append_entry(root: Path, session_id: str, message: str, workspace: str) -> dict:
+    now = datetime.now()
+    entry = {
+        "time": now.strftime(ENTRY_TIME_FORMAT),
+        "workspace": workspace,
+        "session": session_id,
+        "msg": message,
+    }
+
+    path = ledger_path_for_now(root, now)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=True) + "\n")
+
+    return entry
+
+
+def iter_entries(root: Path) -> Iterable[tuple[dict, datetime]]:
+    directory = data_dir(root)
+    if not directory.exists():
+        return
+
+    for ledger_file in sorted(directory.glob("ledger-*.md")):
+        with ledger_file.open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                try:
+                    raw = json.loads(stripped)
+                except json.JSONDecodeError:
+                    print(
+                        f"Warning: Skipping invalid JSON in {ledger_file}:{line_number}",
+                        file=sys.stderr,
+                    )
+                    continue
+
+                raw_time = raw.get("time")
+                if not isinstance(raw_time, str):
+                    print(
+                        f"Warning: Skipping entry without valid time in {ledger_file}:{line_number}",
+                        file=sys.stderr,
+                    )
+                    continue
+
+                try:
+                    parsed_time = datetime.strptime(raw_time, ENTRY_TIME_FORMAT)
+                except ValueError:
+                    print(
+                        f"Warning: Skipping entry with invalid time in {ledger_file}:{line_number}",
+                        file=sys.stderr,
+                    )
+                    continue
+
+                yield raw, parsed_time
+
+
+def normalize_workspace_path(value: str) -> str:
+    try:
+        return str(Path(value).expanduser().resolve())
+    except OSError:
+        return value
+
+
+def find_agents_file(start: Path) -> Path:
+    for directory in [start, *start.parents]:
+        candidate = directory / "AGENTS.md"
+        if candidate.exists():
+            return candidate
+    return start / "AGENTS.md"
+
+
+def build_agents_block(script_path: Path) -> str:
+    return "\n".join(
+        [
+            BLOCK_START,
+            "## ag-ledger",
+            "",
+            "Use `$ag-ledger` and the `ag-ledger` CLI for activity tracking.",
+            "Always log these moments:",
+            "- Session start",
+            "- Notable change",
+            "- Session end",
+            "",
+            "Run:",
+            "- `ag-ledger append <session-id> \"session start: <plan>\"`",
+            "- `ag-ledger append <session-id> \"notable change: <what changed>\"`",
+            "- `ag-ledger append <session-id> \"session end: <outcome>\"`",
+            "",
+            "If `ag-ledger` is not on PATH, run:",
+            f"- `{script_path}`",
+            BLOCK_END,
+        ]
+    )
+
+
+def install_agents_prompt(agents_file: Path, script_path: Path) -> None:
+    block = build_agents_block(script_path)
+    agents_file.parent.mkdir(parents=True, exist_ok=True)
+
+    if agents_file.exists():
+        content = agents_file.read_text(encoding="utf-8")
+    else:
+        content = ""
+
+    pattern = re.compile(
+        rf"{re.escape(BLOCK_START)}.*?{re.escape(BLOCK_END)}\n?",
+        re.DOTALL,
+    )
+    if pattern.search(content):
+        updated = pattern.sub(block + "\n", content).rstrip() + "\n"
+    else:
+        trimmed = content.rstrip()
+        if trimmed:
+            updated = trimmed + "\n\n" + block + "\n"
+        else:
+            updated = block + "\n"
+
+    agents_file.write_text(updated, encoding="utf-8")
+
+
+def cmd_append(args: argparse.Namespace) -> int:
+    root = resolve_root(args.root)
+    workspace = str(Path.cwd())
+    entry = append_entry(
+        root=root,
+        session_id=args.session_id,
+        message=" ".join(args.message).strip(),
+        workspace=workspace,
+    )
+    print(json.dumps(entry, ensure_ascii=True))
+    return 0
+
+
+def cmd_filter(args: argparse.Namespace) -> int:
+    root = resolve_root(args.root)
+
+    try:
+        from_time = parse_time(args.from_time, is_to=False)
+        to_time = parse_time(args.to_time, is_to=True)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    if from_time and to_time and from_time > to_time:
+        print("--from cannot be later than --to.", file=sys.stderr)
+        return 2
+
+    requested_workspace = normalize_workspace_path(args.workspace) if args.workspace else None
+    for entry, entry_time in iter_entries(root) or []:
+        if args.session and entry.get("session") != args.session:
+            continue
+        if args.workspace:
+            entry_workspace = entry.get("workspace")
+            if entry_workspace != args.workspace:
+                if not isinstance(entry_workspace, str):
+                    continue
+                if normalize_workspace_path(entry_workspace) != requested_workspace:
+                    continue
+        if from_time and entry_time < from_time:
+            continue
+        if to_time and entry_time > to_time:
+            continue
+        print(json.dumps(entry, ensure_ascii=True))
+
+    return 0
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    script_path = Path(__file__).resolve()
+    if args.agents_file:
+        agents_file = Path(args.agents_file).expanduser().resolve()
+    else:
+        agents_file = find_agents_file(Path.cwd())
+
+    install_agents_prompt(agents_file, script_path)
+    print(f"Updated {agents_file}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="ag-ledger",
+        description="Append and query local agent activity ledgers.",
+    )
+    parser.add_argument(
+        "--root",
+        help=(
+            "Ledger root directory. Defaults to META_LEDGER_ROOT or "
+            "~/.llm/ag-ledger."
+        ),
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    append_parser = subparsers.add_parser(
+        "append",
+        aliases=["apppend"],
+        help="Append an activity entry.",
+    )
+    append_parser.add_argument("session_id", help="Session id for the entry.")
+    append_parser.add_argument("message", nargs="+", help="Message to record.")
+    append_parser.set_defaults(func=cmd_append)
+
+    filter_parser = subparsers.add_parser("filter", help="Filter stored entries.")
+    filter_parser.add_argument("--session", help="Filter by session id.")
+    filter_parser.add_argument("--workspace", help="Filter by workspace path.")
+    filter_parser.add_argument(
+        "--from",
+        dest="from_time",
+        nargs="+",
+        help="Lower bound: YYYY-MM-DD or YYYY-MM-DD HH:MM",
+    )
+    filter_parser.add_argument(
+        "--to",
+        dest="to_time",
+        nargs="+",
+        help="Upper bound: YYYY-MM-DD or YYYY-MM-DD HH:MM",
+    )
+    filter_parser.set_defaults(func=cmd_filter)
+
+    init_parser = subparsers.add_parser(
+        "init",
+        help="Insert or update ag-ledger instructions in AGENTS.md.",
+    )
+    init_parser.add_argument(
+        "--agents-file",
+        help="Explicit AGENTS.md path (defaults to nearest AGENTS.md or cwd).",
+    )
+    init_parser.set_defaults(func=cmd_init)
+
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

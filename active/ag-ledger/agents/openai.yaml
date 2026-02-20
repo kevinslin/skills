@@ -1,0 +1,4 @@
+interface:
+  display_name: "AG Ledger"
+  short_description: "Record and query agent activity logs"
+  default_prompt: "Use $ag-ledger to log session start/end and notable changes with ag-ledger."
