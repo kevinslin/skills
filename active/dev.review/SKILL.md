@@ -8,10 +8,11 @@ description: Multi-type review skill for code, design docs/specs, architecture, 
 ## Workflow
 
 1. Identify the review type from the user's request and artifact.
-   - Examples: code, design-doc, spec, architecture, ux.
+   - Examples: code, design-doc, spec, architecture, ux, integrator.
    - If ambiguous, ask one clarifying question before reviewing.
 2. Load the matching persona from `references/persona-[review-type].md`.
    - If the persona file does not exist, ask the user for the prompt to add and pause the review.
+   - For `integrator`, default input artifacts are outputs from `meta.learn` and adjacent retrospectives.
 3. Apply the persona to the material and produce the review.
 
 ## Output
@@ -26,3 +27,4 @@ description: Multi-type review skill for code, design docs/specs, architecture, 
 
 - `references/persona-design-doc.md` for design doc review.
 - `references/persona-code.md` for code review.
+- `references/persona-integrator.md` for integrating learnings into skill/code/project changes.
