@@ -3,6 +3,7 @@ Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-
 ## Skills
 
 - [ag-ledger](active/ag-ledger/SKILL.md): Record and query append-only agent activity ledger entries under META_LEDGER_ROOT (default `~/.llm/ag-ledger`). Use when agents should log session start/end, notable changes, or filter activity by session, workspace, or time.
+- [create-task](active/create-task/SKILL.md): Create tasks across target platforms. Use when users ask to create issues/tickets/tasks. Currently supports GitHub Issues and always appends a required Context session footer to the task body.
 - [dev.add-license](active/dev.add-license/SKILL.md): This skill should be used when the user wants to add a LICENSE file to their repository. Currently supports Apache License 2.0 with automatic copyright information detection from git configuration. Also updates package.json license field if the file exists.
 - [dev.code](active/dev.code/SKILL.md): This skill should be used when performing any coding task including implementing features, fixing bugs, refactoring code, or making any modifications to source code. Provides best practices, security considerations, testing guidelines, and a structured workflow for development tasks.
 - [dev.code-extension](active/dev.code-extension/SKILL.md): Install VS Code/Cursor extensions from a local .vsix via CLI (code, code-insiders, cursor, cursor-nightly). Use whenever asked to install an extension programmatically.
