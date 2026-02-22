@@ -39,7 +39,7 @@
 
 **High-Level Diagram**
 
-> Boxes + arrows is enough (Mermaid encouraged)
+> Boxes + arrows is enough (ASCII encouraged)
 
 ### Key Components
 
