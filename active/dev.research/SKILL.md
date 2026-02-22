@@ -1,7 +1,7 @@
 ---
 name: dev.research
-description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers research briefs, flow docs, state docs, service design docs, feature design docs, feature specs (execution plans), investigation specs, validation specs, recipes, vendor docs, and frequently asked questions (FAQ).
-version: 1.9.0
+description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers architecture docs, research briefs, flow docs, state docs, service design docs, feature design docs, feature specs (execution plans), investigation specs, validation specs, recipes, vendor docs, and frequently asked questions (FAQ).
+version: 1.10.0
 dependencies: [dev.llm-session]
 ---
 
@@ -14,6 +14,7 @@ This skill creates structured research artifacts for codebase exploration and fe
 Use this skill when:
 
 - Creating or updating any of the avilable document types
+- Creating or updating system architecture docs for services or platforms
 - Investigating a new technology, library, or approach before implementation
 - Exploring unfamiliar parts of a codebase
 - Comparing multiple solutions or approaches
@@ -33,6 +34,7 @@ Default `$ROOT_DIR` is `./docs` (relative to the project root directory).
 
 Document types are listed here. Read each document type workflow for details, requirements, template location, and output path.
 
+- Architecture Docs: System-level architecture docs covering boundaries, components, interfaces, and key decisions. Workflow: `@references/architecture/workflow.md`
 - Research Briefs: Structured technology/approach research with comparisons and recommendations. Workflow: `@references/research-brief/workflow.md`
 - Flow Docs (Normal): Focused execution-flow documentation for bootstrap/runtime/request lifecycle understanding. Workflow: `@references/flow-doc/workflow.md`
 - Flow Docs (End2End): Exhaustive lifecycle tracing across branches, retries, failures, and side effects. Workflow: `@references/flow-doc-end2end/workflow.md`
@@ -102,6 +104,10 @@ For the session id, use `dev.llm-session` to find the current conversation sessi
 Shortcuts are self-contained workflows triggered only when the user explicitly asks to use one.
 When invoked, follow the mapped workflow section exactly.
 
+### new-architecture-doc
+
+- Follow `@references/architecture/workflow.md` section `Instructions`.
+
 ### new-research-brief
 
 - Follow `@references/research-brief/workflow.md` section `Instructions`.
@@ -168,6 +174,8 @@ Research documentation lives in the project's docs folder:
 
 ```
 $ROOT_DIR/
+  architecture/      # System architecture docs
+    {YYYY-MM-DD}-architecture-{system}.md
   research/          # Research briefs
     {date}-research-{topic}.md
   design/            # Service design docs
@@ -205,6 +213,8 @@ $ROOT_DIR/
 
 Throughout this skill, paths prefixed with `@` are relative to this skill root.
 
+- `@references/architecture/workflow.md` -> `dev.research/references/architecture/workflow.md`
+- `@references/architecture/template.md` -> `dev.research/references/architecture/template.md`
 - `@references/research-brief/workflow.md` -> `dev.research/references/research-brief/workflow.md`
 - `@references/research-brief/template.md` -> `dev.research/references/research-brief/template.md`
 - `@references/flow-doc/workflow.md` -> `dev.research/references/flow-doc/workflow.md`
