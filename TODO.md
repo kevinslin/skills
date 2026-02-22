@@ -6,3 +6,4 @@
 ### Verify
 - [ ] skill dependencies 
 - [ ] skill rename
+- [ ] fast-mode
