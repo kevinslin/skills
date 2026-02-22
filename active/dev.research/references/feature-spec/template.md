@@ -5,47 +5,57 @@
 
 ---
 
-## Goal
+## Goal and Scope
 
-[Describe the overall objective and why it matters]
+### Goal
+[Describe the objective and why it matters]
+
+### In Scope
+- [What this spec will change]
+
+### Out of Scope
+- [What this spec intentionally does not change]
 
 ---
 
-## Context
+## Context and Constraints
 
 ### Background
 [Why this task is needed - user impact, technical debt, or business requirement]
 
 ### Current State
-[Description of the current system, behavior, or architecture]
+[How the system behaves today, including the key code paths or architectural reality]
+
+### Required Pre-Read 
+- [Flow docs, design docs, specs, or code paths to read before implementing]
 
 ### Constraints
 - [Technical constraints]
-- [Resource or dependency constraints]
-- [Business or rollout constraints]
+- [Rollout / product constraints]
+- [Compatibility / operational constraints]
+
+### Non-obvious Dependencies or Access (Optional)
+- [Dependency, service, dataset, feature flag, or permission that can block implementation/validation]
 
 ---
 
-## Technical Approach
+## Approach and Touchpoints
 
-### Architecture or Design
-[High-level design and reasoning]
+### Proposed Approach
+[High-level implementation approach and seam choice]
 
-### Technology Stack
-- [frameworks/libraries]
+### Integration Points / Touchpoints
+- [File / service / endpoint and why it matters]
 
-### Integration Points
-[How this work integrates with existing systems or services]
+### Resolved Ambiguities / Decisions
+- [Decision]: [Resolution and rationale]
 
-### Design Patterns
-[Any required patterns or methodologies]
-
-### Important Context
-[Critical details required to execute this work safely]
+### Important Implementation Notes (Optional)
+- [Critical facts, invariants, or temporary compromises]
 
 ---
 
-## Steps
+## Phases and Dependencies
 
 ### Phase 1: [Name]
 - [ ] Step 1
@@ -58,68 +68,44 @@
 
 ---
 
-## Testing
+## Validation and Done Criteria
+
+### Validation Plan
 
 Integration tests:
 - [explicit test cases]
 
-Unit tests:
+Unit tests (Optional):
 - [explicit test cases]
 
 Manual validation:
 - [explicit checks]
 
----
+### Done Criteria
+- [ ] [Measurable outcome 1]
+- [ ] [Measurable outcome 2]
+- [ ] [Validation and documentation complete]
 
-## Dependencies
-
-### External Services or APIs
-- [Service]: [Purpose] - [Documentation link]
-
-### Libraries or Packages
-- [Package]: [Version] - [Purpose]
-
-### Tools or Infrastructure
-- [Tool]: [Purpose] - [Setup requirements]
-
-### Access Required
-- [ ] [Credentials or permissions]
-- [ ] [Stakeholder coordination]
+### Separate Validation Spec (Optional)
+- [Path to validation spec, if this feature needs a dedicated validation document]
 
 ---
 
-## Risks and Mitigations
+## Open Items and Risks
+
+### Open Items
+- [ ] [Open technical decision, clarification, or research task]
+
+### Risks and Mitigations
 
 | Risk | Impact | Probability | Mitigation |
 | --- | --- | --- | --- |
 | [risk] | High/Med/Low | High/Med/Low | [mitigation] |
 
----
-
-## Questions
-
-### Technical Decisions Needed
-- [ ] [open technical question]
-
-### Clarifications Required
-- [ ] [open requirement or stakeholder question]
-
-### Research Tasks
-- [ ] [missing context to gather]
+### Simplifications and Assumptions (Optional)
+- [Intentional simplification, deferred work, or assumption made to keep scope tight]
 
 ---
-
-## Success Criteria
-
-- [ ] [Measurable outcome 1]
-- [ ] [Measurable outcome 2]
-- [ ] [Validation and documentation complete]
-
----
-
-## Notes
-
-[Additional context, simplifications, or decisions made during execution]
 
 ## Manual Notes 
 
