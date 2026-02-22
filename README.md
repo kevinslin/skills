@@ -1,5 +1,22 @@
 Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) that I use in my day to day.
 
+## Conventions
+
+Skills may use these path conventions:
+
+- `CONFIG_DIR`: Path to skill configuration files. Each skill can define a default. Example: `fast-mode` defaults to `~/.llm/fast-mode/config.json` and reads `allow_list.json` from the same directory.
+- `ROOT_DIR`: Base path for skill outputs when a skill writes files (for example research or design docs). Each skill can define a default when this value is not set.
+
+Users can customize either value by declaring it in `AGENTS.md`.
+
+Example:
+
+```md
+## Skill Conventions
+- Set `CONFIG_DIR` to `~/.llm/fast-mode/config.json`
+- Set `ROOT_DIR` to `./docs`
+```
+
 ## Skills
 
 - [ag-ledger](active/ag-ledger/SKILL.md): Record and query append-only agent activity ledger entries under META_LEDGER_ROOT (default `~/.llm/ag-ledger`). Use when agents should log session start/end, notable changes, or filter activity by session, workspace, or time.
