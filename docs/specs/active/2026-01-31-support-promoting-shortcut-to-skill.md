@@ -7,7 +7,7 @@
 
 ## Goal
 
-Add a dev.shortcuts workflow for promoting an existing shortcut into a skill via skill-creator, and define the follow-up step to replace shortcut invocations with the new skill in existing skills.
+Add a dev.shortcuts workflow for promoting an existing shortcut into a skill via `sc`, and define the follow-up step to replace shortcut invocations with the new skill in existing skills.
 
 ---
 
@@ -22,7 +22,7 @@ The skills repo currently uses dev.shortcuts to document shortcut workflows, but
 
 ### Constraints
 - Keep changes within the `skills` repo and follow existing conventions.
-- Use `skill-creator` to generate the new skill when a promotion is requested.
+- Use `sc` to generate the new skill when a promotion is requested.
 
 ---
 
@@ -82,7 +82,7 @@ The promotion workflow should explicitly instruct updating existing skill refere
 - None
 
 ### Tools/Infrastructure
-- `skill-creator` skill (for workflow instructions)
+- `sc` skill (for workflow instructions)
 
 ### Access Required
 - [ ] None

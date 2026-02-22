@@ -1,7 +1,6 @@
 node_modules
 .env
 .skillz-cache.json
-active/skill-creator/scripts/__pycache__/quick_validate.cpython-312.pyc
 *.skill
 *.pyc
 .vscode/settings.json

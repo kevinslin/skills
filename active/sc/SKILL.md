@@ -1,10 +1,10 @@
 ---
-name: skill-creator
-description: Guide for creating or updating skills and SKILL.md content, including edits to existing skills, adding workflows/tools, or changing triggers. Use whenever a user asks to create/update a skill or mentions a skill name and requests changes (e.g., ‘update $learn skill’, ‘edit skill description’), even if the skill currently lives outside allowed roots.
+name: sc
+description: Guide for creating or updating skills and SKILL.md content, including edits to existing skills, adding workflows/tools, or changing triggers. Use whenever a user asks to create/update a skill, directly invokes $sc, or mentions a skill name and requests changes (e.g., 'update $learn skill', 'edit skill description'), even if the skill currently lives outside allowed roots.
 license: Complete terms in LICENSE.txt
 ---
 
-# Skill Creator
+# sc
 
 This skill provides guidance for creating effective skills.
 
@@ -380,4 +380,3 @@ When a user asks "update this skill to do X":
   - local: `./skills/<skill-name>`
 - If the location is ambiguous or multiple matches exist, ask which root (and drafts vs active) to use before editing.
 - Do not edit skills outside those roots.
-
