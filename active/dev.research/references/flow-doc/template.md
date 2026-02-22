@@ -2,74 +2,148 @@
 
 Last updated: YYYY-MM-DD
 
-## Overview
+## Purpose / Question Answered
 
-[1-2 sentences describing what this flow document covers and why it exists]
+[1-3 sentences describing what this flow covers, what question(s) it answers, and why this flow exists]
 
-**Related Documents:**
-- [Links to related architecture docs, flow docs, feature specs, and research briefs docs]
+## Entry points
 
-## Terminology
+- `path/to/file.ts`: [route/handler/hook/builder/component entrypoint]
+- `path/to/other_file.ts`: [supporting entrypoint used in the same flow]
 
-[Define key terms or link to docs that define them]
+## Call path
 
-## Config
+[Organize by phases. Each phase should include trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.]
 
-[List user-settable configuration that impacts this flow. Include Statsig and env vars. If none, write `None identified`.]
+### Phase 1: [Short phase name]
 
-### Statsig 
+Trigger / entry condition:
+- [What starts this phase?]
+
+Entrypoints:
+- `path/to/file.ts:[functionName]`
+
+Ordered call path:
+- [Step 1]
+- [Step 2]
+- [Step 3]
+
+State transitions / outputs:
+- Input: [state/args entering the phase]
+- Output: [state/value/artifact produced by the phase]
+
+Branch points:
+- [Gate/check/fallback and its effect]
+
+External boundaries:
+- [HTTP/RPC/service call or `None identified`]
+
+#### Sudocode (Phase 1: [Short phase name])
+
+```ts
+// Source: path/to/file.ts
+[sudocode for this phase only; include source file annotations and key branches]
+```
+
+### Phase 2: [Short phase name]
+
+Trigger / entry condition:
+- [What starts this phase?]
+
+Entrypoints:
+- `path/to/file.ts:[functionName]`
+
+Ordered call path:
+- [Step 1]
+- [Step 2]
+
+State transitions / outputs:
+- Input: [state/args entering the phase]
+- Output: [state/value/artifact produced by the phase]
+
+Branch points:
+- [Gate/check/fallback and its effect]
+
+External boundaries:
+- [HTTP/RPC/service call or `None identified`]
+
+#### Sudocode (Phase 2: [Short phase name])
+
+```ts
+// Source: path/to/file.ts
+[sudocode for this phase only]
+```
+
+### Phase N: [Short phase name]
+
+[Repeat as needed]
+
+## State, config, and gates
+
+### Core state values (source of truth and usage)
+
+- `[state_name]`
+  - Source: [where the value is written/derived]
+  - Consumed by: [first/important consumers]
+  - Risk area: [ordering, representation, or branching caveat] (omit if none)
+
+### Statsig (or `None identified`)
 
 | Name | Type | Where Read | Effect on Flow |
 |---|---|---|---|
 | [e.g., migrate_gmail] | [gate/config/experiment/layer] | `path/to/file.ts` | [behavior change] |
 
-### Environment Variables (omit if none identified)
+### Environment Variables (or `None identified`)
 
 | Name | Where Read | Default | Effect on Flow |
 |---|---|---|---|
 | [e.g., FEATURE_X_ENABLED] | `path/to/file.ts` | [default or unknown] | [behavior change] |
 
-### Other User-Settable Inputs (omit if none identified)
+### Other User-Settable Inputs (or `None identified`)
 
 | Name | Type | Where Read | Effect on Flow |
 |---|---|---|---|
 | [e.g., request param/header/tool toggle] | [field/header/query/tool setting] | `path/to/file.ts` | [behavior change] |
 
-## Flow
+### Important gates / branch controls
 
-### [DESCRIPTION OF INITIAL STATE]
+- `[gate/check name]`: [what it gates and where]
+- `[route/type check]`: [how it changes the flow]
 
-- `path/to/file` ([approximate line range])
-```
-[sudocode going over flow logic. see $sudocode skill for details]
-```
+## Sequence diagram
 
-### [NEXT STATE TRANSITION]
-- `path/to/file` ([approximate line range])
-```
-[sudocode going over flow logic. see $sudocode skill for details]
-```
+```mermaid
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Component]
+    participant C as [Service/API]
 
-### ... [add more state transitions as needed]
-
-## Architecture Diagram
-
-```
-[ASCII diagram showing component relationships and data flow]
+    A->>B: [trigger]
+    B->>C: [request / function call]
+    C-->>B: [response]
+    B-->>A: [result]
 ```
 
-## Metrics
-[list of key metrics and what they mean]
+## Observability
 
-## Logs
-[list of key log lines and where they are emitted]
+Metrics:
+- [metric name / timing / counter and what it measures]
+
+Logs:
+- [log line/logger path and when it emits]
+
+Useful debug checkpoints:
+- [checkpoint / probe point]
+
+## Related docs
+
+- [Related flow docs]
+- [Architecture docs]
+- [Specs / design docs / PR docs]
 
 ## Manual Notes 
 
 [keep this for the user to add notes. do not change between edits]
-
-## FAQ
-[keep this in case user asks followup questions - should be added here]
 
 ## Changelog
 - [date]: [description of update] ([codex session id])
