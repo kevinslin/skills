@@ -4,10 +4,14 @@ Quick validation script for skills - minimal version
 """
 
 import sys
-import os
-import re
 import yaml
 from pathlib import Path
+
+from dependency_tools import (
+    FRONTMATTER_RE,
+    is_valid_skill_name,
+    normalize_dependencies,
+)
 
 def validate_skill(skill_path):
     """Basic validation of a skill"""
@@ -24,11 +28,12 @@ def validate_skill(skill_path):
         return False, "No YAML frontmatter found"
 
     # Extract frontmatter
-    match = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+    match = FRONTMATTER_RE.match(content)
     if not match:
         return False, "Invalid frontmatter format"
 
     frontmatter_text = match.group(1)
+    body = content[match.end() :]
 
     # Parse YAML frontmatter
     try:
@@ -39,7 +44,15 @@ def validate_skill(skill_path):
         return False, f"Invalid YAML in frontmatter: {e}"
 
     # Define allowed properties
-    ALLOWED_PROPERTIES = {'name', 'description', 'license', 'allowed-tools', 'metadata'}
+    ALLOWED_PROPERTIES = {
+        'name',
+        'description',
+        'dependencies',
+        'version',
+        'license',
+        'allowed-tools',
+        'metadata',
+    }
 
     # Check for unexpected properties (excluding nested keys under metadata)
     unexpected_keys = set(frontmatter.keys()) - ALLOWED_PROPERTIES
@@ -62,17 +75,42 @@ def validate_skill(skill_path):
     name = name.strip()
     if name:
         # Check naming convention (lowercase with hyphens and optional dots)
-        if not re.match(r'^[a-z0-9][a-z0-9.-]*$', name):
+        if not is_valid_skill_name(name):
             return False, (
-                f"Name '{name}' should use lowercase letters, digits, hyphens, and dots only"
-            )
-        if name.endswith(('-', '.')) or '..' in name or '--' in name:
-            return False, (
-                f"Name '{name}' cannot end with a separator or contain consecutive separators"
+                f"Name '{name}' should use lowercase letters, digits, hyphens, and dots only, "
+                "without consecutive separators."
             )
         # Check name length (max 64 characters per spec)
         if len(name) > 64:
             return False, f"Name is too long ({len(name)} characters). Maximum is 64 characters."
+
+    # Validate dependencies metadata (optional, but must be valid when present)
+    dependencies = frontmatter.get('dependencies')
+    if dependencies is not None:
+        if not isinstance(dependencies, list):
+            return False, "dependencies must be a YAML list of skill names"
+
+        seen = set()
+        for dep in dependencies:
+            if not isinstance(dep, str):
+                return False, "dependencies must contain only strings"
+            dep = dep.strip()
+            if not dep:
+                return False, "dependencies cannot contain empty skill names"
+            if not is_valid_skill_name(dep):
+                return False, f"Invalid dependency name '{dep}'"
+            if dep == name:
+                return False, "A skill cannot list itself in dependencies"
+            if dep in seen:
+                return False, f"Duplicate dependency '{dep}'"
+            seen.add(dep)
+
+    # Ensure dependency inference utility can parse and normalize this file.
+    # This catches invalid dependency field types early with a clear message.
+    try:
+        normalize_dependencies(frontmatter, body, ensure_field=False)
+    except ValueError as exc:
+        return False, str(exc)
 
     # Extract and validate description
     description = frontmatter.get('description', '')

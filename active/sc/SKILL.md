@@ -1,6 +1,11 @@
 ---
 name: sc
-description: Guide for creating or updating skills and SKILL.md content, including edits to existing skills, adding workflows/tools, or changing triggers. Use whenever a user asks to create/update a skill, directly invokes $sc, or mentions a skill name and requests changes (e.g., 'update $learn skill', 'edit skill description'), even if the skill currently lives outside allowed roots.
+description: Guide for creating or updating skills and SKILL.md content, including
+  edits to existing skills, adding workflows/tools, or changing triggers. Use whenever
+  a user asks to create/update a skill, directly invokes $sc, or mentions a skill
+  name and requests changes (e.g., 'update $learn skill', 'edit skill description'),
+  even if the skill currently lives outside allowed roots.
+dependencies: []
 license: Complete terms in LICENSE.txt
 ---
 
@@ -67,7 +72,8 @@ skill-name/
 ├── SKILL.md (required)
 │   ├── YAML frontmatter metadata (required)
 │   │   ├── name: (required)
-│   │   └── description: (required)
+│   │   ├── description: (required)
+│   │   └── dependencies: (required list; can be empty)
 │   └── Markdown instructions (required)
 └── Bundled Resources (optional)
     ├── scripts/          - Executable code (Python/Bash/etc.)
@@ -79,7 +85,7 @@ skill-name/
 
 Every SKILL.md consists of:
 
-- **Frontmatter** (YAML): Contains `name` and `description` fields. These are the only fields that Claude reads to determine when the skill gets used, thus it is very important to be clear and comprehensive in describing what the skill is, and when it should be used.
+- **Frontmatter** (YAML): Contains `name`, `description`, and `dependencies` fields. `dependencies` is a list of other skill names this skill depends on.
 - **Body** (Markdown): Instructions and guidance for using the skill. Only loaded AFTER the skill triggers (if at all).
 
 #### Bundled Resources (optional)
@@ -317,15 +323,19 @@ Any example files and directories not needed for the skill should be deleted. Th
 
 ##### Frontmatter
 
-Write the YAML frontmatter with `name` and `description`:
+Write the YAML frontmatter with `name`, `description`, and `dependencies`:
 
 - `name`: The skill name
 - `description`: This is the primary triggering mechanism for your skill, and helps Claude understand when to use the skill.
   - Include both what the Skill does and specific triggers/contexts for when to use it.
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to Claude.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
+- `dependencies`: YAML list of skill names this skill depends on (example: `dependencies: [dev.research, dev.llm-session]`).
+  - Use `dependencies: []` when there are no dependencies.
+  - When skill body references other skills through explicit skill-path links (for example `/active/<skill-name>/SKILL.md`), automatically sync dependencies with:
+    - `scripts/sync_dependencies.py <path/to/skill-folder>`
 
-Do not include any other fields in YAML frontmatter.
+Do not include unapproved fields in YAML frontmatter (approved: `name`, `description`, `dependencies`, and repository-specific optional fields such as `version`, `license`, `allowed-tools`, `metadata`).
 
 ##### Body
 
@@ -347,8 +357,9 @@ scripts/package_skill.py <path/to/skill-folder> ./dist
 
 The packaging script will:
 
-1. **Validate** the skill automatically, checking:
+1. **Sync + Validate** the skill automatically, checking:
 
+   - dependency metadata is synchronized from explicit skill references in body content
    - YAML frontmatter format and required fields
    - Skill naming conventions and directory structure
    - Description completeness and quality
@@ -380,3 +391,14 @@ When a user asks "update this skill to do X":
   - local: `./skills/<skill-name>`
 - If the location is ambiguous or multiple matches exist, ask which root (and drafts vs active) to use before editing.
 - Do not edit skills outside those roots.
+
+When changing a skill name:
+
+- Run:
+  - `scripts/rename_skill.py <workspace-root> <old-skill-name> <new-skill-name>`
+- This updates:
+  - skill directory name (when present),
+  - frontmatter `name`,
+  - frontmatter `dependencies`,
+  - skill body references.
+- If the script reports updated files, notify the user explicitly that dependency/body references were changed and list the files.

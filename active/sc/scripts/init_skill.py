@@ -18,6 +18,7 @@ from pathlib import Path
 SKILL_TEMPLATE = """---
 name: {skill_name}
 description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+dependencies: []
 ---
 
 # {skill_title}
@@ -264,8 +265,9 @@ def init_skill(skill_name, path):
     print(f"\n✅ Skill '{skill_name}' initialized successfully at {skill_dir}")
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
-    print("2. Customize or delete the example files in scripts/, references/, and assets/")
-    print("3. Run the validator when ready to check the skill structure")
+    print("2. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+    print("3. Customize or delete the example files in scripts/, references/, and assets/")
+    print("4. Run the validator when ready to check the skill structure")
 
     return skill_dir
 

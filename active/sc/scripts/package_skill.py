@@ -14,6 +14,7 @@ import sys
 import zipfile
 from pathlib import Path
 from quick_validate import validate_skill
+from sync_dependencies import sync_dependencies
 
 
 def package_skill(skill_path, output_dir=None):
@@ -43,6 +44,25 @@ def package_skill(skill_path, output_dir=None):
     if not skill_md.exists():
         print(f"❌ Error: SKILL.md not found in {skill_path}")
         return None
+
+    # Auto-sync dependencies from in-body skill references before validation.
+    try:
+        changed, merged, added = sync_dependencies(skill_path, ensure_field=True)
+    except Exception as e:
+        print(f"❌ Failed to sync dependencies: {e}")
+        return None
+
+    if changed:
+        print("🔄 Synchronized dependencies from skill body references.")
+        if added:
+            print(f"   Added: {', '.join(added)}")
+        else:
+            print("   Dependencies metadata normalized.")
+        if merged:
+            print(f"   Current dependencies: {', '.join(merged)}")
+        else:
+            print("   Current dependencies: (none)")
+        print()
 
     # Run validation before packaging
     print("🔍 Validating skill...")
