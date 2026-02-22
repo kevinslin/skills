@@ -33,18 +33,18 @@ Default `$ROOT_DIR` is `./docs` (relative to the project root directory).
 
 Document types are listed here. Read each document type workflow for details, requirements, template location, and output path.
 
-- Research Briefs: `@references/research-brief/workflow.md`
-- Flow Docs (Normal): `@references/flow-doc/workflow.md`
-- Flow Docs (End2End): `@references/flow-doc-end2end/workflow.md`
-- State Docs: `@references/state-doc/workflow.md`
-- Service Design Docs: `@references/service-design-doc/workflow.md`
-- Feature Design Docs: `@references/feature-design-doc/workflow.md`
-- Feature Specs (Execution Plans): `@references/feature-spec/workflow.md`
-- Investigation Specs: `@references/investigation-spec/workflow.md`
-- Validation Specs: `@references/validation-spec/workflow.md`
-- Recipes: `@references/recipe/workflow.md`
-- Frequently Asked Questions (FAQ): `@references/faq-doc/workflow.md`
-- Vendor Docs: `@references/vendor-doc/workflow.md`
+- Research Briefs: Structured technology/approach research with comparisons and recommendations. Workflow: `@references/research-brief/workflow.md`
+- Flow Docs (Normal): Focused execution-flow documentation for bootstrap/runtime/request lifecycle understanding. Workflow: `@references/flow-doc/workflow.md`
+- Flow Docs (End2End): Exhaustive lifecycle tracing across branches, retries, failures, and side effects. Workflow: `@references/flow-doc-end2end/workflow.md`
+- State Docs: Terminal-output mapping with predicates, required state, and derivation paths. Workflow: `@references/state-doc/workflow.md`
+- Service Design Docs: Staff-level service/system proposals covering architecture, APIs, reliability, and risks. Workflow: `@references/service-design-doc/workflow.md`
+- Feature Design Docs: Implementation-ready feature or migration designs with rollout/rollback planning. Workflow: `@references/feature-design-doc/workflow.md`
+- Feature Specs (Execution Plans): Milestone-based implementation plans with dependencies, risks, and verification. Workflow: `@references/feature-spec/workflow.md`
+- Investigation Specs: Structured debugging plans for competing root-cause hypotheses and evidence capture. Workflow: `@references/investigation-spec/workflow.md`
+- Validation Specs: Validation coverage docs for automated and manual checks tied to specs. Workflow: `@references/validation-spec/workflow.md`
+- Recipes: Reproducible step-by-step change instructions derived from conversation or PR context. Workflow: `@references/recipe/workflow.md`
+- Frequently Asked Questions (FAQ): Reusable Q&A docs with concise answers and source citations. Workflow: `@references/faq-doc/workflow.md`
+- Vendor Docs: Project-focused third-party library documentation summaries and topic references. Workflow: `@references/vendor-doc/workflow.md`
 
 ## Common Instructions (All Doc Types)
 
