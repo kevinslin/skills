@@ -16,7 +16,8 @@ from pathlib import Path
 FALLBACK_AG_LEDGER = "/Users/kevinlin/code/skills/active/ag-ledger/scripts/ag-ledger"
 EVENT_PREFIXES = ("session start:", "notable change:", "session end:")
 LOOKUP_CHOICES = ("current_day", "day", "week", "month")
-SCOPE_CHOICES = ("convo", "workspace")
+SCOPE_CHOICES = ("convo", "workspace", "all")
+GROUPBY_CHOICES = ("session", "workspace", "none")
 TS_FMT = "%Y-%m-%d %H:%M"
 
 
@@ -24,11 +25,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Render a session summary from ag-ledger events. "
-            "Usage: summarize_from_ledger.py [scope] [lookup]"
+            "Usage: summarize_from_ledger.py [scope] [lookup] [groupby]"
         )
     )
     parser.add_argument("scope", nargs="?", choices=SCOPE_CHOICES, default="convo")
     parser.add_argument("lookup", nargs="?", choices=LOOKUP_CHOICES, default="current_day")
+    parser.add_argument("groupby", nargs="?", choices=GROUPBY_CHOICES, default="none")
     parser.add_argument(
         "--session",
         help="Session id override for convo scope. Defaults to CODEX_THREAD_ID.",
@@ -184,6 +186,57 @@ def render_template(title: str, started: str, session_label: str, body: str, tim
     return "\n".join(lines)
 
 
+def format_session_label(session_ids: list[str]) -> str:
+    if not session_ids:
+        return "none"
+    if len(session_ids) == 1:
+        return session_ids[0]
+    sample = ", ".join(session_ids[:3])
+    suffix = "..." if len(session_ids) > 3 else ""
+    return f"{len(session_ids)} sessions ({sample}{suffix})"
+
+
+def normalize_workspace(workspace: str) -> str:
+    value = workspace.strip()
+    return value or "(unknown workspace)"
+
+
+def group_events(
+    events: list[dict[str, str]], groupby: str
+) -> list[tuple[str, list[dict[str, str]]]]:
+    if groupby == "none":
+        return []
+
+    grouped: dict[str, list[dict[str, str]]] = defaultdict(list)
+    for event in events:
+        if groupby == "session":
+            key = event["session"]
+        else:
+            key = normalize_workspace(event.get("workspace", ""))
+        grouped[key].append(event)
+
+    ordered_keys = sorted(
+        grouped.keys(),
+        key=lambda key: (min(item["time"] for item in grouped[key]), key),
+    )
+    ordered_groups: list[tuple[str, list[dict[str, str]]]] = []
+    for key in ordered_keys:
+        ordered_groups.append(
+            (
+                key,
+                sorted(
+                    grouped[key],
+                    key=lambda item: (
+                        item["time"],
+                        item["session"],
+                        normalize_workspace(item.get("workspace", "")),
+                    ),
+                ),
+            )
+        )
+    return ordered_groups
+
+
 def render_convo(session_id: str, events: list[dict[str, str]]) -> str:
     if not events:
         return render_template(
@@ -286,11 +339,7 @@ def render_workspace(workspace_root: str, events: list[dict[str, str]]) -> str:
     ended = all_events[-1]["time"]
     title = f"{Path(workspace_root).name} workspace activity"
 
-    session_label = (
-        session_ids[0]
-        if len(session_ids) == 1
-        else f"{len(session_ids)} sessions ({', '.join(session_ids[:3])}{'...' if len(session_ids) > 3 else ''})"
-    )
+    session_label = format_session_label(session_ids)
 
     summary_lines = [
         f"This workspace summary covers {len(session_ids)} sessions that started in {workspace_root}.",
@@ -331,6 +380,88 @@ def render_workspace(workspace_root: str, events: list[dict[str, str]]) -> str:
     )
 
 
+def render_all(events: list[dict[str, str]], groupby: str) -> str:
+    title = "all workspace activity"
+    if not events:
+        return render_template(
+            title=title,
+            started="unknown",
+            session_label="none",
+            body="No ag-ledger events were found for the selected lookup window.",
+            timeline=[],
+        )
+
+    all_events = sorted(
+        events,
+        key=lambda event: (
+            event["time"],
+            event["session"],
+            normalize_workspace(event.get("workspace", "")),
+        ),
+    )
+    session_ids = sorted({event["session"] for event in all_events})
+    workspace_ids = sorted({normalize_workspace(event.get("workspace", "")) for event in all_events})
+    started = all_events[0]["time"]
+    ended = all_events[-1]["time"]
+
+    summary_lines = [
+        f"This all-scope summary covers {len(session_ids)} sessions across {len(workspace_ids)} workspaces.",
+        f"It includes {len(all_events)} ag-ledger events from {started} to {ended}.",
+    ]
+
+    timeline: list[str] = []
+    grouped = group_events(all_events, groupby)
+    if groupby == "none":
+        summary_lines.append("Grouped by: none (chronological timeline across all sessions/workspaces).")
+        timeline.extend(
+            [
+                (
+                    f"- [{event['time']}] "
+                    f"({event['session']} @ {normalize_workspace(event.get('workspace', ''))}) "
+                    f"{event['msg']}"
+                )
+                for event in all_events
+            ]
+        )
+    else:
+        summary_lines.append(f"Grouped by {groupby}:")
+        for group_name, group_items in grouped:
+            group_started = group_items[0]["time"]
+            group_ended = group_items[-1]["time"]
+            group_sessions = len({event["session"] for event in group_items})
+            group_workspaces = len({normalize_workspace(event.get("workspace", "")) for event in group_items})
+            highlights = collect_highlights(group_items, limit=1)
+            if groupby == "session":
+                line = (
+                    f"- {group_name}: {len(group_items)} events, "
+                    f"{group_workspaces} workspaces, {group_started} to {group_ended}"
+                )
+            else:
+                line = (
+                    f"- {group_name}: {len(group_items)} events, "
+                    f"{group_sessions} sessions, {group_started} to {group_ended}"
+                )
+            if highlights:
+                line += f"; highlight: {highlights[0]}"
+            summary_lines.append(line)
+
+            timeline.append(f"- {groupby}: {group_name}")
+            for event in group_items:
+                if groupby == "session":
+                    context = normalize_workspace(event.get("workspace", ""))
+                else:
+                    context = event["session"]
+                timeline.append(f"- [{event['time']}] ({context}) {event['msg']}")
+
+    return render_template(
+        title=title,
+        started=started,
+        session_label=format_session_label(session_ids),
+        body="\n".join(summary_lines),
+        timeline=timeline,
+    )
+
+
 def main() -> None:
     args = parse_args()
     ag_ledger_bin = resolve_ag_ledger_bin(args.ag_ledger_bin)
@@ -351,6 +482,11 @@ def main() -> None:
             extra_args=["--session", session_id],
         )
         print(render_convo(session_id, events))
+        return
+
+    if args.scope == "all":
+        events = run_filter(ag_ledger_bin, start=start, end=end)
+        print(render_all(events, args.groupby))
         return
 
     workspace_root = os.path.realpath(args.workspace or os.getcwd())
