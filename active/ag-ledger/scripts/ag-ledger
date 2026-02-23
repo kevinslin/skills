@@ -10,12 +10,13 @@ import re
 import sys
 from datetime import datetime, time
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 
 ENTRY_TIME_FORMAT = "%Y-%m-%d %H:%M"
 DEFAULT_ROOT = Path("~/.llm/ag-ledger").expanduser()
 ENV_META_LEDGER_ROOT = "META_LEDGER_ROOT"
+ENV_CODEX_THREAD_ID = "CODEX_THREAD_ID"
 BLOCK_START = "<!-- ag-ledger:begin -->"
 BLOCK_END = "<!-- ag-ledger:end -->"
 
@@ -58,6 +59,18 @@ def parse_time(value_parts: list[str] | None, *, is_to: bool = False) -> datetim
 
     raise ValueError(
         f"Invalid time '{raw}'. Use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM'."
+    )
+
+
+def resolve_current_codex_session_id(env: Mapping[str, str] | None = None) -> str:
+    source = os.environ if env is None else env
+    value = source.get(ENV_CODEX_THREAD_ID, "").strip()
+    if value:
+        return value
+
+    raise ValueError(
+        "No Codex session id available. Set CODEX_THREAD_ID or use "
+        "`ag-ledger append <session-id> ...`."
     )
 
 
@@ -146,6 +159,12 @@ def build_agents_block(script_path: Path) -> str:
             "- Session end",
             "",
             "Run:",
+            "- `ag-ledger append-current \"session start: <plan>\"`",
+            "- `ag-ledger append-current \"notable change: <what changed>\"`",
+            "- `ag-ledger append-current \"session end: <outcome>\"`",
+            "- `ag-ledger session-id` (prints `CODEX_THREAD_ID`)",
+            "",
+            "Manual fallback (non-Codex or explicit session ids):",
             "- `ag-ledger append <session-id> \"session start: <plan>\"`",
             "- `ag-ledger append <session-id> \"notable change: <what changed>\"`",
             "- `ag-ledger append <session-id> \"session end: <outcome>\"`",
@@ -192,6 +211,37 @@ def cmd_append(args: argparse.Namespace) -> int:
         workspace=workspace,
     )
     print(json.dumps(entry, ensure_ascii=True))
+    return 0
+
+
+def cmd_append_current(args: argparse.Namespace) -> int:
+    root = resolve_root(args.root)
+    workspace = str(Path.cwd())
+    try:
+        session_id = resolve_current_codex_session_id()
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    entry = append_entry(
+        root=root,
+        session_id=session_id,
+        message=" ".join(args.message).strip(),
+        workspace=workspace,
+    )
+    print(json.dumps(entry, ensure_ascii=True))
+    return 0
+
+
+def cmd_session_id(args: argparse.Namespace) -> int:
+    del args
+    try:
+        session_id = resolve_current_codex_session_id()
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    print(session_id)
     return 0
 
 
@@ -263,6 +313,20 @@ def build_parser() -> argparse.ArgumentParser:
     append_parser.add_argument("session_id", help="Session id for the entry.")
     append_parser.add_argument("message", nargs="+", help="Message to record.")
     append_parser.set_defaults(func=cmd_append)
+
+    append_current_parser = subparsers.add_parser(
+        "append-current",
+        aliases=["appendc"],
+        help="Append an entry using CODEX_THREAD_ID as the session id.",
+    )
+    append_current_parser.add_argument("message", nargs="+", help="Message to record.")
+    append_current_parser.set_defaults(func=cmd_append_current)
+
+    session_id_parser = subparsers.add_parser(
+        "session-id",
+        help="Print the current Codex session id from CODEX_THREAD_ID.",
+    )
+    session_id_parser.set_defaults(func=cmd_session_id)
 
     filter_parser = subparsers.add_parser("filter", help="Filter stored entries.")
     filter_parser.add_argument("--session", help="Filter by session id.")

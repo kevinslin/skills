@@ -15,17 +15,19 @@ editing historical records. Use the bundled CLI in `scripts/ag-ledger`.
 1. Run `ag-ledger init` once per workspace to install/update AGENTS.md guidance.
 2. At session start, run:
 ```bash
-ag-ledger append <session-id> "session start: <what you plan to do>"
+ag-ledger append-current "session start: <what you plan to do>"
 ```
 3. After each notable change (scope shift, major implementation step, blocker,
 or handoff checkpoint), run:
 ```bash
-ag-ledger append <session-id> "<notable change summary>"
+ag-ledger append-current "<notable change summary>"
 ```
 4. At session end, run:
 ```bash
-ag-ledger append <session-id> "session end: <result and next step>"
+ag-ledger append-current "session end: <result and next step>"
 ```
+
+For manual/non-Codex usage, use `ag-ledger append <session-id> "<message>"`.
 
 ## Data Layout
 
@@ -42,9 +44,16 @@ ag-ledger append <session-id> "session end: <result and next step>"
 Run from the skill directory or place `scripts/` on `PATH`.
 
 ```bash
-# append entry (supports both append and apppend alias)
+# append entry (manual session id)
 ag-ledger append <session-id> "<message>"
 ag-ledger apppend <session-id> "<message>"
+
+# append entry using current Codex thread (CODEX_THREAD_ID)
+ag-ledger append-current "<message>"
+ag-ledger appendc "<message>"
+
+# print current Codex session id (CODEX_THREAD_ID)
+ag-ledger session-id
 
 # filter entries
 ag-ledger filter --session <session-id>
@@ -63,3 +72,4 @@ ag-ledger init
   if none is found, it creates one in the current directory.
 - `ag-ledger filter --from YYYY-MM-DD` starts at local `00:00`.
 - `ag-ledger filter --to YYYY-MM-DD` ends at local `23:59`.
+- In Codex, `ag-ledger append-current` reads the session id from `CODEX_THREAD_ID`.

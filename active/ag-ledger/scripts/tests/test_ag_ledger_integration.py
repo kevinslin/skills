@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -25,7 +26,12 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         self._workspace_tmp.cleanup()
         self._root_tmp.cleanup()
 
-    def run_cli(self, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    def run_cli(
+        self,
+        *args: str,
+        cwd: Path | None = None,
+        env_overrides: dict[str, str | None] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
         command = [
             sys.executable,
             str(SCRIPT_PATH),
@@ -33,9 +39,17 @@ class AgLedgerIntegrationTests(unittest.TestCase):
             str(self.root),
             *args,
         ]
+        env = os.environ.copy()
+        if env_overrides:
+            for key, value in env_overrides.items():
+                if value is None:
+                    env.pop(key, None)
+                else:
+                    env[key] = value
         return subprocess.run(
             command,
             cwd=str(cwd or self.workspace),
+            env=env,
             text=True,
             capture_output=True,
             check=False,
@@ -67,6 +81,40 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         entry = json.loads(result.stdout.strip())
         self.assertEqual(entry["session"], "sess-alias")
         self.assertEqual(entry["msg"], "notable change")
+
+    def test_append_current_uses_codex_thread_id(self) -> None:
+        codex_thread_id = "019c87f5-6475-76b1-9963-2d6b7336edcf"
+        result = self.run_cli(
+            "append-current",
+            "session",
+            "start:",
+            "test",
+            env_overrides={"CODEX_THREAD_ID": codex_thread_id},
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        entry = json.loads(result.stdout.strip())
+        self.assertEqual(entry["session"], codex_thread_id)
+        self.assertEqual(entry["msg"], "session start: test")
+
+    def test_append_current_errors_without_codex_thread_id(self) -> None:
+        result = self.run_cli(
+            "append-current",
+            "session",
+            "start:",
+            "test",
+            env_overrides={"CODEX_THREAD_ID": None},
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("CODEX_THREAD_ID", result.stderr)
+
+    def test_session_id_prints_codex_thread_id(self) -> None:
+        codex_thread_id = "019c87f5-6475-76b1-9963-2d6b7336edcf"
+        result = self.run_cli(
+            "session-id",
+            env_overrides={"CODEX_THREAD_ID": codex_thread_id},
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(result.stdout.strip(), codex_thread_id)
 
     def test_filter_supports_session_workspace_and_time(self) -> None:
         data_dir = self.root / "data"
@@ -139,6 +187,7 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         first_content = agents_file.read_text(encoding="utf-8")
         self.assertIn("<!-- ag-ledger:begin -->", first_content)
         self.assertIn("<!-- ag-ledger:end -->", first_content)
+        self.assertIn("ag-ledger append-current", first_content)
         self.assertIn("ag-ledger append <session-id>", first_content)
 
         second = self.run_cli("init")
