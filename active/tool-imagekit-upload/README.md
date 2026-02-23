@@ -7,7 +7,7 @@ A generic agent skill for uploading images to ImageKit CDN from file paths or cl
 ### 1. Navigate to Scripts Directory
 
 ```bash
-cd ~/.claude/skills/imagekit-upload/scripts
+cd ~/.llm/skills/tool-imagekit-upload/scripts
 ```
 
 ### 2. Install Dependencies
@@ -24,6 +24,8 @@ This installs:
 - `clipboardy` - Clipboard support for macOS
 
 ### 3. Configure Credentials
+
+Credentials should be stored under `~/.llm/skills/tool-imagekit-upload/`.
 
 Create a `.env` file from the example:
 
@@ -46,7 +48,7 @@ You can find these credentials in your ImageKit dashboard under **Developer Opti
 Try uploading a test image:
 
 ```bash
-node ~/.claude/skills/imagekit-upload/scripts/upload.js --file "/path/to/test-image.jpg"
+node ~/.llm/skills/tool-imagekit-upload/scripts/upload.js --file "/path/to/test-image.jpg"
 ```
 
 ## Usage Examples

@@ -10,10 +10,11 @@ This skill enables uploading images to ImageKit CDN from either local file paths
 
 ## Prerequisites
 
-Before using this skill, configure your ImageKit credentials. Create a `.env` file in the scripts directory:
+Before using this skill, configure your ImageKit credentials in `~/.llm/skills/tool-imagekit-upload/`.
+Create a `.env` file in the scripts directory:
 
 ```bash
-cd ~/.claude/skills/imagekit-upload/scripts
+cd ~/.llm/skills/tool-imagekit-upload/scripts
 cp .env.example .env
 ```
 
@@ -30,7 +31,7 @@ Find these in your ImageKit dashboard under Developer Options → API Keys.
 Install Node.js dependencies:
 
 ```bash
-cd ~/.claude/skills/imagekit-upload/scripts
+cd ~/.llm/skills/tool-imagekit-upload/scripts
 npm install
 ```
 
@@ -43,7 +44,7 @@ This installs ImageKit SDK, dotenv for configuration, and clipboardy for clipboa
 When the user provides a file path to an image, use the upload script:
 
 ```bash
-node ~/.claude/skills/imagekit-upload/scripts/upload.js --file "/path/to/image.jpg"
+node ~/.llm/skills/tool-imagekit-upload/scripts/upload.js --file "/path/to/image.jpg"
 ```
 
 Optional parameters:
@@ -56,7 +57,7 @@ Optional parameters:
 When the user wants to upload an image from their clipboard:
 
 ```bash
-node ~/.claude/skills/imagekit-upload/scripts/upload.js --clipboard
+node ~/.llm/skills/tool-imagekit-upload/scripts/upload.js --clipboard
 ```
 
 This reads image data directly from the system clipboard.
