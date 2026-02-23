@@ -1,2 +1,2 @@
-- [ ] examine past skill runs to find improvements
-- [ ] examine learning files
+- [x] examine past skill runs to find improvements (merged into `SKILL.md` evidence-driven optimization workflow)
+- [x] examine learning files (merged into `SKILL.md` evidence-driven optimization workflow)
