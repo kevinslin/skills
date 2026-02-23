@@ -25,21 +25,39 @@ description: Optimize existing skills and their associated files (SKILL.md, scri
 
 Choose the smallest workflow that matches the request.
 
+### Required pre-edit confirmation (all optimization modes)
+
+If the request may result in edits (not recommendations-only), do not edit immediately.
+
+Before making changes:
+
+1. Inspect enough of the target skill/files to produce concrete, non-generic guidance.
+2. Respond with:
+   - `Recommendations` (what should improve and why)
+   - `Proposed changes` (exact files/sections/behavior you plan to change)
+3. Ask for user confirmation.
+4. Apply edits only after confirmation.
+
+Exceptions:
+- If the user explicitly says to proceed without confirmation, you may skip step 3 and apply changes.
+- If the user asks for recommendations only, do not edit.
+
 ### Workflow A: `simple` optimization (default)
 
 1. Locate the skill directory and inventory its files (SKILL.md, scripts/, references/, assets/).
 2. Read SKILL.md fully; skim related files only as needed to resolve conflicts, duplication, or missing guidance.
 3. Identify issues: unclear triggers, redundant sections, inconsistent terminology, or misplaced detail.
 4. Decide what belongs in SKILL.md vs references/ (keep SKILL.md lean; push details to references).
-5. Edit SKILL.md:
+5. Draft `Recommendations` and `Proposed changes`, then get confirmation before editing (unless explicitly waived by the user).
+6. Edit SKILL.md:
    - Strengthen the frontmatter description with clear triggers and scope.
    - Use imperative, concise steps and consistent terminology.
    - Remove duplication; reorder for logical flow.
    - Add a short Examples section only if it reduces confusion.
-6. Clean up files:
+7. Clean up files:
    - Remove unused example files and orphaned references.
    - Ensure every reference file is linked from SKILL.md.
-7. Validate/package only if requested.
+8. Validate/package only if requested.
 
 ### Workflow B: `trace` optimization (general workflow for any skill)
 
@@ -68,10 +86,11 @@ Use this mode when the user wants improvements grounded in actual usage (for exa
    - Move detailed content from SKILL.md into references/ when it reduces context cost
    - Add checklists/guardrails for recurring failure modes
    - Add small examples only where they eliminate ambiguity
-6. Preserve intent while editing:
+6. Present `Recommendations` and `Proposed changes`, then get confirmation before editing (unless explicitly waived by the user).
+7. Preserve intent while editing:
    - Keep the skill’s purpose and expected behavior stable unless the user asks to broaden scope
    - Prefer additive changes over broad rewrites when refining an already-working skill
-7. Validate and summarize:
+8. Validate and summarize:
    - Run the relevant validator(s) if requested or if editing SKILL frontmatter/structure
    - In the final response, map each major change to the evidence that motivated it
    - Call out coverage limits and any assumptions
@@ -94,3 +113,4 @@ Use this mode when the user wants improvements grounded in actual usage (for exa
 - Skill intent is preserved (ask before broadening scope)
 - If using `trace` optimization: evidence coverage and gaps are stated before conclusions
 - If using `trace` optimization: recommendations map back to observed usage or explicit feedback
+- If edits were made: pre-edit `Recommendations` and `Proposed changes` were provided and confirmed (unless user explicitly waived confirmation)
