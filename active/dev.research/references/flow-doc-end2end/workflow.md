@@ -13,7 +13,7 @@
 
 ## Output Location
 
-- `$ROOT_DIR/flows/{flow-name}.md`
+- `$DOCS_ROOT/flows/{flow-name}.md`
 
 ## Flow Naming Contract
 
@@ -38,12 +38,12 @@
 ## Instructions
 
 1. Review architecture docs and relevant project patterns.
-2. Review existing flow docs in `$ROOT_DIR/flows/`.
+2. Review existing flow docs in `$DOCS_ROOT/flows/`.
 3. Choose `{flow-name}` using the naming contract:
    - `bootstrap` for initial build/context-establishment lifecycle.
    - `runtime_invoke` for steady-state invocation lifecycle.
    - `ref.{name-of-flow}` for all other flows.
-4. Copy `@references/flow-doc-end2end/template.md` to `$ROOT_DIR/flows/{flow-name}.md`.
+4. Copy `@references/flow-doc-end2end/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
 5. Fill the required `Config` section with user-settable configuration that affects behavior.
 6. Build the `State Timeline Table` for critical values before drafting sudocode.
 7. Perform a comprehensive code walk so every lifecycle step is inventoried.

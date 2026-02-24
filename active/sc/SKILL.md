@@ -51,6 +51,15 @@ When installing or documenting the `sc` skill in an `AGENTS.md`, add this line:
 
 Use this guardrail to prevent editing the runtime mirror in `~/.codex/skills` when the real editable skill lives in `skills-public`, `skills-private`, or another allowed root.
 
+## Path Variable Conventions
+
+When documenting path conventions in skills or `AGENTS.md`, prefer explicit semantics:
+
+- `ROOT_DIR`: Base path for general outputs and local artifacts (for example progress files, scratch outputs, or non-doc generated files).
+- `DOCS_ROOT`: Base path for documentation outputs (for example specs, design docs, flow docs, and research docs).
+
+Do not overload `DOCS_ROOT` to mean both "where docs are written" and "all possible fallback lookup roots". If a skill needs fallback read locations, document them separately with explicit names.
+
 ## Core Principles
 
 ### Concise is Key

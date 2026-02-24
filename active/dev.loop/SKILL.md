@@ -8,7 +8,7 @@ dependencies: [dev.shortcuts, dev.research]
 
 ## Setup
 Do this only once per repo.
-Ensure that *-progress.md and *-learnings.md are added to gitignore in repo
+Ensure the `.agents/` folder is ignored in the repo (for example, add `.agents/` to `.gitignore`)
 
 ## Usage
 User will ask you to run dev.loop. This is usually with either an existing design spec or a stated goal.  
@@ -43,9 +43,9 @@ In addition to running the whole dev.loop, users can also invoke an individual p
 - Follow the plan steps in order and check off each task as it is completed in the plan file.
 - For each phase or milestone, run `@shortcut:precommit-process.md` then `@shortcut:commit-code.md` to commit that phase separately.
 - **Always commit after each phase** (do not wait for user prompting). If precommit fails, fix issues and re-run before committing. If no precommit script exists, run the plan’s tests then commit.
-- Maintain progress artifacts next to the plan:
-  - `{prefix}-progress.md` for status updates, decisions, and blockers.
-  - `{prefix}-learnings.md` for mistakes, lessons, and adjustments.
+- Maintain progress artifacts under `%ROOT_DIR/.agents/progress` (create the folder if it does not exist):
+  - `%ROOT_DIR/.agents/progress/{prefix}-progress.md` for status updates, decisions, and blockers.
+  - `%ROOT_DIR/.agents/progress/{prefix}-learnings.md` for mistakes, lessons, and adjustments.
 
 ### 4. Polish
 - If there is user facing documentation like README.md, ARCHITECTURE.md or the like, make sure to update it

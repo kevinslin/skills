@@ -11,7 +11,7 @@
 
 ## Output Location
 
-- `$ROOT_DIR/recipes/{recipe-name}.md`
+- `$DOCS_ROOT/recipes/{recipe-name}.md`
 
 ## Inputs
 
@@ -22,7 +22,7 @@
 
 1. Confirm the input source (`current_conversation` or `pr`) and gather relevant context.
 2. Derive a concise kebab-case recipe name.
-3. Copy `@references/recipe/template.md` to `$ROOT_DIR/recipes/{recipe-name}.md`.
+3. Copy `@references/recipe/template.md` to `$DOCS_ROOT/recipes/{recipe-name}.md`.
 4. Fill the recipe with concrete, reproducible steps including exact file paths and commands.
 5. Add verification steps and assumptions so another agent can execute the recipe safely.
 

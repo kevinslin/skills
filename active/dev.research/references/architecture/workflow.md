@@ -13,12 +13,12 @@
 
 ## Output Location
 
-- `$ROOT_DIR/architecture/{YYYY-MM-DD}-architecture-{system}.md`
+- `$DOCS_ROOT/architecture/{YYYY-MM-DD}-architecture-{system}.md`
 
 ## Instructions
 
-1. Review existing docs under `$ROOT_DIR/architecture/` to align with local conventions.
-2. Copy `@references/architecture/template.md` to `$ROOT_DIR/ARCHITECTURE.md`.
+1. Review existing docs under `$DOCS_ROOT/architecture/` to align with local conventions.
+2. Copy `@references/architecture/template.md` to `$DOCS_ROOT/ARCHITECTURE.md`.
 3. Fill in the architecture doc based on user requirements and source-backed repository context.
 4. Include at least one high-level system diagram (Mermaid or ASCII) and map components to concrete code or service boundaries.
 5. Stop for clarification when ownership, boundaries, or critical interfaces are ambiguous.

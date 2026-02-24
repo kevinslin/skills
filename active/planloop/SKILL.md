@@ -9,6 +9,7 @@ description: Run a four-stage design workflow (`design` to `refine design` to `s
 
 - Require `goal`.
 - Require `%DOCS_ROOT` (ask once if missing).
+- When invoking `$dev.research`, treat `%DOCS_ROOT` as the docs output root for all design/spec/flow docs created in this workflow.
 - Capture optional initial steps, constraints, non-goals, milestones, and rollout expectations.
 - Derive `design-title` from user intent; confirm only if ambiguous.
 - Use `$dev.research` as the research dependency (if user says `dev.reseearch`, treat it as a typo).
@@ -16,7 +17,7 @@ description: Run a four-stage design workflow (`design` to `refine design` to `s
 ## Stage 1: Design
 
 1. Ask clarifying questions until scope and success criteria are concrete.
-2. Use `$dev.research` to read relevant existing docs and flows.
+2. Use `$dev.research` to read relevant existing docs and flows, with `%DOCS_ROOT` as the docs root for reads/writes in this workflow.
 3. Capture critical state lifecycle assumptions for key values (`init -> snapshot -> consume`) and note where each boundary occurs.
 4. Create initial design doc at `%DOCS_ROOT/specs/{design-title}/design.md` using `$dev.research`.
 5. Include at minimum:
@@ -39,7 +40,7 @@ description: Run a four-stage design workflow (`design` to `refine design` to `s
 
 ## Stage 3: Specs
 
-1. For each milestone, use $dev.research to create a feature spec
+1. For each milestone, use $dev.research to create a feature spec with `%DOCS_ROOT` set as the docs output root
 2. Save each spec to `%DOCS_ROOT/specs/{design-title}/spec-{num}-{milestone}.md`.
 3. Ensure each milestone ships significant, verifiable functionality.
 4. Require each spec to cover:
@@ -53,7 +54,7 @@ description: Run a four-stage design workflow (`design` to `refine design` to `s
 1. Refine each spec for execution readiness.
 2. Add a `Required Pre-Read` section linking related design/flow/spec docs and key code entrypoints.
 3. Investigate and resolve ambiguity/risk before finalizing each spec.
-4. Create new flow docs using $dev.research for complex behavior when existing docs are insufficient, then link them from specs.
+4. Create new flow docs using $dev.research (still using `%DOCS_ROOT` as the docs root) for complex behavior when existing docs are insufficient, then link them from specs.
 5. Keep naming, toggles, and acceptance criteria consistent across all specs.
 
 ## Output Contract

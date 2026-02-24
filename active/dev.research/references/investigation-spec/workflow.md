@@ -13,7 +13,7 @@
 
 ## Constants
 
-- %%OUTPUT_DIR: $ROOT_DIR/specs/
+- %%OUTPUT_DIR: $DOCS_ROOT/specs/
 - %%OUTPUT_FILE: %%OUTPUT_DIR/investigation-{YYYY-MM-DD}-{topic}.md
 
 ## Instructions

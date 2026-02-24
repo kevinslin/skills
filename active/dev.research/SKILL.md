@@ -27,8 +27,8 @@ Use this skill when:
 
 ## Root Directory
 
-All filepaths in this skill are relative to `$ROOT_DIR` unless noted otherwise.
-Default `$ROOT_DIR` is `./docs` (relative to the project root directory).
+All filepaths in this skill are relative to `$DOCS_ROOT` unless noted otherwise.
+Default `$DOCS_ROOT` is `./docs` (relative to the project root directory).
 
 ## Available Document Types
 
@@ -173,7 +173,7 @@ When updating existing flow docs, use a preservation-first revision style.
 Research documentation lives in the project's docs folder:
 
 ```
-$ROOT_DIR/
+$DOCS_ROOT/
   architecture/      # System architecture docs
     {YYYY-MM-DD}-architecture-{system}.md
   research/          # Research briefs
@@ -242,4 +242,4 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/vendor-doc/workflow.md` -> `dev.research/references/vendor-doc/workflow.md`
 - `@references/vendor-doc/template.md` -> `dev.research/references/vendor-doc/template.md`
 
-When you see `$ROOT_DIR/`, resolve paths relative to the project root directory.
+When you see `$DOCS_ROOT/`, resolve paths relative to the project root directory.

@@ -12,12 +12,12 @@
 
 ## Output Location
 
-- `$DOC_ROOT/vendor/{library}/README.md`
+- `$DOCS_ROOT/vendor/{library}/README.md`
 
 ## Variables
 
-- `$DOC_ROOT` defaults to `$ROOT_DIR` (`./docs`) unless overridden.
-- `$LIB_ROOT` is `$DOC_ROOT/vendor/{library}`.
+- `$DOCS_ROOT` defaults to `./docs` (relative to the project root directory) unless overridden.
+- `$LIB_ROOT` is `$DOCS_ROOT/vendor/{library}`.
 
 ## Structure Requirements
 
@@ -30,8 +30,8 @@
 ## Instructions
 
 1. Collect docs URL endpoint and library name (infer name if omitted).
-2. Review `$DOC_ROOT/vendor/` for existing naming conventions.
+2. Review `$DOCS_ROOT/vendor/` for existing naming conventions.
 3. Identify the subset of vendor functionality actually used in the project.
-4. Create `$DOC_ROOT/vendor/{library}/` with `reference/` and `topics/` folders.
-5. Copy `@references/vendor-doc/template.md` to `$DOC_ROOT/vendor/{library}/README.md`.
+4. Create `$DOCS_ROOT/vendor/{library}/` with `reference/` and `topics/` folders.
+5. Copy `@references/vendor-doc/template.md` to `$DOCS_ROOT/vendor/{library}/README.md`.
 6. Populate README, reference, and topic docs with project-relevant summaries.

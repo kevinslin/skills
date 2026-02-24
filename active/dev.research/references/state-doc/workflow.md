@@ -13,7 +13,7 @@
 
 ## Output Location
 
-- `$ROOT_DIR/state/{state-name}.md`
+- `$DOCS_ROOT/state/{state-name}.md`
 
 ## State Naming Contract
 
@@ -60,7 +60,7 @@
    - target file
    - target class/function/component
    - terminal output scope (render/return outputs only unless user says otherwise)
-2. Copy `@references/state-doc/template.md` to `$ROOT_DIR/state/{state-name}.md`.
+2. Copy `@references/state-doc/template.md` to `$DOCS_ROOT/state/{state-name}.md`.
 3. Read target code and capture all terminal outputs (`return null`, returned branch component, etc.) in code order.
 4. Read one level down into helper functions used to derive output-gating values.
 5. Populate `## inputs`:

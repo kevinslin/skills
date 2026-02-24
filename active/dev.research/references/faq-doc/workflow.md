@@ -11,12 +11,12 @@
 
 ## Output Location
 
-- `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic}.md`
+- `$DOCS_ROOT/faq/{YYYY-MM-DD}-{topic}.md`
 
 ## Instructions
 
 1. Capture the question being asked and gather supporting code references.
-2. Copy `@references/faq-doc/template.md` to `$ROOT_DIR/faq/{YYYY-MM-DD}-{topic-slug}.md`.
+2. Copy `@references/faq-doc/template.md` to `$DOCS_ROOT/faq/{YYYY-MM-DD}-{topic-slug}.md`.
 3. Write the answer with citations, then refine for concise, follow-up-friendly clarity.
 
 ## Authoring Requirements

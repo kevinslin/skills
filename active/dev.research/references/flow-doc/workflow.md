@@ -13,7 +13,7 @@
 
 ## Output Location
 
-- `$ROOT_DIR/flows/{flow-name}.md`
+- `$DOCS_ROOT/flows/{flow-name}.md`
 
 ## Flow Naming Contract
 
@@ -46,12 +46,12 @@
 ## Instructions
 
 1. Review existing architecture documents and relevant patterns used in the project.
-2. Review existing flow docs in `$ROOT_DIR/flows/` for consistency.
+2. Review existing flow docs in `$DOCS_ROOT/flows/` for consistency.
 3. Choose `{flow-name}` using the naming contract:
    - `bootstrap` for initial build/context-establishment lifecycle.
    - `runtime_invoke` for steady-state invocation lifecycle.
    - `ref.{name-of-flow}` for all other flows.
-4. Copy `@references/flow-doc/template.md` to `$ROOT_DIR/flows/{flow-name}.md`.
+4. Copy `@references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
 5. Fill the required `Purpose / Question Answered` and `Entry points` sections first so scope is explicit.
 6. Draft the `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
 7. Add inlined sudocode under each relevant `Call path` phase (`#### Sudocode (...)`) with source file annotations.
