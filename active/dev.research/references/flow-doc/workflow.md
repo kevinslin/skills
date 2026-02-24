@@ -24,7 +24,7 @@
 
 ## Authoring Requirements
 
-- Flow doc are question-first and debugging-oriented. Optimize for tracability
+- Flow docs are question-first and debugging-oriented. Optimize for traceability.
 - Use $sudocode with file annotations to describe code logic
 - Cite files where logic occurs.
 - Preserve any line ending with `// manual` exactly across updates.
@@ -34,7 +34,7 @@
 - If no user-settable configuration applies, explicitly write `None identified`.
 - `Sequence diagram` is required 
 - `$sudocode` is required
-- $usdocode should be embedded under the corresponding `Call path` phases .
+- `$sudocode` should be embedded under the corresponding `Call path` phases.
 - The `Call path` section must be phase-based and must include:
   - trigger / entry condition
   - concrete entrypoints
@@ -58,7 +58,9 @@
 8. Fill the required `State, config, and gates` section, including Statsig/env/user-settable inputs. If none apply, write `None identified`.
 9. Add a required `Sequence diagram` (prefer Mermaid) that matches the documented `Call path`.
 10. Fill in `Observability` and `Related docs`.
-11. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
+11. Run validator from this skill root:
+    - `python3 scripts/validate_flow_doc.py --kind normal --doc "$DOCS_ROOT/flows/{flow-name}.md"`
+12. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
 
 ## Instructions: Revise Flow Doc
 
@@ -74,7 +76,17 @@
 10. Ensure the `State, config, and gates` section is accurate and complete, or explicitly says `None identified` for user-settable configuration.
 11. If updating to the new format, inline sudocode under `Call path` phases instead of a standalone sudocode section.
 12. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
-13. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
+13. Run validator from this skill root:
+    - `python3 scripts/validate_flow_doc.py --kind normal --doc "<path-to-flow-doc>"`
+14. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
+
+## Pre-Handoff Checklist (Required)
+
+- [ ] `## Call path` exists and is phase-based.
+- [ ] Each call-path phase includes inlined `#### Sudocode (...)`.
+- [ ] Sudocode includes source annotations and reflects runtime branch ordering.
+- [ ] `## State, config, and gates` and `## Sequence diagram` are present.
+- [ ] `validate_flow_doc.py` passes with no errors.
 
 ## Best Practices
 

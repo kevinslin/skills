@@ -34,6 +34,7 @@
 - Include a required `Config` section that captures user-settable configuration impacting the flow:
   Statsig gates/configs/experiments/layers, environment variables, and other user-controlled runtime flags/inputs.
 - If no user-settable configuration applies, explicitly write `None identified`.
+- `$sudocode` is required for detailed flow logic.
 
 ## Instructions
 
@@ -47,7 +48,9 @@
 5. Fill the required `Config` section with user-settable configuration that affects behavior.
 6. Build the `State Timeline Table` for critical values before drafting sudocode.
 7. Perform a comprehensive code walk so every lifecycle step is inventoried.
-8. Fill in the document based on user instructions, stopping for clarifications when needed.
+8. Run validator from this skill root:
+   - `python3 scripts/validate_flow_doc.py --kind end2end --doc "$DOCS_ROOT/flows/{flow-name}.md"`
+9. Fill in the document based on user instructions, stopping for clarifications when needed.
 
 ## Revision Requirements
 
@@ -55,6 +58,16 @@
 - Confirm lifecycle-complete coverage from entrypoint to all terminal states.
 - Confirm `State Timeline Table` coverage for critical values and ensure ordering validity is explicit.
 - Ensure the `Config` section is accurate and complete, or explicitly says `None identified`.
+- Run validator from this skill root:
+  - `python3 scripts/validate_flow_doc.py --kind end2end --doc "<path-to-flow-doc>"`
+
+## Pre-Handoff Checklist (Required)
+
+- [ ] `## Full Logic Inventory` is complete and maps entrypoint to terminal states.
+- [ ] `## Detailed Flow sudocode` contains source-aligned sudocode for lifecycle stages.
+- [ ] Branches/retries/failures and side effects are represented.
+- [ ] `## Config` and `State Timeline Table` are complete (or explicitly `None identified` where appropriate).
+- [ ] `validate_flow_doc.py` passes with no errors.
 
 ## Best Practices
 

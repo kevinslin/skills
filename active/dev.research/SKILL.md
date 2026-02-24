@@ -1,7 +1,7 @@
 ---
 name: dev.research
 description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers architecture docs, research briefs, flow docs, state docs, service design docs, feature design docs, feature specs (execution plans), investigation specs, validation specs, recipes, vendor docs, and frequently asked questions (FAQ).
-version: 1.10.0
+version: 1.11.0
 dependencies: [dev.llm-session]
 ---
 
@@ -24,6 +24,10 @@ Use this skill when:
 - Drafting staff-level service design docs for new systems or services
 - Drafting implementation-focused feature design docs for new capabilities or migrations
 - Capturing reproducible change recipes from a current conversation or PR
+
+## Hard Trigger Rule (Flow Docs)
+
+If the request mentions any flow-doc intent (for example: `flow doc`, `flow docs`, `flowdoc`, `call path doc`, `end2end flow`, `execution flow doc`), you must run this skill and follow the matching flow-doc workflow before drafting or revising content.
 
 ## Root Directory
 
@@ -80,7 +84,18 @@ Do not force all phases into one document. Instead, each isolated flow doc must 
 
 ## Shared References
 
-- Whenever you need to write sudocode, use the [$sudocode](/Users/kevinlin/code/skills/active/sudocode/SKILL.md) skill.
+- Whenever you need to write sudocode, use `$sudocode`.
+- Source path for this workspace: [$sudocode](/Users/kevinlin/code/skills-public/active/sudocode/SKILL.md).
+
+## Flow-Doc Quality Gate (Required)
+
+Before finalizing any flow doc, run the validator from this skill root:
+
+```bash
+python3 scripts/validate_flow_doc.py --kind auto --doc "<flow-doc-path>"
+```
+
+Resolve validator errors before handoff. Do not skip this check.
 
 
 ## Required Ending Sections (All Docs)
