@@ -1,12 +1,15 @@
 ---
-name: ag-project
-description: Define and maintain an Agent Project Directory (AGD) with clear durable docs, canonical status ownership, and isolated runtime artifacts.
-dependencies: [ag-ledger, dev.research]
+name: ag-dir
+description: Define and maintain an Agent Project Directory (AGD) with clear durable
+  docs, canonical status ownership, and isolated runtime artifacts.
+dependencies:
+- ag-ledger
+- dev.research
 ---
 
-# AG Project Directory (AGD)
+# AG Directory (AGD)
 
-Use this skill when creating, auditing, or updating a durable agent project directory (AGD) for one task.
+Use this skill when creating, auditing, or updating a durable AG directory (AGD) for one task.
 
 ## Core Concept
 
