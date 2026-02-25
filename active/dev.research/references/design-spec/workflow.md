@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/feature-design-doc/template.md`
+- `@references/design-spec/template.md`
 
 ## Output Location
 
@@ -19,7 +19,7 @@
 
 1. Review existing docs under `$DOCS_ROOT/specs/` and related flow docs under `$DOCS_ROOT/flows/` to align with local conventions and known behavior.
 2. Create the project folder at `$DOCS_ROOT/specs/{YYYY-MM}-{feature-slug}/` if it does not exist.
-3. Copy `@references/feature-design-doc/template.md` to `$DOCS_ROOT/specs/{YYYY-MM}-{feature-slug}/design.md`.
+3. Copy `@references/design-spec/template.md` to `$DOCS_ROOT/specs/{YYYY-MM}-{feature-slug}/design.md`.
 4. Fill in the doc using source-backed details from code and docs (not guesses).
 5. If migration/parity is involved, add a dedicated parity audit section with explicit file-level follow-ups.
 

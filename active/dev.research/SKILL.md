@@ -44,7 +44,7 @@ Document types are listed here. Read each document type workflow for details, re
 - Flow Docs (End2End): Exhaustive lifecycle tracing across branches, retries, failures, and side effects. Workflow: `@references/flow-doc-end2end/workflow.md`
 - State Docs: Terminal-output mapping with predicates, required state, and derivation paths. Workflow: `@references/state-doc/workflow.md`
 - Service Design Docs: Staff-level service/system proposals covering architecture, APIs, reliability, and risks. Workflow: `@references/service-design-doc/workflow.md`
-- Feature Design Docs: Implementation-ready feature or migration designs with rollout/rollback planning. Workflow: `@references/feature-design-doc/workflow.md`
+- Feature Design Docs: Implementation-ready feature or migration designs with rollout/rollback planning. Workflow: `@references/design-spec/workflow.md`
 - Feature Specs (Execution Plans): Milestone-based implementation plans with dependencies, risks, and verification. Workflow: `@references/feature-spec/workflow.md`
 - Investigation Specs: Structured debugging plans for competing root-cause hypotheses and evidence capture. Workflow: `@references/investigation-spec/workflow.md`
 - Validation Specs: Validation coverage docs for automated and manual checks tied to specs. Workflow: `@references/validation-spec/workflow.md`
@@ -143,9 +143,9 @@ When invoked, follow the mapped workflow section exactly.
 
 - Follow `@references/service-design-doc/workflow.md` section `Instructions`.
 
-### new-feature-design-doc
+### new-design-spec
 
-- Follow `@references/feature-design-doc/workflow.md` section `Instructions`.
+- Follow `@references/design-spec/workflow.md` section `Instructions`.
 
 ### new-feature-spec
 
@@ -240,8 +240,8 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/state-doc/template.md` -> `dev.research/references/state-doc/template.md`
 - `@references/service-design-doc/workflow.md` -> `dev.research/references/service-design-doc/workflow.md`
 - `@references/service-design-doc/template.md` -> `dev.research/references/service-design-doc/template.md`
-- `@references/feature-design-doc/workflow.md` -> `dev.research/references/feature-design-doc/workflow.md`
-- `@references/feature-design-doc/template.md` -> `dev.research/references/feature-design-doc/template.md`
+- `@references/design-spec/workflow.md` -> `dev.research/references/design-spec/workflow.md`
+- `@references/design-spec/template.md` -> `dev.research/references/design-spec/template.md`
 - `@references/feature-spec/workflow.md` -> `dev.research/references/feature-spec/workflow.md`
 - `@references/feature-spec/template.md` -> `dev.research/references/feature-spec/template.md`
 - `@references/feature-spec/effective-planning.md` -> `dev.research/references/feature-spec/effective-planning.md`
