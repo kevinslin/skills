@@ -107,6 +107,10 @@ Manual validation:
 
 ---
 
+## Outputs
+
+- PR created from this spec: [PR URL, title, or status]
+
 ## Manual Notes 
 
 [keep this for the user to add notes. do not change between edits]
