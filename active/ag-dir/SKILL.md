@@ -23,9 +23,9 @@ Use this skill when creating, auditing, or updating a durable AG directory (AGD)
 │   ├── spec-01-<name>.md
 │   └── spec-02-<name>.md
 └── .agents
-    ├── ledger
-    │   └── ledger-{YYYY}-{MM}-{DD}.jsonl
-    └── local.env
+    ├── runs/
+        └── spec-{num}-progress.md
+        └── spec-{num}-learnings.md
 ```
 
 Durable project docs stay at the root. Runtime and local-only artifacts stay under `.agents/`.
@@ -36,27 +36,20 @@ Durable project docs stay at the root. Runtime and local-only artifacts stay und
 - `config.md`: Non-secret config schema/defaults and env var names. Do not store secret values.
 - `design.md`: The project-level design document (from `$dev.research` design-doc workflows).
 - `progress.md`: Single global status board with milestones, blockers, and next actions.
-- `specs/*.md`: Feature specs (from `$dev.research` feature-spec workflows). Each spec must include `## Status` and `## Learnings`.
-- `.agents/ledger/ledger-*.jsonl`: Append-only runtime activity files in JSONL format. If `$ag-ledger` emits `ledger-*.md`, treat it as JSONL content for compatibility.
-- `.agents/local.env`: Local runtime values/secrets (gitignored).
+- `specs/*.md`: Feature specs (from `$dev.research` feature-spec workflows) 
 
 ## Operating Rules
 
-1. Use a single source of truth for status:
-   - project-level status in `progress.md`
-   - per-spec status and learnings inside each `specs/spec-*.md`
-2. Do not create `spec-*-progress.md` or `spec-*-learnings.md`; keep that data in spec files.
+1. Keep project-level status in `progress.md`
+2. create `spec-*-progress.md` or `spec-*-learnings.md` under `.agents/runs/`
 3. Keep `memory.md` concise and durable; remove stale hypotheses once resolved.
-4. Keep `config.md` secret-free; use `.agents/local.env` for local runtime values.
-5. Keep spec numbering stable (`spec-01`, `spec-02`, ...). Avoid renaming active specs.
-6. Keep ledger files append-only; never rewrite historical entries.
-7. Keep top-level files limited to durable docs; isolate runtime churn under `.agents/`.
+4. Keep spec numbering stable (`spec-01`, `spec-02`, ...). Avoid renaming active specs.
+5. Keep top-level files limited to durable docs; isolate runtime churn under `.agents/`.
 
 ## Recommended Workflow
 
 1. Create the AGD skeleton.
 2. Draft `design.md`.
 3. Add one or more feature specs in `specs/`.
-4. Implement each spec while updating `## Status` and `## Learnings` in that spec file.
-5. Roll key outcomes and cross-spec updates into `progress.md`.
-6. Append runtime events to `.agents/ledger/ledger-*.jsonl`.
+4. Roll key outcomes and cross-spec updates into `progress.md`.
+5. Add spec specific progress under `.agents/runs`
