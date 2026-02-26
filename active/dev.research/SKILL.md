@@ -1,8 +1,17 @@
 ---
 name: dev.research
-description: Create structured research documentation for codebase exploration and feature investigation. Enables agents to produce docs that capture findings, methodologies, and recommendations. Covers architecture docs, research briefs, flow docs, state docs, service design docs, feature design docs, feature specs (execution plans), investigation specs, validation specs, recipes, vendor docs, and frequently asked questions (FAQ).
-version: 1.11.0
-dependencies: [dev.llm-session]
+description: >-
+  Create structured research documentation for codebase exploration and feature
+  investigation. Enables agents to produce docs that capture findings,
+  methodologies, and recommendations. Covers architecture docs, research briefs,
+  flow docs, state docs, service design docs, feature design docs, feature specs
+  (execution plans), investigation specs, validation specs, recipes, vendor
+  docs, frequently asked questions (FAQ), and FAQ specs that append Q&A to an
+  existing research document.
+version: 1.12.0
+dependencies:
+- dev.llm-session
+- sudocode
 ---
 
 # Research Documentation
@@ -50,6 +59,7 @@ Document types are listed here. Read each document type workflow for details, re
 - Validation Specs: Validation coverage docs for automated and manual checks tied to specs. Workflow: `@references/validation-spec/workflow.md`
 - Recipes: Reproducible step-by-step change instructions derived from conversation or PR context. Workflow: `@references/recipe/workflow.md`
 - Frequently Asked Questions (FAQ): Reusable Q&A docs with concise answers and source citations. Workflow: `@references/faq-doc/workflow.md`
+- FAQ Specs: In-place FAQ additions that append a focused Q&A to the most recent research document type mentioned in the conversation. Workflow: `@references/faq-spec/workflow.md`
 - Vendor Docs: Project-focused third-party library documentation summaries and topic references. Workflow: `@references/vendor-doc/workflow.md`
 
 ## Common Instructions (All Doc Types)
@@ -57,6 +67,7 @@ Document types are listed here. Read each document type workflow for details, re
 1. Find the requested doc type workflow at `@references/[doc-type]/workflow.md`.
 2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `@references/[doc-type]/template.md` to the requested output location before filling in content.
+4. For in-place doc types (currently FAQ Specs), use the template as an insertion snippet instead of creating a new file.
 
 ## Context Triage Gate (Required Before Drafting)
 
@@ -172,6 +183,10 @@ When updating existing flow docs, use a preservation-first revision style.
 
 - Follow `@references/recipe/workflow.md` section `Instructions`.
 
+### new-faq-spec
+
+- Follow `@references/faq-spec/workflow.md` section `Instructions`.
+
 ### new-vendor-docs
 
 - Follow `@references/vendor-doc/workflow.md` section `Instructions`.
@@ -224,6 +239,8 @@ $DOCS_ROOT/
         {name}.md
 ```
 
+FAQ Specs do not create standalone files. They update the target research document in place.
+
 ## Path Convention
 
 Throughout this skill, paths prefixed with `@` are relative to this skill root.
@@ -254,6 +271,8 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/recipe/template.md` -> `dev.research/references/recipe/template.md`
 - `@references/faq-doc/workflow.md` -> `dev.research/references/faq-doc/workflow.md`
 - `@references/faq-doc/template.md` -> `dev.research/references/faq-doc/template.md`
+- `@references/faq-spec/workflow.md` -> `dev.research/references/faq-spec/workflow.md`
+- `@references/faq-spec/template.md` -> `dev.research/references/faq-spec/template.md`
 - `@references/vendor-doc/workflow.md` -> `dev.research/references/vendor-doc/workflow.md`
 - `@references/vendor-doc/template.md` -> `dev.research/references/vendor-doc/template.md`
 
