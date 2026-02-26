@@ -101,16 +101,16 @@ agent-browser open https://app.example.com/dashboard
 
 ```bash
 # Auto-save/restore cookies and localStorage across browser restarts
-agent-browser --session-name myapp open https://app.example.com/login
+agent-browser --session myapp open https://app.example.com/login
 # ... login flow ...
-agent-browser close  # State auto-saved to ~/.agent-browser/sessions/
+agent-browser --session myapp close  # State auto-saved to ~/.agent-browser/sessions/
 
 # Next time, state is auto-loaded
-agent-browser --session-name myapp open https://app.example.com/dashboard
+agent-browser --session myapp open https://app.example.com/dashboard
 
 # Encrypt state at rest
 export AGENT_BROWSER_ENCRYPTION_KEY=$(openssl rand -hex 32)
-agent-browser --session-name secure open https://app.example.com
+agent-browser --session secure open https://app.example.com
 
 # Manage saved states
 agent-browser state list
@@ -158,9 +158,12 @@ agent-browser --cdp 9222 snapshot
 ### Visual Browser (Debugging)
 
 ```bash
-agent-browser --headed open https://example.com
-agent-browser highlight @e1          # Highlight element
-agent-browser record start demo.webm # Record session
+# Launch once with headed/profile flags
+agent-browser --session demo --headed open https://example.com
+
+# Follow-up commands should reuse only the session name
+agent-browser --session demo highlight @e1
+agent-browser --session demo record start demo.webm
 ```
 
 ### Local Files (PDFs, HTML)
@@ -233,6 +236,18 @@ agent-browser --session agent2 open site-b.com
 
 # Check active sessions
 agent-browser session list
+```
+
+Launch-only flags such as `--profile` and `--headed` belong on the initial `open` command for a session. After the browser daemon is running, reuse only `--session` for follow-up commands; repeating launch flags can be ignored or produce warnings.
+
+```bash
+# Initial launch
+agent-browser --session kevin-test --profile ~/.agent-browser/profiles/kevin-test --headed open http://localhost:3000
+
+# Follow-up commands
+agent-browser --session kevin-test wait --load networkidle
+agent-browser --session kevin-test snapshot -i
+agent-browser --session kevin-test get url
 ```
 
 Always close your browser session when done to avoid leaked processes:
