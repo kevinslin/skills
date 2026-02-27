@@ -10,10 +10,11 @@ allowed-tools: Bash(npx agent-browser:*), Bash(agent-browser:*)
 
 Every browser automation follows this pattern:
 
-1. **Navigate**: `agent-browser open <url>`
-2. **Snapshot**: `agent-browser snapshot -i` (get element refs like `@e1`, `@e2`)
-3. **Interact**: Use refs to click, fill, select
-4. **Re-snapshot**: After navigation or DOM changes, get fresh refs
+1. **Preflight**: For live apps, verify session/auth state and wait for the real UI to be ready
+2. **Navigate**: `agent-browser open <url>`
+3. **Snapshot**: `agent-browser snapshot -i` (get element refs like `@e1`, `@e2`)
+4. **Interact**: Use refs to click, fill, select
+5. **Re-snapshot**: After navigation or DOM changes, get fresh refs
 
 ```bash
 agent-browser open https://example.com/form
@@ -26,6 +27,18 @@ agent-browser click @e3
 agent-browser wait --load networkidle
 agent-browser snapshot -i  # Check result
 ```
+
+## Preflight Checklist (Live Apps)
+
+Before testing behavior in a logged-in app or local dev app, confirm the environment is valid:
+
+1. **Session**: Reuse a named session when possible: `agent-browser session list`
+2. **URL**: Confirm you are on the expected page: `agent-browser --session app get url`
+3. **Auth**: Check for obvious logged-out markers before testing product behavior
+4. **Editor**: Identify the real input surface. Rich apps often use `contenteditable` or `ProseMirror`, not a plain `textarea`
+5. **Backend readiness**: If you just restarted a local service, wait for it to be healthy before trusting browser results
+
+Do this before clicking around. Many false negatives come from testing the wrong browser state.
 
 ## Essential Commands
 
@@ -125,12 +138,14 @@ agent-browser state clean --older-than 7
 agent-browser open https://example.com/products
 agent-browser snapshot -i
 agent-browser get text @e5           # Get specific element text
-agent-browser get text body > page.txt  # Get all page text
+agent-browser get text body > page.txt  # Good for static pages; too noisy for app-state classification
 
 # JSON output for parsing
 agent-browser snapshot -i --json
 agent-browser get text @e1 --json
 ```
+
+For interactive apps, prefer a narrow container or stable selector over `get text body`. Full-body text often mixes shell UI, scripts, and transient loading text with the real result.
 
 ### Parallel Sessions
 
@@ -165,6 +180,10 @@ agent-browser --session demo --headed open https://example.com
 agent-browser --session demo highlight @e1
 agent-browser --session demo record start demo.webm
 ```
+
+If the user asked for a visible/headed browser, verify the window is actually on screen and frontmost. On macOS, the app may appear as `Google Chrome for Testing` rather than `Google Chrome`.
+
+If recording is requested, prefer a fresh session when possible. Recording mixed with persistent-profile debugging is more fragile than plain headed automation.
 
 ### Local Files (PDFs, HTML)
 
@@ -238,7 +257,7 @@ agent-browser --session agent2 open site-b.com
 agent-browser session list
 ```
 
-Launch-only flags such as `--profile` and `--headed` belong on the initial `open` command for a session. After the browser daemon is running, reuse only `--session` for follow-up commands; repeating launch flags can be ignored or produce warnings.
+Launch-only flags such as `--profile` and `--headed` belong on the initial `open` command for a session. After the browser daemon is running, reuse only `--session` for follow-up commands. Do not repeat launch flags on later commands; they can be ignored or produce warnings like `--profile ignored: daemon already running`.
 
 ```bash
 # Initial launch
@@ -250,6 +269,13 @@ agent-browser --session kevin-test snapshot -i
 agent-browser --session kevin-test get url
 ```
 
+If you need a different profile or different launch flags, close the running session first and relaunch:
+
+```bash
+agent-browser --session kevin-test close
+agent-browser --session kevin-test --profile ~/.agent-browser/profiles/other --headed open http://localhost:3000
+```
+
 Always close your browser session when done to avoid leaked processes:
 
 ```bash
@@ -258,6 +284,33 @@ agent-browser --session agent1 close   # Close specific session
 ```
 
 If a previous session was not closed properly, the daemon may still be running. Use `agent-browser close` to clean it up before starting new work.
+
+## Drive, Then Watch
+
+For chat apps, approval flows, and other long-running actions, separate submission from observation:
+
+1. Submit the action
+2. Record the submit timestamp immediately before the final click/press
+3. Watch the page with repeated narrow snapshots or stable selectors
+4. Stop on explicit success/refusal/approval criteria, not only on spinner text
+
+```bash
+# Submit first
+agent-browser --session chat snapshot -i
+agent-browser --session chat fill @e2 "hello"
+agent-browser --session chat click @e3
+
+# Then watch a narrow region or stable selector
+agent-browser --session chat wait 2000
+agent-browser --session chat snapshot -i -s '[data-testid="conversation"]'
+```
+
+Guidelines:
+
+- Prefer scoped `snapshot -s "<selector>"` or stable test ids over `get text body`
+- Re-snapshot after DOM changes; do not trust stale refs
+- Use explicit terminal conditions such as approval card visible, confirmation banner visible, refusal text visible, or unchanged conversation text for consecutive polls
+- Treat `Connecting to app`, `Stop streaming`, and similar shell text as weak signals, not final proof
 
 ## Ref Lifecycle (Important)
 
