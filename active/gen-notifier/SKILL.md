@@ -1,12 +1,12 @@
 ---
 name: gen-notifier
-description: Generic desktop notification skill for agents. Send desktop notifications when tasks are complete (or when user input/errors block progress). By default, assume that all jobs will require a notification unless the user says otherwise.
-version: 1.0.0
+description: Generic desktop notification skill for agents. Send exactly one desktop notification per job at the final terminal state, immediately before the final user-facing report, unless the user says otherwise.
+version: 1.1.0
 ---
 
 # Task Completion Notifier
 
-This skill sends desktop notifications using terminal-notifier to alert the user when tasks are complete.
+This skill sends desktop notifications using terminal-notifier to alert the user when a job has reached its final terminal state.
 
 ## When to Use This Skill
 
@@ -15,11 +15,20 @@ Use this skill in the following scenarios:
 1. **User explicitly requests notification** - When the user says "notify me when done", "let me know when this finishes", etc.
 2. **Long-running tasks** - Jobs that take significant time (builds, deployments, large refactors, test suites)
 3. **Background tasks** - When the user might context-switch while waiting
-4. **Default behavior** - By default, assume all jobs assigned to you will require a notification unless the user specifies otherwise
+4. **Default behavior** - By default, assume all jobs assigned to you will require one notification unless the user specifies otherwise
+
+## Core Rule
+
+Use this skill only once per job, at the very end, after the work is finalized and immediately before you generate the final user-facing report.
+
+- Do not notify during intermediate steps
+- Do not notify when you are still investigating or iterating
+- Do not notify before verification, cleanup, or finalization is complete
+- If the user explicitly asks for different timing, follow the user's instruction instead
 
 ## How to Notify
 
-When a task reaches a terminal state (completed, needs input, or has errors), send a notification using:
+When a job reaches a finalized terminal state (`completed`, `needs_input`, or `errors`), send a notification using:
 
 ```bash
 terminal-notifier -title "{DESCRIPTION OF JOB}" -message "{STATUS_OF_JOB}" -sound default
@@ -66,14 +75,19 @@ terminal-notifier -title "Database Migration Setup" -message "needs_input" -soun
 terminal-notifier -title "Build and Test Suite" -message "errors" -sound default
 ```
 
-## When to Send Notifications
+## Notification Timing
 
-Send notifications at these key moments:
+Send the notification only when both conditions are true:
 
-1. **Task completion** - When all work is done successfully
-2. **Blocked on input** - When you need user decision or clarification to proceed
-3. **Critical errors** - When errors prevent task completion
-4. **End of session** - When you've completed your turn and are waiting for user
+1. **The job is finalized** - Implementation, verification, cleanup, and any final checks are done, or you have reached a definitive blocked/error state
+2. **You are about to report out** - The next step is the final user-facing response
+
+Order of operations:
+
+1. Finish the work
+2. Verify and finalize the outcome
+3. Send exactly one notification
+4. Generate the final report to the user
 
 ## When NOT to Send Notifications
 
@@ -84,14 +98,15 @@ Don't send notifications for:
 - Minor clarifying questions
 - Every tool execution
 - Tasks where user is actively watching
+- Cases where the job is not yet finalized
 
 ## Best Practices
 
 1. **One notification per task** - Don't spam multiple notifications
-2. **Wait until terminal state** - Only notify when task is done or blocked
+2. **Wait until final handoff** - Only notify when the job is fully finalized and you are about to produce the final report
 3. **Be specific in title** - User should understand what completed
 4. **Use appropriate status** - Accurately reflect the outcome
-5. **Notify at the end** - Send notification as the last action in your turn
+5. **Default timing can be overridden** - If the user explicitly asks for a different moment, follow that instead
 
 ## Example Workflows
 
@@ -103,7 +118,9 @@ Assistant steps:
 1. Implements authentication feature
 2. Adds tests
 3. Runs tests (all pass)
-4. Sends notification: terminal-notifier -title "Authentication Feature" -message "completed" -sound default
+4. Finalizes the result and prepares the handoff
+5. Sends notification: terminal-notifier -title "Authentication Feature" -message "completed" -sound default
+6. Generates the final user-facing report
 
 ### Needs User Input
 
@@ -112,8 +129,10 @@ User: "Set up the database migration"
 Assistant steps:
 1. Creates migration files
 2. Discovers multiple valid approaches for schema design
-3. Needs user decision on approach
-4. Sends notification: terminal-notifier -title "Database Migration Setup" -message "needs_input" -sound default
+3. Determines it cannot proceed without a user decision
+4. Finalizes the blocked state and prepares the handoff
+5. Sends notification: terminal-notifier -title "Database Migration Setup" -message "needs_input" -sound default
+6. Generates the final user-facing report
 
 ### Encountered Errors
 
@@ -122,23 +141,25 @@ User: "Run the full test suite and notify me"
 Assistant steps:
 1. Runs test suite
 2. Encounters 5 failing tests
-3. Attempts to fix but requires refactoring beyond scope
-4. Sends notification: terminal-notifier -title "Test Suite Execution" -message "errors" -sound default
+3. Attempts to fix but determines the task cannot be completed within scope
+4. Finalizes the error state and prepares the handoff
+5. Sends notification: terminal-notifier -title "Test Suite Execution" -message "errors" -sound default
+6. Generates the final user-facing report
 
 ## Implementation Notes
 
 ### Timing
 
-Always send the notification as the **last action** in your response:
+Always send the notification after the job is finalized and immediately before the final user-facing report:
 
 ```
 Assistant: I've completed implementing the authentication feature...
 
 [Details of what was done]
 
-All tests are passing. Notifying you now.
-
 [Runs terminal-notifier command]
+
+[Final report to the user]
 ```
 
 ### Error Handling

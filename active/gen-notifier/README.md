@@ -4,7 +4,7 @@ A generic agent skill that sends desktop notifications when tasks are complete u
 
 ## Overview
 
-This skill enables an agent to notify you via desktop notifications when tasks are done, need input, or encounter errors. By default, all jobs assigned to the agent will trigger a notification when complete.
+This skill enables an agent to notify you via desktop notifications when a job is finalized, needs input, or ends in errors. By default, all jobs assigned to the agent trigger one notification at final handoff unless you say otherwise.
 
 ## Installation
 
@@ -30,7 +30,18 @@ The skill is automatically invoked when:
 
 ### Automatic Behavior
 
-By default, assume all jobs will generate a notification. The agent will send notifications at the end of tasks without you having to ask.
+By default, assume all jobs will generate exactly one notification. The agent should send it only after the work is fully finalized and immediately before the final user-facing report.
+
+### Timing Rule
+
+Use this skill only at the very end of the job unless the user explicitly asks for different timing.
+
+Order:
+
+1. Finish the work
+2. Verify and finalize the outcome
+3. Send the notification
+4. Deliver the final report
 
 ### Notification Format
 
@@ -51,7 +62,7 @@ terminal-notifier -title "{JOB_DESCRIPTION}" -message "{STATUS}"
 User: "Implement the user dashboard and notify me when you're done"
 ```
 
-The agent will complete the work and send:
+The agent will complete the work, finalize the result, send the notification, and then deliver the final report:
 ```bash
 terminal-notifier -title "User Dashboard Implementation" -message "completed"
 ```
@@ -62,7 +73,7 @@ terminal-notifier -title "User Dashboard Implementation" -message "completed"
 User: "Run the full test suite and fix any failures"
 ```
 
-The agent will execute tests, attempt fixes, and send:
+The agent will execute tests, attempt fixes, finalize the outcome, send the notification, and then deliver the final report:
 ```bash
 terminal-notifier -title "Test Suite and Fixes" -message "completed"
 ```
@@ -73,7 +84,7 @@ terminal-notifier -title "Test Suite and Fixes" -message "completed"
 User: "Set up authentication"
 ```
 
-If the agent needs to choose between OAuth or JWT, it sends:
+If the agent needs to choose between OAuth or JWT, it first confirms it is blocked, then sends:
 ```bash
 terminal-notifier -title "Authentication Setup" -message "needs_input"
 ```
@@ -84,17 +95,17 @@ terminal-notifier -title "Authentication Setup" -message "needs_input"
 User: "Deploy to production"
 ```
 
-If deployment fails:
+If deployment fails and the agent has reached a finalized error state:
 ```bash
 terminal-notifier -title "Production Deployment" -message "errors"
 ```
 
 ## Features
 
-- **Automatic notifications** - Default behavior for all tasks
+- **Automatic notifications** - Default behavior for all jobs unless disabled
 - **Clear status indicators** - completed, needs_input, or errors
 - **Concise titles** - Understand what finished at a glance
-- **End-of-turn notifications** - Sent when the agent is done or blocked
+- **Final-handoff timing** - Sent only after work is finalized and right before the final report
 - **No spam** - One notification per task, not per step
 
 ## Configuration
@@ -126,4 +137,4 @@ Ensure Terminal has notification permissions:
 
 ## Version
 
-Current version: 1.0.0
+Current version: 1.1.0
