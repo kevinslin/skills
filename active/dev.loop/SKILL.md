@@ -49,7 +49,12 @@ In addition to running the whole dev.loop, users can also invoke an individual p
   - `%ROOT_DIR/.agents/progress/{prefix}-learnings.md` for mistakes, lessons, and adjustments.
 
 ### 4. Polish
-- If there is user facing documentation like README.md, ARCHITECTURE.md or the like, make sure to update it
+- Gather session changes by reviewing changed files in the current worktree.
+- Identify behavior changes, CLI/API changes, config changes, and workflow changes that need documentation.
+- Update `README.md` so relevant behavior changes are documented.
+- If `DESIGN.md` exists, update sections affected by the implementation.
+- Confirm each meaningful change is reflected in docs, keeping updates specific and accurate.
+- If flow docs exist, update relevant flow docs with meaningful changes, including config updates and sudocode details when significant logic changes.
 
 ### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
