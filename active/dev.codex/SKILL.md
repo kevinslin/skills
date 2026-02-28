@@ -28,3 +28,33 @@ server management; expand with new capabilities as needed.
   errors/blocks, and concrete next steps.
 - Redact or avoid sensitive data; include short code paths/filenames only when they
   are essential to the summary.
+
+### 3. Multi-agent role management (add/update agents)
+- Use when asked to add, update, or tune Codex sub-agent roles.
+- Source of truth: `https://developers.openai.com/codex/multi-agent/`.
+- Ensure multi-agent is enabled first:
+  - Enable via `/experimental` in Codex CLI and restart, or set:
+    ```toml
+    [features]
+    multi_agent = true
+    ```
+- Configure roles in `[agents]` in either:
+  - `~/.codex/config.toml` for personal defaults.
+  - `.codex/config.toml` for project-shared roles.
+- Add or update role entries as `[agents.<name>]` with:
+  - `description`: short guidance for when Codex should choose the role.
+  - `config_file`: TOML layer for that role (relative paths resolve from the owning
+    `config.toml`).
+- Create or update each role `config_file` to set role-specific overrides such as:
+  - `model`, `model_reasoning_effort`, `sandbox_mode`, `developer_instructions`.
+  - Optional role-local MCP and skills settings when needed.
+- Important validation and behavior:
+  - Unknown keys in `[agents.<name>]` are rejected.
+  - `config_file` must exist and load cleanly or role spawns can fail.
+  - If a custom role name matches a built-in role (`default`, `worker`,
+    `explorer`, `monitor`), the custom role takes precedence.
+  - Unset settings inherit from the parent session.
+  - `agents.max_depth` defaults to `1` (child can spawn, deeper nesting blocked).
+- Verify changes by restarting Codex, then:
+  - Use `/agent` to inspect/switch active agent threads in CLI.
+  - Spawn explicitly with `agent_type = "<name>"` when testing a role.
