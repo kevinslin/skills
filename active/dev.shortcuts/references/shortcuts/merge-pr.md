@@ -7,14 +7,8 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
-1. Check if there are any unstaged commits. If so, use @shortcut:commit-code to commit unstaged changes.
+1. trigger:merge-pr-worktree
 
-2. Check if there is a remote PR open for the current branch. Make sure that all pending checks have passed. If a remote PR is not available, throw an error. 
+2. Switch back to the main branch locally if you are not on it. Pull from the remote. Push all changes.
 
-3. If a remote PR exists, merge it remotely (use `gh` if available). No need to wait for pending checks since we already did that in step 2.
-
-4. Switch back to the main branch locally if you are not on it. Pull from the remote. Push all changes.
-
-5. Delete the local branch if you switched branches. 
-
-6. Use $ag-learn in code mode to learn from this session and what could be done better
+3. Delete the local branch if you switched branches. 
