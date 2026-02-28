@@ -41,6 +41,7 @@ In addition to running the whole dev.loop, users can also invoke an individual p
 ### 3. Execute
 - Create a new branch for implementation unless given explicit instructions not to. If user explicitly asks for worktree, create worktree. If a plan branch exists, branch off it to keep the plan commit(s).
 - Follow the plan steps in order and check off each task as it is completed in the plan file.
+- Use red/green TDD.
 - For each phase or milestone, run `@shortcut:precommit-process.md` then `@shortcut:commit-code.md` to commit that phase separately.
 - **Always commit after each phase** (do not wait for user prompting). If precommit fails, fix issues and re-run before committing. If no precommit script exists, run the plan’s tests then commit.
 - Maintain progress artifacts under `%ROOT_DIR/.agents/progress` (create the folder if it does not exist):
