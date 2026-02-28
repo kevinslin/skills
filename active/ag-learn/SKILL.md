@@ -55,14 +55,18 @@ Use this mode when the user asks to "review [time interval] [path]".
    - `dev.llm-session` / transcript inspection to fill gaps
 3. Report coverage before analysis: how many candidates came from each source and which exact sessions matched.
 4. If `[path]` is provided, filter to sessions whose working directory is within that path (prefix match on absolute paths). If the interval or path is ambiguous, ask a clarifying question before proceeding.
-5. For each matching session, inspect the relevant artifacts and repeat the Default workflow. Produce a separate output file per session when needed.
-6. After the per-session notes, write one rollup file for the current review session that includes:
+5. Prioritize inspection order before opening transcripts in depth.
+   - Group repetitive sessions by workflow or workspace when the ledger shows they are materially identical no-op runs.
+   - Use ledger summaries as sufficient evidence for repetitive no-op clusters unless a run shows an anomaly such as an error, a missing ledger counterpart, a surprising artifact change, or a large token outlier.
+   - If a matched session already has a persisted learn file and it still matches the durable evidence, treat that learn file as primary evidence instead of re-deriving the same learning.
+6. For each matching session or cluster, inspect the relevant artifacts and repeat the Default workflow. Produce a separate output file per session when needed. For repetitive clusters, one grouped note is acceptable if anomalies are broken out separately.
+7. After the per-session notes, write one rollup file for the current review session that includes:
    - the exact review window
    - the matched session list
    - recurring patterns with frequency counts
    - the top 3-5 recommendations across sessions
    - likely targets for follow-up changes
-7. If no sessions match, state that explicitly.
+8. If no sessions match, state that explicitly.
 
 ### Code mode: `code`
 Use this mode when the user asks to learn from the current coding session
