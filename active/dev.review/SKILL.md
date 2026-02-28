@@ -1,6 +1,9 @@
 ---
 name: dev.review
-description: Multi-type review skill for code, design docs/specs, architecture, UX, and other reviews. Use when the user asks for a review or critique (code review, design doc review, spec review, PR review). Select the appropriate review persona from references/persona-[review-type].md.
+description: Multi-type review skill for code, design docs/specs, architecture, UX,
+  and other reviews. Use when the user asks for a review or critique (code review,
+  design doc review, spec review, PR review). Select the appropriate review persona
+  from references/persona-[review-type].md.
 ---
 
 # dev.review
@@ -12,7 +15,7 @@ description: Multi-type review skill for code, design docs/specs, architecture, 
    - If ambiguous, ask one clarifying question before reviewing.
 2. Load the matching persona from `references/persona-[review-type].md`.
    - If the persona file does not exist, ask the user for the prompt to add and pause the review.
-   - For `integrator`, default input artifacts are outputs from `meta.learn` and adjacent retrospectives.
+   - For `integrator`, default input artifacts are outputs from `ag-learn` and adjacent retrospectives.
 3. Apply the persona to the material and produce the review.
 
 ## Output

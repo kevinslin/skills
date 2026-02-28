@@ -17,4 +17,4 @@ Create a to-do list with the following items then perform all of them:
 
 5. Delete the local branch if you switched branches. 
 
-6. Use $meta.learn in code mode to learn from this session and what could be done better 
+6. Use $ag-learn in code mode to learn from this session and what could be done better

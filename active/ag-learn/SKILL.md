@@ -1,7 +1,11 @@
 ---
-name: meta.learn
-description: learn from the current session, run a time-bounded review across sessions, or reflect on a merged PR to identify simplicity and maintainability improvements. Use when asked to "learn", "review sessions", or "learn from PR"
-dependencies: [ag-ledger, dev.llm-session]
+name: ag-learn
+description: learn from the current session, run a time-bounded review across sessions,
+  or reflect on a merged PR to identify simplicity and maintainability improvements.
+  Use when asked to "learn", "review sessions", or "learn from PR"
+dependencies:
+- ag-ledger
+- dev.llm-session
 version: 0.0.0
 ---
 
@@ -22,7 +26,7 @@ Learn from the current session, or run a multi-session review over a time interv
 
 - %%LEARN_ROOT: $HOME/.llm/skills/learn/
 - %%LEARN_ARCHIVE: %%LEARN_ROOT/.archive
-- %%SKILL_TOKEN: `meta.learn`
+- %%SKILL_TOKEN: `ag-learn`
 
 ## General Rules
 
@@ -31,7 +35,7 @@ Learn from the current session, or run a multi-session review over a time interv
    - `ag-ledger session-id`
    - `$CODEX_THREAD_ID`
    - `dev.llm-session` as fallback
-3. Use the literal `meta.learn` token in output filenames. 
+3. Use the literal `ag-learn` token in output filenames. 
 4. Prefer 2-3 high-signal items. Do not pad with weak learnings.
 
 ## Workflow
