@@ -59,13 +59,12 @@ In addition to running the whole dev.loop, users can also invoke an individual p
 ### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
 - Check features against validation plan and ensure existing tests pass
-- After tests pass, always push at this stage by default unless overwritten elsewhere.
-- Default push behavior: `trigger:push-pr`
-- Assume `trigger:push-pr` will commit staged code before pushing.
-- If `trigger:push-pr` creates or updates a PR, make sure the PR body includes manual testing steps that need to be done with checkboxes.
-- Verify CI for the pushed branch is green. `trigger:check-ci`
-- Use $dev.review skill to do a critical code review of changes. Add findings as comments to the PR
-- Address review feedback from coding agents and humans; apply fixes, re-run tests, push, and re-check CI.
+- Run default push behavior: `trigger:push-pr`. Ensure the PR body includes manual testing steps with checkboxes
+- After push succeeds, delegate CI check to a `worker` subagent unless overwritten elsewhere.
+- In that `worker` subagent, ensure verify CI for the pushed branch is green via `trigger:check-ci`.
+- At the same time, kick off an `a-review` subagent for critical review.
+- In the `a-review` subagent, use $dev.review skill to do a critical code review of changes and add findings as PR comments.
+- Wait for both subagents to complete. Address review feedback from coding agents and humans; apply fixes, re-run tests, push, and re-check CI.
 - Notify the user when the work is ready.
 
 ## Important Reminders
