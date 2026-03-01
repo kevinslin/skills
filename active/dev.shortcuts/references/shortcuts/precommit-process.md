@@ -26,8 +26,7 @@ Before code is committed all changes must be reviewed and ensure they comply wit
 
 4. **Unit testing and integration testing:**
 
-BE SURE YOU RUN ALL TESTS (npm run precommit) as this includes codegen, formatting, linting, unit tests and integration tests.
-
+BE SURE YOU RUN ALL TESTS as this includes codegen, formatting, linting, unit tests and integration tests.
 Read @docs/development.md for additional background on test workflows.
 
 If you are in a node repo and there is a `precommit` check, then ALWAYS run the precommit check:

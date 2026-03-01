@@ -6,15 +6,19 @@ description: push a pr
 Instructions:
 1. if there are unstaged changes -> invoke:commit-code
 2. push code
-3. create a pr using the following template
-```
+3. create a pr using a body file (do NOT inline markdown in shell arguments). Example:
+```bash
+cat > /tmp/pr_body.md << 'EOF'
 [feat|enhance|chore|fix|docs]: [description of change]
 
 ## Context
 [what this change does]
 
-## Testing 
+## Testing
 [description of tests]
+EOF
+
+gh pr create --title "[feat|enhance|chore|fix|docs]: [description of change]" --body-file /tmp/pr_body.md
 ```
 4. invoke:check-ci -> if failure, invoke:fix-pr
 5. notify if everything passes

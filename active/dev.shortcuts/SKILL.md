@@ -9,7 +9,7 @@ Shortcuts are a small self-contained workflow that can be triggered via the keyw
 ## Shortcut Location
 Shortcuts can be in the following locations
 
-1. Under [shortcuts under skills directory](~/.codex/skills/dev.shortcuts/references/shortcuts/)
+1. Under the skill-bundled `references/shortcuts/` directory next to this `SKILL.md` (runtime mirror is typically `~/.codex/skills/dev.shortcuts/references/shortcuts/`).
 2. Inlined in agent instructions under `## Shortcuts`. Shortcut is header text. Can be followed by a space with argument hints enclosed in `[arg_name]`
 Examples
 ```
@@ -20,7 +20,10 @@ Invokes a foo with [arg1] and [arg2]
 ```
 
 ## Shortcut Trigger and Usage
-Any `@shortcut:[shortcut]` or `trigger:[shortcut]` invokes a shortcut and resolves either to the file with the same name in `./references/shortcuts/[shortcut].md` or inlined in the agent instruction. 
+Any `@shortcut:[shortcut]` or `trigger:[shortcut]` invokes a shortcut and resolves in this order:
+
+1. Exact file match in this skill's `./references/shortcuts/[shortcut].md`
+2. Exact inlined match under `## Shortcuts` in active instructions
 
 If the user asks to promote a shortcut to a skill, use `@shortcut:promote-shortcut-to-skill.md`.
 
@@ -34,7 +37,7 @@ Example:
 
 ## Mandatory Check Protocol
 
-1. Scan shortcuts in the `./shortcuts` folder. 
+1. Scan this skill's `./references/shortcuts` directory first (canonical source).
 2. If a shortcut matches -> Announce: "Using [shortcut name]"
 3. Follow the shortcut exactly
 
