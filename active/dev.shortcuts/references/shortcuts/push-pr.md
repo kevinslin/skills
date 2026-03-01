@@ -27,10 +27,14 @@ if [ -z "$BASE_BRANCH" ]; then
   exit 1
 fi
 
-gh pr create \
+PR_URL="$(gh pr create \
   --base "$BASE_BRANCH" \
   --title "[feat|enhance|chore|fix|docs]: [description of change]" \
-  --body-file /tmp/pr_body.md
+  --body-file /tmp/pr_body.md)"
+CURRENT_DIR="$(basename "$PWD")"
+PR_URL_FILE="${LOOPS_PR_ARTIFACT_FILE:-/tmp/${CURRENT_DIR}-devloop-pr}"
+printf '%s\n' "$PR_URL" > "$PR_URL_FILE"
+echo "Wrote PR URL to $PR_URL_FILE"
 ```
 4. invoke:check-ci -> if failure, invoke:fix-pr
 5. notify if everything passes
