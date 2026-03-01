@@ -35,16 +35,22 @@ Learn from the current session, or run a multi-session review over a time interv
    - `ag-ledger session-id`
    - `$CODEX_THREAD_ID`
    - `dev.llm-session` as fallback
-3. Use the literal `ag-learn` token in output filenames. 
-4. Prefer 2-3 high-signal items. Do not pad with weak learnings.
+3. If the active session is forked, also scan the parent session:
+   - Inspect the active session `session_meta` in `~/.codex/sessions/**/rollout-*.jsonl`.
+   - If `payload.forked_from_id` is present, include that parent session in the evidence scan.
+   - Pull the smallest durable artifact set for both sessions and label parent-derived findings clearly.
+4. Use the literal `ag-learn` token in output filenames.
+5. Prefer 2-3 high-signal items. Do not pad with weak learnings.
 
 ## Workflow
 ### Default (current session)
 1. Resolve the current session id using the canonical lookup order above.
-2. Review the full conversation and inspect the smallest durable artifact set for the task.
-3. List the points where you made a mistake, were uncertain, or found a reusable optimization opportunity.
-4. For each item, write a short analysis using the required template.
-5. If there are no mistakes or uncertainties, state that explicitly.
+2. Check whether this session is forked by reading `payload.forked_from_id` from the session `session_meta`.
+3. If forked, include the parent session in the evidence scan.
+4. Review the full conversation and inspect the smallest durable artifact set for the task (active session plus parent when forked).
+5. List the points where you made a mistake, were uncertain, or found a reusable optimization opportunity.
+6. For each item, write a short analysis using the required template.
+7. If there are no mistakes or uncertainties, state that explicitly.
 
 ### Review mode: `review [time interval] [path]`
 Use this mode when the user asks to "review [time interval] [path]".
@@ -71,16 +77,17 @@ Use this mode when the user asks to "review [time interval] [path]".
 ### Code mode: `code`
 Use this mode when the user asks to learn from the current coding session
 1. Resolve the current session id using the canonical lookup order above.
-2. Review the current coding session, and if a PR was submitted, any review comments that were addressed.
-3. Read each changed file in the current codebase (post-merge state), plus the smallest relevant test/log/review artifacts.
-4. For each file, reflect with hindsight: knowing the full implementation now, what would you do differently to make the code simpler and more maintainable? Consider:
+2. Check whether this session is forked by reading `payload.forked_from_id` from the session `session_meta`.
+3. Review the current coding session (plus parent session when forked), and if a PR was submitted, any review comments that were addressed.
+4. Read each changed file in the current codebase (post-merge state), plus the smallest relevant test/log/review artifacts.
+5. For each file, reflect with hindsight: knowing the full implementation now, what would you do differently to make the code simpler and more maintainable? Consider:
    - Duplicated patterns that could be consolidated
    - Abstractions that are too complex or too shallow
    - State management issues (stale state, missing resets, race conditions)
    - API surface problems (leaky internals, unnecessary casts, inconsistent naming)
    - Redundant logic (duplicate checks, dead code paths)
    - Missing edge cases discovered during or after implementation
-5. For each finding, write an analysis using the Required Output Template.
+6. For each finding, write an analysis using the Required Output Template.
 
 ### Archive Learning
 A learning is archived when it has already been used. When the user archives a learning, move it to %%LEARN_ARCHIVE 
