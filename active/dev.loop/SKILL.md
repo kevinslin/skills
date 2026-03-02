@@ -59,7 +59,9 @@ In addition to running the whole dev.loop, users can also invoke an individual p
 ### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
 - Check features against validation plan and ensure existing tests pass
-- Run default push behavior: `trigger:push-pr`. Ensure the PR body includes manual testing steps with checkboxes
+- Push is mandatory by default. Run `trigger:push-pr` for every dev.loop execution unless the user explicitly instructs not to push.
+- Do not treat push as optional due to caution, preference, or uncertainty; only skip push when the user says so explicitly.
+- Ensure the PR body includes manual testing steps with checkboxes.
 - After push succeeds, spawn two subagents:
   - spawn `worker` subagent to verify CI for the pushed branch is green via `trigger:check-ci`.
   - spawn `a-review` subagent for critical review using the $dev.review skill 
@@ -68,6 +70,7 @@ In addition to running the whole dev.loop, users can also invoke an individual p
 
 ## Important Reminders
 - unless you require user input, don't stop until you finish EVERY phase of the dev.loop
+- Verify phase includes push, CI check, and review. These are required by default and are NEVER optional unless the user explicitly instructs not to push.
 
 ## Phase Overrides
 Users can substitute any phase in the dev loop by mentioning they would like to override a particular phase with another set of instrctions. 
