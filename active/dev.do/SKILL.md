@@ -39,7 +39,12 @@ Drive a single dev task from intake to completion: parse the task input, gather 
 - Invoke the dev.loop skill to plan, implement, verify, and cleanup.
 - Pass along the task summary, relevant files, and any constraints/acceptance criteria.
 - When creating the PR, be sure to include the issue URL so that the PR can be linked to the issue
-- ALWAYS CREATE the PR before stopping unless you encounter something major that requires user intervention
+- Hard completion gate for code changes:
+  - Do not stop at local edits/commit.
+  - Ensure branch is pushed to remote.
+  - Ensure a PR exists and capture its URL.
+  - If no PR exists yet, run `trigger:push-pr` before final handoff.
+  - If push/PR creation fails, report the exact command error and what retry was attempted.
 
 ### 5) Cleanup
 - If the task came in as a git issue and user invokes the merge-pr shortcut, update the `Status` to `Done` 
@@ -48,3 +53,4 @@ Drive a single dev task from intake to completion: parse the task input, gather 
 
 - If questions are needed, ask them first and pause.
 - Otherwise, immediately run dev.loop and complete the task end-to-end.
+- For code changes, final report must include PR URL and confirmation that the branch was pushed.
