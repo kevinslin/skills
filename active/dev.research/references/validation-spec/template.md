@@ -17,7 +17,7 @@ context once implementation is complete.
 > AGENT INSTRUCTIONS:
 > 
 > Review all implementation and testing done to date and fill in the sections below with
-> automated validation that has been done and remaining manual validatin needed.
+> automated validation that has been done and remaining manual validation needed.
 
 ## Validation Planning
 
@@ -41,7 +41,7 @@ context once implementation is complete.
 > expected.
 > 
 > Give a detailed list of manual validation steps the user must perform to confirm the
-> all code and features implemented in these specs.
+> code and features implemented in these specs.
 > 
 > Do NOT include tests that are already automated and included and have been validated
 > as part of the implementation plan.
