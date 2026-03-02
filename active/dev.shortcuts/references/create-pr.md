@@ -25,18 +25,11 @@ Create a to-do list with the following items then perform all of them:
    - If you can’t run the GitHub CLI (`gh`) see
      @docs/general/agent-setup/github-cli-setup.md
 
-4. **Validate CI:** Use the `gh` CLI to be sure the CI system runs and passes.
-
-- Use `gh pr checks <pr_number>` to check on the build checks.
-
-- If any are failing, try reproduce locally.
-
-- If you can’t reproduce locally, review GitHub Actions configurations and debug why
-  local build is not reproducible but CI build is failing.
-
-- Make a fix and confirm it works on the next GitHub PR.
-
-- You *MUST* make the build pass.
-  If you cannot or don’t know how, tell the user and ask for help.
+4. **Validate CI:** Invoke @shortcut:check-ci.md so the PR uses the canonical awaiter-based
+   CI watch flow, sparse status updates, and Buildkite job-first triage rules.
+   If checks fail, reproduce and fix them locally when possible, then rerun CI until the
+   PR passes.
+   You *MUST* make the build pass.
+   If you cannot or don’t know how, tell the user and ask for help.
 
 5. **Print PR URL**: Return the url of the PR you just created
