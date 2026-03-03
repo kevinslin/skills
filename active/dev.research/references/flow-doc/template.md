@@ -112,16 +112,8 @@ External boundaries:
 
 ## Sequence diagram
 
-```mermaid
-sequenceDiagram
-    participant A as [Caller]
-    participant B as [Component]
-    participant C as [Service/API]
-
-    A->>B: [trigger]
-    B->>C: [request / function call]
-    C-->>B: [response]
-    B-->>A: [result]
+```
+[prefer ascii diagram]
 ```
 
 ## Observability
