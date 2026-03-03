@@ -20,7 +20,7 @@ Learn from the current session, or run a multi-session review over a time interv
 - identify areas of optimization that could improve the speed or quality of this task in the future
 - identify desires you have to make things better next time
 - synthesize recurring patterns across multiple sessions
-- route learnings toward skills, AGENTS.md, repo docs, or personal workflow updates
+- route learnings toward existing skill improvements, new skill proposals, AGENTS.md, repo docs, or personal workflow updates
 
 ## Constants
 
@@ -66,11 +66,14 @@ Use this mode when the user asks to "review [time interval] [path]".
    - Use ledger summaries as sufficient evidence for repetitive no-op clusters unless a run shows an anomaly such as an error, a missing ledger counterpart, a surprising artifact change, or a large token outlier.
    - If a matched session already has a persisted learn file and it still matches the durable evidence, treat that learn file as primary evidence instead of re-deriving the same learning.
 6. For each matching session or cluster, inspect the relevant artifacts and repeat the Default workflow. Produce a separate output file per session when needed. For repetitive clusters, one grouped note is acceptable if anomalies are broken out separately.
+   - When a recommendation routes to `skill`, explicitly decide whether the optimization is best served by improving an existing skill or by proposing a new skill.
+   - Prefer `skill action: create` when repeated work lacks a clean home in the current skill set or would otherwise overload an unrelated skill.
 7. After the per-session notes, write one rollup file for the current review session that includes:
    - the exact review window
    - the matched session list
    - recurring patterns with frequency counts
    - the top 3-5 recommendations across sessions
+   - skill opportunities grouped into `create new` versus `optimize existing`
    - likely targets for follow-up changes
 8. If no sessions match, state that explicitly.
 
@@ -112,6 +115,8 @@ Use this exact structure for each item to create a numbered list:
 
 ### Routing
 - target: [skill|AGENTS.md|repo docs|workflow|none]
+- skill action: [create|optimize|none]
+- skill name: [existing-skill-name|proposed-skill-name|n/a]
 - scope: [local|repo|cross-session]
 - promote: [yes|no]
 ```
