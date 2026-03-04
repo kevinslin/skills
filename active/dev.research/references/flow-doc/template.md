@@ -38,11 +38,11 @@ Branch points:
 External boundaries:
 - [HTTP/RPC/service call or `None identified`]
 
-#### Sudocode (Phase 1: [Short phase name])
+#### Pseudocode (Phase 1: [Short phase name])
 
 ```ts
 // Source: path/to/file.ts
-[sudocode for this phase only; include source file annotations and key branches]
+[use $sudocode skill for this phase only; include source file annotations and key branches]
 ```
 
 ### Phase 2: [Short phase name]
