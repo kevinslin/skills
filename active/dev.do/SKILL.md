@@ -36,7 +36,7 @@ Drive a single dev task from intake to completion: parse the task input, gather 
 
 ### 4) Execute with dev.loop
 
-- Invoke the dev.loop skill to plan, implement, verify, and cleanup.
+- Use $dev.loop skill to plan, implement, verify, and cleanup. You MUST FOLLOW every step of $dev.loop - this includes the `Verify` of the workflow which triggers a pr pushes and spawns subagents to check ci and do review. NEVER SKIP the verify phase
 - Pass along the task summary, relevant files, and any constraints/acceptance criteria.
 - When creating the PR, be sure to include the issue URL so that the PR can be linked to the issue
 - Hard completion gate for code changes:
@@ -45,6 +45,7 @@ Drive a single dev task from intake to completion: parse the task input, gather 
   - Ensure a PR exists and capture its URL.
   - If no PR exists yet, run `trigger:push-pr` before final handoff.
   - If push/PR creation fails, report the exact command error and what retry was attempted.
+  - Ensure `Verify` phase of $dev.loop is carried out
 
 ### 5) Cleanup
 - If the task came in as a git issue and user invokes the merge-pr shortcut, update the `Status` to `Done` 
