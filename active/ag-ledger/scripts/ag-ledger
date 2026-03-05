@@ -147,12 +147,16 @@ def find_agents_file(start: Path) -> Path:
 
 
 def build_agents_block(script_path: Path) -> str:
+    script_dir = script_path.parent
     return "\n".join(
         [
             BLOCK_START,
             "## ag-ledger",
             "",
             "Use `$ag-ledger` and the `ag-ledger` CLI for activity tracking.",
+            "Ensure the bundled CLI is on PATH in fresh shells:",
+            f'- `export PATH="{script_dir}:$PATH"`',
+            "",
             "Always log these moments:",
             "- Session start",
             "- Notable change",
@@ -168,9 +172,6 @@ def build_agents_block(script_path: Path) -> str:
             "- `ag-ledger append <session-id> \"session start: <plan>\"`",
             "- `ag-ledger append <session-id> \"notable change: <what changed>\"`",
             "- `ag-ledger append <session-id> \"session end: <outcome>\"`",
-            "",
-            "If `ag-ledger` is not on PATH, run:",
-            f"- `{script_path}`",
             BLOCK_END,
         ]
     )

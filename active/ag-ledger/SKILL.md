@@ -12,7 +12,7 @@ editing historical records. Use the bundled CLI in `scripts/ag-ledger`.
 
 ## Required Workflow
 
-1. Run `ag-ledger init` once per workspace to install/update AGENTS.md guidance.
+1. Run `ag-ledger init` once per workspace to install/update AGENTS.md guidance, including the PATH export for the bundled CLI.
 2. At session start, run:
 ```bash
 ag-ledger append-current "session start: <what you plan to do>"
@@ -69,7 +69,8 @@ ag-ledger init
 ## Notes
 
 - `ag-ledger init` searches upward from the current directory for `AGENTS.md`;
-  if none is found, it creates one in the current directory.
+  if none is found, it creates one in the current directory and adds a PATH export
+  for the bundled CLI.
 - `ag-ledger filter --from YYYY-MM-DD` starts at local `00:00`.
 - `ag-ledger filter --to YYYY-MM-DD` ends at local `23:59`.
 - In Codex, `ag-ledger append-current` reads the session id from `CODEX_THREAD_ID`.

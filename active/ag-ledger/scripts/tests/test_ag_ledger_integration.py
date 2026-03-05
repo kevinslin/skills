@@ -179,6 +179,7 @@ class AgLedgerIntegrationTests(unittest.TestCase):
     def test_init_writes_single_managed_agents_block(self) -> None:
         agents_file = self.workspace / "AGENTS.md"
         agents_file.write_text("# Workspace Instructions\n", encoding="utf-8")
+        expected_path_export = f'export PATH="{SCRIPT_PATH.parent}:$PATH"'
 
         first = self.run_cli("init")
         self.assertEqual(first.returncode, 0, msg=first.stderr)
@@ -189,6 +190,8 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         self.assertIn("<!-- ag-ledger:end -->", first_content)
         self.assertIn("ag-ledger append-current", first_content)
         self.assertIn("ag-ledger append <session-id>", first_content)
+        self.assertIn(expected_path_export, first_content)
+        self.assertNotIn("If `ag-ledger` is not on PATH", first_content)
 
         second = self.run_cli("init")
         self.assertEqual(second.returncode, 0, msg=second.stderr)
