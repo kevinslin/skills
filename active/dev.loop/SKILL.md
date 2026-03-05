@@ -17,6 +17,8 @@ If user gives you an existing spec - go straight to step 2 (Gather Context). Oth
 
 In addition to running the whole dev.loop, users can also invoke an individual phase of the dev.loop by referring to it (eg. re-run the "verify" phase)
 
+Whenever practical - use one or more subagents to run any given phase to preserve context
+
 ## Workflow Phases
 
 ### 1. Plan
@@ -37,6 +39,8 @@ In addition to running the whole dev.loop, users can also invoke an individual p
   - `Ambiguities/Gaps`
   - `Questions for User`
   - `Proposed Flow Docs`
+- After creating the spec, spawn subagent to critical review design doc with $dev.review skill and provide recommendations
+- Apply recommendations provided by the subagent
 
 ### 3. Execute
 - Create a new branch for implementation unless given explicit instructions not to. If user explicitly asks for worktree, create worktree. If a plan branch exists, branch off it to keep the plan commit(s).
