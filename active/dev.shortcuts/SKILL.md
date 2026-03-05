@@ -1,6 +1,7 @@
 ---
 name: dev.shortcuts
-description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request. 
+description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut. Applies before responding to ANY coding or development request.
+dependencies: []
 ---
 
 ## Context
