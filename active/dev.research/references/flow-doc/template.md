@@ -113,7 +113,7 @@ External boundaries:
 ## Sequence diagram
 
 ```
-[prefer ascii diagram]
+[prefer ascii box diagrams]
 ```
 
 ## Observability
