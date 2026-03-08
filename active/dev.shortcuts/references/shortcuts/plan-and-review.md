@@ -1,6 +1,6 @@
 ---
 name: plan-and-review
-description: Create a feature spec from user input with dev.research, run a comprehensive design review with dev.review, then apply accepted recommendations back into the original spec.
+description: Create a feature spec from user input with specy, run a comprehensive design review with dev.review, then apply accepted recommendations back into the original spec.
 ---
 
 Shortcut: Plan and Review
@@ -11,7 +11,7 @@ Create a to-do list with the following items then perform all of them:
 
 1. Confirm the feature request and constraints from user input. If scope is unclear, ask focused clarification questions before writing the spec.
 
-2. Use skill `dev.research` to create a feature spec from the user input.
+2. Use skill `specy` to create a feature spec from the user input.
    - Choose the correct spec type and target path.
    - Include at minimum: problem statement, goals/non-goals, requirements, proposed design, risks, and validation plan.
 

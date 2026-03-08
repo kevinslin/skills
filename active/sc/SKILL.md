@@ -349,7 +349,7 @@ Write the YAML frontmatter with `name`, `description`, and `dependencies`:
   - Include both what the Skill does and specific triggers/contexts for when to use it.
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to Claude.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
-- `dependencies`: YAML list of skill names this skill depends on (example: `dependencies: [dev.research, dev.llm-session]`).
+- `dependencies`: YAML list of skill names this skill depends on (example: `dependencies: [specy, dev.llm-session]`).
   - Use `dependencies: []` when there are no dependencies.
   - When skill body references other skills through explicit skill-path links (for example `/active/<skill-name>/SKILL.md`), automatically sync dependencies with:
     - `scripts/sync_dependencies.py <path/to/skill-folder>`

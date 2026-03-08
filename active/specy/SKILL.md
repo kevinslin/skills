@@ -1,13 +1,11 @@
 ---
-name: dev.research
-description: >-
-  Create structured research documentation for codebase exploration and feature
-  investigation. Enables agents to produce docs that capture findings,
-  methodologies, and recommendations. Covers architecture docs, research briefs,
-  flow docs, state docs, service design docs, feature design docs, feature specs
-  (execution plans), investigation specs, validation specs, recipes, vendor
-  docs, frequently asked questions (FAQ), and FAQ specs that append Q&A to an
-  existing research document.
+name: specy
+description: Create structured research documentation for codebase exploration and
+  feature investigation. Enables agents to produce docs that capture findings, methodologies,
+  and recommendations. Covers architecture docs, research briefs, flow docs, state
+  docs, service design docs, feature design docs, feature specs (execution plans),
+  investigation specs, validation specs, recipes, vendor docs, frequently asked questions
+  (FAQ), and FAQ specs that append Q&A to an existing research document.
 version: 1.12.0
 dependencies:
 - dev.llm-session
@@ -245,35 +243,35 @@ FAQ Specs do not create standalone files. They update the target research docume
 
 Throughout this skill, paths prefixed with `@` are relative to this skill root.
 
-- `@references/architecture/workflow.md` -> `dev.research/references/architecture/workflow.md`
-- `@references/architecture/template.md` -> `dev.research/references/architecture/template.md`
-- `@references/research-brief/workflow.md` -> `dev.research/references/research-brief/workflow.md`
-- `@references/research-brief/template.md` -> `dev.research/references/research-brief/template.md`
-- `@references/flow-doc/workflow.md` -> `dev.research/references/flow-doc/workflow.md`
-- `@references/flow-doc/template.md` -> `dev.research/references/flow-doc/template.md`
-- `@references/flow-doc-end2end/workflow.md` -> `dev.research/references/flow-doc-end2end/workflow.md`
-- `@references/flow-doc-end2end/template.md` -> `dev.research/references/flow-doc-end2end/template.md`
-- `@references/state-doc/workflow.md` -> `dev.research/references/state-doc/workflow.md`
-- `@references/state-doc/template.md` -> `dev.research/references/state-doc/template.md`
-- `@references/service-design-doc/workflow.md` -> `dev.research/references/service-design-doc/workflow.md`
-- `@references/service-design-doc/template.md` -> `dev.research/references/service-design-doc/template.md`
-- `@references/design-spec/workflow.md` -> `dev.research/references/design-spec/workflow.md`
-- `@references/design-spec/template.md` -> `dev.research/references/design-spec/template.md`
-- `@references/feature-spec/workflow.md` -> `dev.research/references/feature-spec/workflow.md`
-- `@references/feature-spec/template.md` -> `dev.research/references/feature-spec/template.md`
-- `@references/feature-spec/effective-planning.md` -> `dev.research/references/feature-spec/effective-planning.md`
-- `@references/feature-spec/beads.md` -> `dev.research/references/feature-spec/beads.md`
-- `@references/investigation-spec/workflow.md` -> `dev.research/references/investigation-spec/workflow.md`
-- `@references/investigation-spec/template.md` -> `dev.research/references/investigation-spec/template.md`
-- `@references/validation-spec/workflow.md` -> `dev.research/references/validation-spec/workflow.md`
-- `@references/validation-spec/template.md` -> `dev.research/references/validation-spec/template.md`
-- `@references/recipe/workflow.md` -> `dev.research/references/recipe/workflow.md`
-- `@references/recipe/template.md` -> `dev.research/references/recipe/template.md`
-- `@references/faq-doc/workflow.md` -> `dev.research/references/faq-doc/workflow.md`
-- `@references/faq-doc/template.md` -> `dev.research/references/faq-doc/template.md`
-- `@references/faq-spec/workflow.md` -> `dev.research/references/faq-spec/workflow.md`
-- `@references/faq-spec/template.md` -> `dev.research/references/faq-spec/template.md`
-- `@references/vendor-doc/workflow.md` -> `dev.research/references/vendor-doc/workflow.md`
-- `@references/vendor-doc/template.md` -> `dev.research/references/vendor-doc/template.md`
+- `@references/architecture/workflow.md` -> `specy/references/architecture/workflow.md`
+- `@references/architecture/template.md` -> `specy/references/architecture/template.md`
+- `@references/research-brief/workflow.md` -> `specy/references/research-brief/workflow.md`
+- `@references/research-brief/template.md` -> `specy/references/research-brief/template.md`
+- `@references/flow-doc/workflow.md` -> `specy/references/flow-doc/workflow.md`
+- `@references/flow-doc/template.md` -> `specy/references/flow-doc/template.md`
+- `@references/flow-doc-end2end/workflow.md` -> `specy/references/flow-doc-end2end/workflow.md`
+- `@references/flow-doc-end2end/template.md` -> `specy/references/flow-doc-end2end/template.md`
+- `@references/state-doc/workflow.md` -> `specy/references/state-doc/workflow.md`
+- `@references/state-doc/template.md` -> `specy/references/state-doc/template.md`
+- `@references/service-design-doc/workflow.md` -> `specy/references/service-design-doc/workflow.md`
+- `@references/service-design-doc/template.md` -> `specy/references/service-design-doc/template.md`
+- `@references/design-spec/workflow.md` -> `specy/references/design-spec/workflow.md`
+- `@references/design-spec/template.md` -> `specy/references/design-spec/template.md`
+- `@references/feature-spec/workflow.md` -> `specy/references/feature-spec/workflow.md`
+- `@references/feature-spec/template.md` -> `specy/references/feature-spec/template.md`
+- `@references/feature-spec/effective-planning.md` -> `specy/references/feature-spec/effective-planning.md`
+- `@references/feature-spec/beads.md` -> `specy/references/feature-spec/beads.md`
+- `@references/investigation-spec/workflow.md` -> `specy/references/investigation-spec/workflow.md`
+- `@references/investigation-spec/template.md` -> `specy/references/investigation-spec/template.md`
+- `@references/validation-spec/workflow.md` -> `specy/references/validation-spec/workflow.md`
+- `@references/validation-spec/template.md` -> `specy/references/validation-spec/template.md`
+- `@references/recipe/workflow.md` -> `specy/references/recipe/workflow.md`
+- `@references/recipe/template.md` -> `specy/references/recipe/template.md`
+- `@references/faq-doc/workflow.md` -> `specy/references/faq-doc/workflow.md`
+- `@references/faq-doc/template.md` -> `specy/references/faq-doc/template.md`
+- `@references/faq-spec/workflow.md` -> `specy/references/faq-spec/workflow.md`
+- `@references/faq-spec/template.md` -> `specy/references/faq-spec/template.md`
+- `@references/vendor-doc/workflow.md` -> `specy/references/vendor-doc/workflow.md`
+- `@references/vendor-doc/template.md` -> `specy/references/vendor-doc/template.md`
 
 When you see `$DOCS_ROOT/`, resolve paths relative to the project root directory.

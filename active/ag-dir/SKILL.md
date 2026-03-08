@@ -4,7 +4,7 @@ description: Define and maintain an Agent Project Directory (AGD) with clear dur
   docs, canonical status ownership, and isolated runtime artifacts.
 dependencies:
 - ag-ledger
-- dev.research
+- specy
 ---
 
 # AG Directory (AGD)
@@ -34,9 +34,9 @@ Durable project docs stay at the root. Runtime and local-only artifacts stay und
 
 - `memory.md`: Relevant memory for this project only. Keep stable facts, decisions, and known constraints.
 - `config.md`: Non-secret config schema/defaults and env var names. Do not store secret values.
-- `design.md`: The project-level design document (from `$dev.research` design-doc workflows).
+- `design.md`: The project-level design document (from `$specy` design-doc workflows).
 - `progress.md`: Single global status board with milestones, blockers, and next actions.
-- `specs/*.md`: Feature specs (from `$dev.research` feature-spec workflows) 
+- `specs/*.md`: Feature specs (from `$specy` feature-spec workflows) 
 
 ## Operating Rules
 

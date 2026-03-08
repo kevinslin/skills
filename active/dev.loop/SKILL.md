@@ -1,7 +1,13 @@
 ---
 name: dev.loop
-description: Drive a development task end-to-end from a user-stated goal through planning, context gathering, execution, verification. Use when the user asks to run a devloop, drive a task to completion, or wants a plan-gather-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop
-dependencies: [dev.shortcuts, dev.research]
+description: Drive a development task end-to-end from a user-stated goal through planning,
+  context gathering, execution, verification. Use when the user asks to run a devloop,
+  drive a task to completion, or wants a plan-gather-execute-verify workflow with
+  phased commits and CI verification. Also use if user asks to invoke any individual
+  phase of the devloop
+dependencies:
+- dev.shortcuts
+- specy
 ---
 
 # Dev Loop
@@ -22,11 +28,11 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 ## Workflow Phases
 
 ### 1. Plan
-- Use $dev.research to create a feature spec 
+- Use $specy to create a feature spec 
 - Bias toward answering plan questions yourself; only ask the user when blocked or when user tells you to check with them.
 - Ensure the plan includes explicit tests (prefer integration tests).
 - Capture the plan prefix from the plan filename: `{YYYY-MM-DD}-{title-in-kebab-case}`.
-- use $dev.research to create validation spec against the feature spec
+- use $specy to create validation spec against the feature spec
 
 ### 2. Gather Context
 - Given the spec/plan, identify remaining ambiguities, gaps, and unresolved assumptions.

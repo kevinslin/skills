@@ -1,6 +1,7 @@
 ---
 name: dev.shortcuts
-description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut. Applies before responding to ANY coding or development request.
+description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut.
+  Applies before responding to ANY coding or development request.
 dependencies: []
 ---
 
@@ -34,7 +35,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `inline-shortcut` | Inline one or more shortcut definitions into another skill. |
 | `merge-pr-basic` | Merge the current remote PR after confirming the branch is committed and checks passed. |
 | `merge-pr` | Merge the remote PR, switch back to the main branch locally, and clean up the local branch. |
-| `plan-and-review` | Draft a feature spec with `dev.research`, review it with `dev.review`, then fold accepted feedback back into the spec. |
+| `plan-and-review` | Draft a feature spec with `specy`, review it with `dev.review`, then fold accepted feedback back into the spec. |
 | `precommit-process` | Run the canonical pre-commit review and validation workflow before committing. |
 | `promote-shortcut-to-skill` | Convert a shortcut into a standalone skill and replace old shortcut references. |
 | `push-code` | Commit if needed, then push the current branch. |

@@ -53,7 +53,8 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_is_valid_skill_name_rules(self) -> None:
-        self.assertTrue(dependency_tools.is_valid_skill_name("dev.research"))
+        self.assertTrue(dependency_tools.is_valid_skill_name("specy"))
+        self.assertTrue(dependency_tools.is_valid_skill_name("dev.review"))
         self.assertTrue(dependency_tools.is_valid_skill_name("sc"))
 
         self.assertFalse(dependency_tools.is_valid_skill_name("Dev.Research"))
@@ -68,7 +69,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
             "dependencies": ["dev.llm-session"],
         }
         body = (
-            "Use /Users/kevinlin/code/skills/active/dev.research/SKILL.md and "
+            "Use /Users/kevinlin/code/skills/active/specy/SKILL.md and "
             "ignore self /Users/kevinlin/code/skills/active/consumer/SKILL.md."
         )
 
@@ -79,26 +80,26 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         )
 
         self.assertTrue(changed)
-        self.assertEqual(merged, ["dev.llm-session", "dev.research"])
-        self.assertEqual(added, ["dev.research"])
-        self.assertEqual(updated["dependencies"], ["dev.llm-session", "dev.research"])
+        self.assertEqual(merged, ["dev.llm-session", "specy"])
+        self.assertEqual(added, ["specy"])
+        self.assertEqual(updated["dependencies"], ["dev.llm-session", "specy"])
 
     def test_sync_dependencies_updates_skill_file_from_body_links(self) -> None:
         skill_dir = self.root / "sync-skill"
         _write_skill(
             skill_dir,
             name="sync-skill",
-            body="See /Users/kevinlin/code/skills/active/dev.research/SKILL.md.",
+            body="See /Users/kevinlin/code/skills/active/specy/SKILL.md.",
         )
 
         changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=True)
 
         self.assertTrue(changed)
-        self.assertEqual(merged, ["dev.research"])
-        self.assertEqual(added, ["dev.research"])
+        self.assertEqual(merged, ["specy"])
+        self.assertEqual(added, ["specy"])
 
         frontmatter, _ = dependency_tools.parse_skill_markdown(skill_dir / "SKILL.md")
-        self.assertEqual(frontmatter["dependencies"], ["dev.research"])
+        self.assertEqual(frontmatter["dependencies"], ["specy"])
 
     def test_sync_dependencies_respects_no_ensure_field(self) -> None:
         skill_dir = self.root / "no-ensure-skill"
@@ -123,7 +124,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         _write_skill(
             skill_dir,
             name="dup-deps-skill",
-            dependencies_line="dependencies: [dev.research, dev.research]",
+            dependencies_line="dependencies: [specy, specy]",
         )
 
         valid, message = quick_validate.validate_skill(skill_dir)
@@ -150,7 +151,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         _write_skill(
             old_skill_dir,
             name="old-skill",
-            dependencies_line="dependencies: [dev.research]",
+            dependencies_line="dependencies: [specy]",
             body="Use $old-skill and /active/old-skill/SKILL.md and `old-skill`.",
         )
         _write_skill(
@@ -227,7 +228,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         _write_skill(
             skill_dir,
             name="pkg-skill",
-            body="Use /Users/kevinlin/code/skills/active/dev.research/SKILL.md.",
+            body="Use /Users/kevinlin/code/skills/active/specy/SKILL.md.",
         )
         output_dir = self.root / "dist"
 
@@ -238,7 +239,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertTrue(packaged.exists())
 
         frontmatter, _ = dependency_tools.parse_skill_markdown(skill_dir / "SKILL.md")
-        self.assertEqual(frontmatter["dependencies"], ["dev.research"])
+        self.assertEqual(frontmatter["dependencies"], ["specy"])
 
         with zipfile.ZipFile(packaged, "r") as zipf:
             self.assertIn("pkg-skill/SKILL.md", zipf.namelist())

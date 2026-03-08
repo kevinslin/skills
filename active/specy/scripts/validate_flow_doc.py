@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validate flow-doc structure and sudocode coverage for dev.research workflows.
+Validate flow-doc structure and sudocode coverage for specy workflows.
 
 Checks:
 - Required section headings
