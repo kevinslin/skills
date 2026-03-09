@@ -57,7 +57,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertTrue(dependency_tools.is_valid_skill_name("dev.review"))
         self.assertTrue(dependency_tools.is_valid_skill_name("sc"))
 
-        self.assertFalse(dependency_tools.is_valid_skill_name("Dev.Research"))
+        self.assertFalse(dependency_tools.is_valid_skill_name("specy"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc--helper"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc..helper"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc-"))
