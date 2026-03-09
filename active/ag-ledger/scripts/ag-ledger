@@ -74,7 +74,25 @@ def resolve_current_codex_session_id(env: Mapping[str, str] | None = None) -> st
     )
 
 
-def append_entry(root: Path, session_id: str, message: str, workspace: str) -> dict:
+def normalize_optional_field(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    return normalized
+
+
+def append_entry(
+    root: Path,
+    session_id: str,
+    message: str,
+    workspace: str,
+    *,
+    invoked_skill: str | None = None,
+    mode: str | None = None,
+    parent_session_id: str | None = None,
+) -> dict:
     now = datetime.now()
     entry = {
         "time": now.strftime(ENTRY_TIME_FORMAT),
@@ -82,6 +100,14 @@ def append_entry(root: Path, session_id: str, message: str, workspace: str) -> d
         "session": session_id,
         "msg": message,
     }
+    optional_fields = {
+        "invoked_skill": normalize_optional_field(invoked_skill),
+        "mode": normalize_optional_field(mode),
+        "parent_session_id": normalize_optional_field(parent_session_id),
+    }
+    for key, value in optional_fields.items():
+        if value is not None:
+            entry[key] = value
 
     path = ledger_path_for_now(root, now)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +192,8 @@ def build_agents_block(script_path: Path) -> str:
             "- `ag-ledger append-current \"session start: <plan>\"`",
             "- `ag-ledger append-current \"notable change: <what changed>\"`",
             "- `ag-ledger append-current \"session end: <outcome>\"`",
+            "- `ag-ledger append-current --invoked-skill <skill-name> --mode <mode> \"<message>\"` when a skill workflow is active",
+            "- `ag-ledger append-current --parent-session-id <session-id> \"<message>\"` for subagent or fork lineage",
             "- `ag-ledger session-id` (prints `CODEX_THREAD_ID`)",
             "",
             "Manual fallback (non-Codex or explicit session ids):",
@@ -210,6 +238,9 @@ def cmd_append(args: argparse.Namespace) -> int:
         session_id=args.session_id,
         message=" ".join(args.message).strip(),
         workspace=workspace,
+        invoked_skill=args.invoked_skill,
+        mode=args.mode,
+        parent_session_id=args.parent_session_id,
     )
     print(json.dumps(entry, ensure_ascii=True))
     return 0
@@ -229,6 +260,9 @@ def cmd_append_current(args: argparse.Namespace) -> int:
         session_id=session_id,
         message=" ".join(args.message).strip(),
         workspace=workspace,
+        invoked_skill=args.invoked_skill,
+        mode=args.mode,
+        parent_session_id=args.parent_session_id,
     )
     print(json.dumps(entry, ensure_ascii=True))
     return 0
@@ -263,6 +297,12 @@ def cmd_filter(args: argparse.Namespace) -> int:
     requested_workspace = normalize_workspace_path(args.workspace) if args.workspace else None
     for entry, entry_time in iter_entries(root) or []:
         if args.session and entry.get("session") != args.session:
+            continue
+        if args.invoked_skill and entry.get("invoked_skill") != args.invoked_skill:
+            continue
+        if args.mode and entry.get("mode") != args.mode:
+            continue
+        if args.parent_session_id and entry.get("parent_session_id") != args.parent_session_id:
             continue
         if args.workspace:
             entry_workspace = entry.get("workspace")
@@ -312,6 +352,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Append an activity entry.",
     )
     append_parser.add_argument("session_id", help="Session id for the entry.")
+    append_parser.add_argument(
+        "--invoked-skill",
+        help="Structured skill name for the invocation being logged.",
+    )
+    append_parser.add_argument(
+        "--mode",
+        help="Structured execution mode such as review, code, or apply.",
+    )
+    append_parser.add_argument(
+        "--parent-session-id",
+        help="Parent session id for subagent or fork lineage.",
+    )
     append_parser.add_argument("message", nargs="+", help="Message to record.")
     append_parser.set_defaults(func=cmd_append)
 
@@ -319,6 +371,18 @@ def build_parser() -> argparse.ArgumentParser:
         "append-current",
         aliases=["appendc"],
         help="Append an entry using CODEX_THREAD_ID as the session id.",
+    )
+    append_current_parser.add_argument(
+        "--invoked-skill",
+        help="Structured skill name for the invocation being logged.",
+    )
+    append_current_parser.add_argument(
+        "--mode",
+        help="Structured execution mode such as review, code, or apply.",
+    )
+    append_current_parser.add_argument(
+        "--parent-session-id",
+        help="Parent session id for subagent or fork lineage.",
     )
     append_current_parser.add_argument("message", nargs="+", help="Message to record.")
     append_current_parser.set_defaults(func=cmd_append_current)
@@ -332,6 +396,18 @@ def build_parser() -> argparse.ArgumentParser:
     filter_parser = subparsers.add_parser("filter", help="Filter stored entries.")
     filter_parser.add_argument("--session", help="Filter by session id.")
     filter_parser.add_argument("--workspace", help="Filter by workspace path.")
+    filter_parser.add_argument(
+        "--invoked-skill",
+        help="Filter by structured invoked skill name.",
+    )
+    filter_parser.add_argument(
+        "--mode",
+        help="Filter by structured execution mode.",
+    )
+    filter_parser.add_argument(
+        "--parent-session-id",
+        help="Filter by structured parent session id.",
+    )
     filter_parser.add_argument(
         "--from",
         dest="from_time",

@@ -62,6 +62,9 @@ class AgLedgerIntegrationTests(unittest.TestCase):
 
         self.assertEqual(entry["session"], "sess-append")
         self.assertEqual(entry["msg"], "implement feature")
+        self.assertNotIn("invoked_skill", entry)
+        self.assertNotIn("mode", entry)
+        self.assertNotIn("parent_session_id", entry)
         self.assertEqual(
             Path(entry["workspace"]).resolve(),
             self.workspace.resolve(),
@@ -86,6 +89,12 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         codex_thread_id = "019c87f5-6475-76b1-9963-2d6b7336edcf"
         result = self.run_cli(
             "append-current",
+            "--invoked-skill",
+            "ag-learn",
+            "--mode",
+            "review",
+            "--parent-session-id",
+            "sess-parent",
             "session",
             "start:",
             "test",
@@ -95,6 +104,9 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         entry = json.loads(result.stdout.strip())
         self.assertEqual(entry["session"], codex_thread_id)
         self.assertEqual(entry["msg"], "session start: test")
+        self.assertEqual(entry["invoked_skill"], "ag-learn")
+        self.assertEqual(entry["mode"], "review")
+        self.assertEqual(entry["parent_session_id"], "sess-parent")
 
     def test_append_current_errors_without_codex_thread_id(self) -> None:
         result = self.run_cli(
@@ -176,6 +188,51 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         self.assertEqual(len(time_lines), 1)
         self.assertEqual(time_lines[0]["msg"], "middle")
 
+    def test_filter_supports_structured_skill_metadata(self) -> None:
+        data_dir = self.root / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        entries = [
+            {
+                "time": "2026-01-02 10:00",
+                "workspace": str(self.workspace),
+                "session": "sess-review",
+                "msg": "session start: review sessions",
+                "invoked_skill": "ag-learn",
+                "mode": "review",
+                "parent_session_id": "sess-root",
+            },
+            {
+                "time": "2026-01-02 10:05",
+                "workspace": str(self.workspace),
+                "session": "sess-code",
+                "msg": "session start: implement telemetry",
+                "invoked_skill": "ag-ledger",
+                "mode": "code",
+            },
+        ]
+        (data_dir / "ledger-2026-01-02.md").write_text(
+            "\n".join(json.dumps(entry, ensure_ascii=True) for entry in entries) + "\n",
+            encoding="utf-8",
+        )
+
+        by_skill = self.run_cli("filter", "--invoked-skill", "ag-learn")
+        self.assertEqual(by_skill.returncode, 0, msg=by_skill.stderr)
+        skill_lines = [json.loads(line) for line in by_skill.stdout.splitlines() if line.strip()]
+        self.assertEqual(len(skill_lines), 1)
+        self.assertEqual(skill_lines[0]["session"], "sess-review")
+
+        by_mode = self.run_cli("filter", "--mode", "review")
+        self.assertEqual(by_mode.returncode, 0, msg=by_mode.stderr)
+        mode_lines = [json.loads(line) for line in by_mode.stdout.splitlines() if line.strip()]
+        self.assertEqual(len(mode_lines), 1)
+        self.assertEqual(mode_lines[0]["invoked_skill"], "ag-learn")
+
+        by_parent = self.run_cli("filter", "--parent-session-id", "sess-root")
+        self.assertEqual(by_parent.returncode, 0, msg=by_parent.stderr)
+        parent_lines = [json.loads(line) for line in by_parent.stdout.splitlines() if line.strip()]
+        self.assertEqual(len(parent_lines), 1)
+        self.assertEqual(parent_lines[0]["mode"], "review")
+
     def test_init_writes_single_managed_agents_block(self) -> None:
         agents_file = self.workspace / "AGENTS.md"
         agents_file.write_text("# Workspace Instructions\n", encoding="utf-8")
@@ -190,6 +247,8 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         self.assertIn("<!-- ag-ledger:end -->", first_content)
         self.assertIn("ag-ledger append-current", first_content)
         self.assertIn("ag-ledger append <session-id>", first_content)
+        self.assertIn("--invoked-skill <skill-name>", first_content)
+        self.assertIn("--parent-session-id <session-id>", first_content)
         self.assertIn(expected_path_export, first_content)
         self.assertNotIn("If `ag-ledger` is not on PATH", first_content)
 
