@@ -55,6 +55,14 @@
 
 ---
 
+## Acceptance Criteria
+
+- [ ] [Observable feature outcome or invariant that must be true when the work is complete]
+- [ ] [User-visible behavior, system behavior, or compatibility guarantee the change must satisfy]
+- [ ] [Critical error-handling, data, or rollout invariant that must hold]
+
+---
+
 ## Phases and Dependencies
 
 ### Phase 1: [Name]
@@ -68,9 +76,7 @@
 
 ---
 
-## Validation and Done Criteria
-
-### Validation Plan
+## Validation Plan
 
 Integration tests:
 - [explicit test cases]
@@ -81,13 +87,16 @@ Unit tests (Optional):
 Manual validation:
 - [explicit checks]
 
-### Done Criteria
-- [ ] [Measurable outcome 1]
-- [ ] [Measurable outcome 2]
-- [ ] [Validation and documentation complete]
-
 ### Separate Validation Spec (Optional)
 - [Path to validation spec, if this feature needs a dedicated validation document]
+
+---
+
+## Done Criteria
+
+- [ ] [Implementation is complete and matches the acceptance criteria]
+- [ ] [Validation results are reviewed or linked, and any required follow-up is captured]
+- [ ] [Relevant docs, specs, or rollout/handoff steps are complete]
 
 ---
 

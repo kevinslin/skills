@@ -23,7 +23,7 @@
 4. Use `@references/feature-spec/effective-planning.md` for planning quality standards.
 5. Include a concrete `Required Pre-Read (LLM Agent)` list and explicit integration touchpoints (files/services/endpoints), because these are frequently reused during implementation sessions.
 6. Record resolved ambiguities and explicit decisions in the spec as they are discovered; do not leave important pivots buried in chat history.
-7. Include explicit validation and done criteria. If a dedicated validation spec is created, link it instead of duplicating a large matrix in the feature spec.
+7. Include explicit acceptance criteria, validation plan, and done criteria. Acceptance criteria answer "what must be true," validation answers "how it is proven," and done criteria answer "what must be complete before handoff." If a dedicated validation spec is created, link it instead of duplicating a large matrix in the feature spec.
 8. If the repository uses beads for tracking, follow `@references/feature-spec/beads.md`.
 9. Present a concise summary plus unresolved questions, unless the user asked to proceed without waiting.
 10. If the user asked to proceed without waiting, answer outstanding questions with best judgment and record assumptions in the spec.
@@ -32,8 +32,11 @@
 
 ## Authoring Requirements
 
-- Required sections: `Goal and Scope`, `Context and Constraints`, `Approach and Touchpoints`, `Phases and Dependencies`, `Validation and Done Criteria`, `Open Items and Risks`, `Manual Notes`, `Changelog`.
+- Required sections: `Goal and Scope`, `Context and Constraints`, `Approach and Touchpoints`, `Acceptance Criteria`, `Phases and Dependencies`, `Validation Plan`, `Done Criteria`, `Open Items and Risks`, `Manual Notes`, `Changelog`.
 - Optional subsections should be omitted when empty or generic (for example, `Non-obvious Dependencies or Access`, `Important Implementation Notes`, `Unit tests`, `Separate Validation Spec`, `Simplifications and Assumptions`).
+- `Acceptance Criteria` is required and feature-level, not per-phase. Use it for observable outcomes and important invariants, not test commands, implementation tasks, or completion/admin items such as "docs updated."
+- `Validation Plan` is required. Use it for automated and manual checks that prove the acceptance criteria, and link a separate validation spec when a larger matrix would be redundant here.
+- `Done Criteria` is required, but keep it short and process-oriented (for example: implementation complete, validation reviewed, docs/specs updated, rollout or handoff complete where applicable). It may reference acceptance or validation completion, but must not restate the acceptance bullets or validation checklist.
 - Break implementation into milestones or phases with explicit dependencies.
 - Each milestone must ship a verifiable outcome.
 - Risks must include concrete mitigations.
