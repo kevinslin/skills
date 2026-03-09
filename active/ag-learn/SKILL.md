@@ -36,11 +36,20 @@ Learn from the current session, or run a multi-session review over a time interv
    - `$CODEX_THREAD_ID`
    - `dev.llm-session` as fallback
 3. If the active session is forked, also scan the parent session:
-   - Inspect the active session `session_meta` in `~/.codex/sessions/**/rollout-*.jsonl`.
-   - If `payload.forked_from_id` is present, include that parent session in the evidence scan.
+   - Prefer `ag-ledger` `parent_session_id` metadata when it is present.
+   - Otherwise inspect the active session `session_meta` in `~/.codex/sessions/**/rollout-*.jsonl`.
+   - If `payload.forked_from_id` or `source.subagent.thread_spawn.parent_thread_id` is present, include that parent session in the evidence scan.
    - Pull the smallest durable artifact set for both sessions and label parent-derived findings clearly.
 4. Use the literal `ag-learn` token in output filenames.
 5. Prefer 2-3 high-signal items. Do not pad with weak learnings.
+6. In review mode, separate `catalog evidence` from `invocation evidence`.
+   - `catalog evidence`: skill names listed in `AGENTS.md`, skill inventories, dependency metadata, or generic instructions that enumerate available skills.
+   - `invocation evidence`: `ag-ledger` `invoked_skill` fields, explicit `$skill` or named-skill user requests, transcript/tool output showing the skill workflow was actually used, or durable artifacts produced by that skill.
+   - Do not count catalog-only sessions as skill invocations.
+7. When logging `ag-learn` activity to `ag-ledger`, always set structured fields:
+   - `--invoked-skill ag-learn`
+   - `--mode default|review|code`
+   - `--parent-session-id <session-id>` when the learn run is following a parent/forked/subagent session
 
 ## Workflow
 ### Default (current session)
@@ -59,23 +68,29 @@ Use this mode when the user asks to "review [time interval] [path]".
    - `ag-ledger` entries in the requested window
    - persisted learn files in `%%LEARN_ROOT` (including legacy `meta-learn-*` files)
    - `dev.llm-session` / transcript inspection to fill gaps
-3. Report coverage before analysis: how many candidates came from each source and which exact sessions matched.
-4. If `[path]` is provided, filter to sessions whose working directory is within that path (prefix match on absolute paths). If the interval or path is ambiguous, ask a clarifying question before proceeding.
-5. Prioritize inspection order before opening transcripts in depth.
+3. Classify skill evidence before counting invocations.
+   - Prefer `ag-ledger` `invoked_skill`, `mode`, and `parent_session_id` fields when they exist.
+   - Treat AGENTS catalogs, skill lists, dependency blocks, and other static enumerations as weak signals only.
+   - Count a skill invocation only when at least one direct signal exists; otherwise keep the session in coverage counts but exclude it from skill-frequency analysis.
+4. Report coverage before analysis: how many candidates came from each source, which exact sessions matched, and how many had direct invocation evidence versus weak/catalog-only evidence.
+5. If `[path]` is provided, filter to sessions whose working directory is within that path (prefix match on absolute paths). If the interval or path is ambiguous, ask a clarifying question before proceeding.
+6. Prioritize inspection order before opening transcripts in depth.
    - Group repetitive sessions by workflow or workspace when the ledger shows they are materially identical no-op runs.
    - Use ledger summaries as sufficient evidence for repetitive no-op clusters unless a run shows an anomaly such as an error, a missing ledger counterpart, a surprising artifact change, or a large token outlier.
+   - When you must inspect transcripts, scan first for direct invocation signals and skip AGENTS/skill-catalog sections unless they are needed to disprove a false positive.
    - If a matched session already has a persisted learn file and it still matches the durable evidence, treat that learn file as primary evidence instead of re-deriving the same learning.
-6. For each matching session or cluster, inspect the relevant artifacts and repeat the Default workflow. Produce a separate output file per session when needed. For repetitive clusters, one grouped note is acceptable if anomalies are broken out separately.
+7. For each matching session or cluster, inspect the relevant artifacts and repeat the Default workflow. Produce a separate output file per session when needed. For repetitive clusters, one grouped note is acceptable if anomalies are broken out separately.
    - When a recommendation routes to `skill`, explicitly decide whether the optimization is best served by improving an existing skill or by proposing a new skill.
    - Prefer `skill action: create` when repeated work lacks a clean home in the current skill set or would otherwise overload an unrelated skill.
-7. After the per-session notes, write one rollup file for the current review session that includes:
+8. After the per-session notes, write one rollup file for the current review session that includes:
    - the exact review window
    - the matched session list
+   - coverage split between direct invocation evidence and catalog-only evidence
    - recurring patterns with frequency counts
    - the top 3-5 recommendations across sessions
    - skill opportunities grouped into `create new` versus `optimize existing`
    - likely targets for follow-up changes
-8. If no sessions match, state that explicitly.
+9. If no sessions match, state that explicitly.
 
 ### Code mode: `code`
 Use this mode when the user asks to learn from the current coding session
