@@ -261,19 +261,19 @@ Launch-only flags such as `--profile` and `--headed` belong on the initial `open
 
 ```bash
 # Initial launch
-agent-browser --session kevin-test --profile ~/.agent-browser/profiles/kevin-test --headed open http://localhost:3000
+agent-browser --session self-test --profile ~/.agent-browser/profiles/self-test --headed open http://localhost:3000
 
 # Follow-up commands
-agent-browser --session kevin-test wait --load networkidle
-agent-browser --session kevin-test snapshot -i
-agent-browser --session kevin-test get url
+agent-browser --session self-test wait --load networkidle
+agent-browser --session self-test snapshot -i
+agent-browser --session self-test get url
 ```
 
 If you need a different profile or different launch flags, close the running session first and relaunch:
 
 ```bash
-agent-browser --session kevin-test close
-agent-browser --session kevin-test --profile ~/.agent-browser/profiles/other --headed open http://localhost:3000
+agent-browser --session self-test close
+agent-browser --session self-test --profile ~/.agent-browser/profiles/other --headed open http://localhost:3000
 ```
 
 Always close your browser session when done to avoid leaked processes:
