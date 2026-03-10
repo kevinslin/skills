@@ -34,7 +34,8 @@
 - If no user-settable configuration applies, explicitly write `None identified`.
 - `Sequence diagram` is required 
 - `$sudocode` is required
-- `$sudocode` should be embedded under the corresponding `Call path` phases.
+- Each `Ordered call path` entry should be a numbered step followed immediately by the relevant fenced sudocode block.
+- Keep ordered-call-path prose terse; put detailed logic, branch callouts, and side notes in the sudocode and sudocode comments.
 - The `Call path` section must be phase-based and must include:
   - trigger / entry condition
   - concrete entrypoints
@@ -54,13 +55,14 @@
 4. Copy `@references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
 5. Fill the required `Purpose / Question Answered` and `Entry points` sections first so scope is explicit.
 6. Draft the `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
-7. Add inlined sudocode under each relevant `Call path` phase (`#### Sudocode (...)`) with source file annotations.
-8. Fill the required `State, config, and gates` section, including Statsig/env/user-settable inputs. If none apply, write `None identified`.
-9. Add a required `Sequence diagram` (prefer Mermaid) that matches the documented `Call path`.
-10. Fill in `Observability` and `Related docs`.
-11. Run validator from this skill root:
+7. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations.
+8. Keep detailed logic, guard callouts, and external-call notes in the sudocode and sudocode comments instead of verbose step prose.
+9. Fill the required `State, config, and gates` section, including Statsig/env/user-settable inputs. If none apply, write `None identified`.
+10. Add a required `Sequence diagram` (prefer Mermaid) that matches the documented `Call path`.
+11. Fill in `Observability` and `Related docs`.
+12. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "$DOCS_ROOT/flows/{flow-name}.md"`
-12. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
+13. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
 
 ## Instructions: Revise Flow Doc
 
@@ -74,7 +76,7 @@
 8. If the document is end2end, verify explicit lifecycle-complete inventory coverage across branch, retry, and error paths.
 9. For context/state-sensitive behavior, make ordering validity explicit in the `Call path` and `State, config, and gates` sections (table optional, not required).
 10. Ensure the `State, config, and gates` section is accurate and complete, or explicitly says `None identified` for user-settable configuration.
-11. If updating to the new format, inline sudocode under `Call path` phases instead of a standalone sudocode section.
+11. If updating to the new format, move per-phase `#### Sudocode (...)` content into the matching numbered `Ordered call path` entries. If no format migration was requested, preserving legacy separate sudocode subsections is acceptable.
 12. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
 13. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "<path-to-flow-doc>"`
@@ -83,8 +85,8 @@
 ## Pre-Handoff Checklist (Required)
 
 - [ ] `## Call path` exists and is phase-based.
-- [ ] Each call-path phase includes inlined `#### Sudocode (...)`.
-- [ ] Sudocode includes source annotations and reflects runtime branch ordering.
+- [ ] Each call-path phase includes numbered `Ordered call path` steps with embedded fenced sudocode blocks, or intentionally preserved legacy `#### Sudocode (...)` subsections when migration was not requested.
+- [ ] Ordered-call-path sudocode includes source annotations and reflects runtime branch ordering.
 - [ ] `## State, config, and gates` and `## Sequence diagram` are present.
 - [ ] `validate_flow_doc.py` passes with no errors.
 
@@ -94,5 +96,6 @@
 - Link related docs where available.
 - Keep one lifecycle/behavior per document.
 - Keep sudocode readable and source-cited.
-- Keep call-path phases and sudocode aligned (same phase boundaries and branch labels).
+- Keep ordered-call-path descriptions terse; put nuance in sudocode/comments.
+- Keep call-path phases and ordered-step sudocode aligned (same phase boundaries and branch labels).
 - End your response with the exact flow-doc path (for discoverability).

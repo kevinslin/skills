@@ -4,8 +4,8 @@ Validate flow-doc structure and sudocode coverage for specy workflows.
 
 Checks:
 - Required section headings
-- Sudocode presence under call path sections
-- Basic phase/sudocode alignment checks
+- Ordered call path step coverage
+- Legacy sudocode subsection coverage for preservation-first revisions
 """
 
 from __future__ import annotations
@@ -59,6 +59,78 @@ def _section_contains_sudocode_heading(section: str) -> bool:
     return re.search(r"(?im)^####\s+.*sudocode.*$", section) is not None
 
 
+def _extract_labeled_block(section: str, label: str, next_patterns: list[str]) -> str | None:
+    start_re = re.compile(rf"(?im)^{re.escape(label)}\s*$")
+    match = start_re.search(section)
+    if not match:
+        return None
+
+    start = match.end()
+    next_indices = [
+        next_match.start()
+        for pattern in next_patterns
+        if (next_match := re.compile(pattern, re.I | re.M).search(section, start))
+    ]
+    end = min(next_indices) if next_indices else len(section)
+    return section[start:end]
+
+
+def _validate_legacy_sudocode_sections(scope: str, section: str, result: ValidationResult) -> None:
+    sudocode_sections = _extract_segments_by_heading(section, r"^####\s+.*sudocode.*$")
+    for heading, segment in sudocode_sections:
+        if CODE_BLOCK_RE.search(segment) is None:
+            result.errors.append(f"{scope} has no fenced code block in legacy sudocode section: {heading.strip()}")
+        if re.search(r"(?im)\bsource\b\s*:", segment) is None:
+            result.warnings.append(
+                f"{scope} has no explicit source annotation ('Source:') in legacy sudocode section: {heading.strip()}"
+            )
+
+
+def _validate_ordered_call_path(scope: str, section: str, result: ValidationResult) -> None:
+    ordered_call_path = _extract_labeled_block(
+        section,
+        "Ordered call path:",
+        [
+            r"^State transitions / outputs:\s*$",
+            r"^Branch points:\s*$",
+            r"^External boundaries:\s*$",
+            r"^###\s+Phase\b.*$",
+            r"^##\s+",
+        ],
+    )
+    if ordered_call_path is None:
+        result.errors.append(f"{scope} is missing an 'Ordered call path:' block.")
+        return
+
+    step_segments = _extract_segments_by_heading(ordered_call_path, r"^\d+\.\s+.+$")
+    if not step_segments:
+        if _section_contains_sudocode_heading(section):
+            result.warnings.append(
+                f"{scope} uses legacy separate sudocode subsections; prefer numbered Ordered call path steps with embedded code blocks."
+            )
+            _validate_legacy_sudocode_sections(scope, section, result)
+            return
+        result.errors.append(f"{scope} must use numbered steps under 'Ordered call path:'.")
+        return
+
+    steps_with_code = 0
+    for heading, segment in step_segments:
+        if CODE_BLOCK_RE.search(segment) is None:
+            result.errors.append(f"{scope} ordered step has no fenced code block: {heading.strip()}")
+            continue
+        steps_with_code += 1
+        if re.search(r"(?im)\bsource\b\s*:", segment) is None:
+            result.warnings.append(
+                f"{scope} ordered step has no explicit source annotation ('Source:'): {heading.strip()}"
+            )
+
+    if steps_with_code == 0 and _section_contains_sudocode_heading(section):
+        result.warnings.append(
+            f"{scope} uses legacy separate sudocode subsections; prefer numbered Ordered call path steps with embedded code blocks."
+        )
+        _validate_legacy_sudocode_sections(scope, section, result)
+
+
 def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
     required_h2 = [
         "Purpose / Question Answered",
@@ -75,32 +147,16 @@ def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
     if call_path is None:
         return
 
-    if not _section_contains_sudocode_heading(call_path):
-        result.errors.append(
-            "Call path must include inlined sudocode (expected heading like '#### Sudocode (...)')."
-        )
-        return
-
     phase_segments = _extract_segments_by_heading(call_path, r"^###\s+Phase\b.*$")
     if not phase_segments:
         result.warnings.append(
-            "Call path does not use explicit '### Phase ...' headings; phase/sudocode alignment cannot be fully validated."
+            "Call path does not use explicit '### Phase ...' headings; phase/ordered-step alignment cannot be fully validated."
         )
-    else:
-        for heading, segment in phase_segments:
-            if not _section_contains_sudocode_heading(segment):
-                result.errors.append(
-                    f"Phase is missing inlined sudocode subsection: {heading.strip()}"
-                )
+        _validate_ordered_call_path("Call path", call_path, result)
+        return
 
-    sudocode_sections = _extract_segments_by_heading(call_path, r"^####\s+.*sudocode.*$")
-    for heading, segment in sudocode_sections:
-        if CODE_BLOCK_RE.search(segment) is None:
-            result.errors.append(f"Sudocode subsection has no fenced code block: {heading.strip()}")
-        if re.search(r"(?im)\bsource\b\s*:", segment) is None:
-            result.warnings.append(
-                f"Sudocode subsection has no explicit source annotation ('Source:'): {heading.strip()}"
-            )
+    for heading, segment in phase_segments:
+        _validate_ordered_call_path(heading.strip(), segment, result)
 
 
 def _validate_end2end_flow_doc(text: str, result: ValidationResult) -> None:

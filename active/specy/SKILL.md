@@ -6,7 +6,7 @@ description: Create structured research documentation for codebase exploration a
   docs, service design docs, feature design docs, feature specs (execution plans),
   investigation specs, validation specs, recipes, vendor docs, frequently asked questions
   (FAQ), and FAQ specs that append Q&A to an existing research document.
-version: 1.12.0
+version: 1.12.1
 dependencies:
 - dev.llm-session
 - sudocode

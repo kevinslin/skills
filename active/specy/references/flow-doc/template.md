@@ -24,9 +24,21 @@ Entrypoints:
 - `path/to/file.ts:[functionName]`
 
 Ordered call path:
-- [Step 1]
-- [Step 2]
-- [Step 3]
+1. [Short, concrete action]
+   ```ts
+   // Source: path/to/file.ts
+   [use $sudocode skill for this step only; keep the description terse and move logic/branch callouts into comments]
+   ```
+2. [Next short action]
+   ```ts
+   // Source: path/to/file.ts
+   [sudocode for this step only]
+   ```
+3. [Next short action]
+   ```ts
+   // Source: path/to/file.ts
+   [sudocode for this step only]
+   ```
 
 State transitions / outputs:
 - Input: [state/args entering the phase]
@@ -37,13 +49,6 @@ Branch points:
 
 External boundaries:
 - [HTTP/RPC/service call or `None identified`]
-
-#### Pseudocode (Phase 1: [Short phase name])
-
-```ts
-// Source: path/to/file.ts
-[use $sudocode skill for this phase only; include source file annotations and key branches]
-```
 
 ### Phase 2: [Short phase name]
 
@@ -54,8 +59,16 @@ Entrypoints:
 - `path/to/file.ts:[functionName]`
 
 Ordered call path:
-- [Step 1]
-- [Step 2]
+1. [Short, concrete action]
+   ```ts
+   // Source: path/to/file.ts
+   [sudocode for this step only]
+   ```
+2. [Next short action]
+   ```ts
+   // Source: path/to/file.ts
+   [sudocode for this step only]
+   ```
 
 State transitions / outputs:
 - Input: [state/args entering the phase]
@@ -67,16 +80,30 @@ Branch points:
 External boundaries:
 - [HTTP/RPC/service call or `None identified`]
 
-#### Sudocode (Phase 2: [Short phase name])
-
-```ts
-// Source: path/to/file.ts
-[sudocode for this phase only]
-```
-
 ### Phase N: [Short phase name]
 
-[Repeat as needed]
+Trigger / entry condition:
+- [What starts this phase?]
+
+Entrypoints:
+- `path/to/file.ts:[functionName]`
+
+Ordered call path:
+1. [Short, concrete action]
+   ```ts
+   // Source: path/to/file.ts
+   [sudocode for this step only]
+   ```
+
+State transitions / outputs:
+- Input: [state/args entering the phase]
+- Output: [state/value/artifact produced by the phase]
+
+Branch points:
+- [Gate/check/fallback and its effect]
+
+External boundaries:
+- [HTTP/RPC/service call or `None identified`]
 
 ## State, config, and gates
 
