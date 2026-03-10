@@ -40,8 +40,8 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `promote-shortcut-to-skill` | Convert a shortcut into a standalone skill and replace old shortcut references. |
 | `push-code` | Commit if needed, then push the current branch. |
 | `push-pr` | Commit if needed, push the branch, create a PR, then watch and fix CI as needed. |
-| `sync-branch-push` | Sync the current branch with its upstream branch, then force-push with lease. |
-| `sync-branch` | Rebase the current branch onto its upstream branch and resolve conflicts if needed. |
+| `sync-branch-push` | Rebase the current branch onto the remote default branch from `git remote show`, then force-push upstream with lease. |
+| `sync-branch` | Rebase the current branch onto the remote default branch from `git remote show` and resolve conflicts if needed. |
 
 ## Maintenance
 Keep the inline shortcut index above synchronized with the bundled shortcut files.
