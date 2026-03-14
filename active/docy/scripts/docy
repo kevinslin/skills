@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""Manage injectable doc references for the docy skill."""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+
+BLOCK_TEMPLATE = "<!-- docy:{slug}:begin -->"
+BLOCK_END_TEMPLATE = "<!-- docy:{slug}:end -->"
+
+
+@dataclass(frozen=True)
+class DocSpec:
+    slug: str
+    rel_path: str
+    description: str
+
+
+SCRIPT_PATH = Path(__file__).resolve()
+SKILL_ROOT = SCRIPT_PATH.parents[1]
+DOCS_ROOT = SKILL_ROOT / "references"
+ALIASES = {
+    "ref/no-backward-compat": "ref/no-back-compat",
+}
+DOCS = {
+    "ref/no-back-compat": DocSpec(
+        slug="ref/no-back-compat",
+        rel_path="ref/no-back-compat.md",
+        description="Hard-cut product policy; no backwards compatibility.",
+    ),
+}
+
+
+def clean_slug(value: str) -> str:
+    normalized = value.strip()
+    if normalized.startswith("`") and normalized.endswith("`") and len(normalized) >= 2:
+        normalized = normalized[1:-1].strip()
+    return normalized
+
+
+def resolve_doc(value: str) -> DocSpec:
+    slug = clean_slug(value)
+    canonical = ALIASES.get(slug, slug)
+    if canonical not in DOCS:
+        supported = ", ".join(sorted([*DOCS.keys(), *ALIASES.keys()]))
+        raise ValueError(f"Unknown doc '{value}'. Supported docs: {supported}")
+    return DOCS[canonical]
+
+
+def doc_path(doc: DocSpec) -> Path:
+    return DOCS_ROOT / doc.rel_path
+
+
+def load_doc_text(doc: DocSpec) -> str:
+    path = doc_path(doc)
+    if not path.exists():
+        raise FileNotFoundError(f"Doc file not found: {path}")
+    return path.read_text(encoding="utf-8").rstrip() + "\n"
+
+
+def block_markers(doc: DocSpec) -> tuple[str, str]:
+    key = doc.slug.replace("/", "__")
+    return (
+        BLOCK_TEMPLATE.format(slug=key),
+        BLOCK_END_TEMPLATE.format(slug=key),
+    )
+
+
+def build_agents_block(doc: DocSpec) -> str:
+    start, end = block_markers(doc)
+    body = load_doc_text(doc).rstrip()
+    lines = [
+        start,
+        f"## docy: {doc.slug}",
+        "",
+        "Managed by `docy install`.",
+        f"Source doc: `{doc.slug}`",
+        "",
+        body,
+        end,
+    ]
+    return "\n".join(lines)
+
+
+def find_agents_file(start: Path) -> Path:
+    for directory in [start, *start.parents]:
+        candidate = directory / "AGENTS.md"
+        if candidate.exists():
+            return candidate
+    return start / "AGENTS.md"
+
+
+def install_doc(doc: DocSpec, agents_file: Path) -> None:
+    block = build_agents_block(doc)
+    start, end = block_markers(doc)
+    agents_file.parent.mkdir(parents=True, exist_ok=True)
+
+    if agents_file.exists():
+        content = agents_file.read_text(encoding="utf-8")
+    else:
+        content = ""
+
+    pattern = re.compile(
+        rf"{re.escape(start)}.*?{re.escape(end)}\n?",
+        re.DOTALL,
+    )
+    if pattern.search(content):
+        updated = pattern.sub(block + "\n", content).rstrip() + "\n"
+    else:
+        trimmed = content.rstrip()
+        if trimmed:
+            updated = trimmed + "\n\n" + block + "\n"
+        else:
+            updated = block + "\n"
+
+    agents_file.write_text(updated, encoding="utf-8")
+
+
+def cmd_inject(args: argparse.Namespace) -> int:
+    try:
+        doc = resolve_doc(args.doc)
+        sys.stdout.write(load_doc_text(doc))
+        return 0
+    except (ValueError, FileNotFoundError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+
+def cmd_install(args: argparse.Namespace) -> int:
+    try:
+        doc = resolve_doc(args.doc)
+        agents_file = (
+            Path(args.agents_file).expanduser().resolve()
+            if args.agents_file
+            else find_agents_file(Path.cwd())
+        )
+        install_doc(doc, agents_file)
+        print(str(agents_file))
+        return 0
+    except (ValueError, FileNotFoundError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="docy",
+        description="Manage injectable docs for the docy skill.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    inject = subparsers.add_parser("inject", help="Print a managed doc to stdout.")
+    inject.add_argument("doc", help="Doc slug such as ref/no-back-compat.")
+    inject.set_defaults(func=cmd_inject)
+
+    install = subparsers.add_parser(
+        "install",
+        help="Install or update a managed rule block in AGENTS.md.",
+    )
+    install.add_argument("doc", help="Doc slug such as ref/no-back-compat.")
+    install.add_argument(
+        "--agents-file",
+        help="Write to this AGENTS.md path instead of searching upward from cwd.",
+    )
+    install.set_defaults(func=cmd_install)
+
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
