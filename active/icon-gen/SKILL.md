@@ -9,7 +9,7 @@ dependencies:
 
 ## Overview
 
-Generate one primary icon with `imagegen`, then derive a deterministic inline icon by trimming transparent padding. The general icon and inline icon may share the same art style, but the inline icon should be optimized for small text-adjacent usage.
+Generate one primary icon with `imagegen`, then derive a deterministic high-resolution inline PNG from that reference art. The general icon and inline icon may share the same brand identity, but the inline icon should be cropped and padded specifically for small text-adjacent usage.
 
 ## Workflow
 
@@ -26,18 +26,18 @@ Generate one primary icon with `imagegen`, then derive a deterministic inline ic
    - Keep transparent background, simple silhouette, and clean edges.
    - Treat the deliverable as two outputs:
      - General icon: full icon asset for docs, avatars, or larger display.
-     - Inline icon: trimmed transparent icon meant to sit beside text.
+     - Inline icon: high-resolution PNG meant to sit beside text.
 4. Generate the general icon with the `imagegen` dependency:
    - Use `logo-brand` unless another `imagegen` taxonomy is clearly better.
    - Write the general icon to `$ASSETS_DIR/<slug>.png`.
    - Keep filenames stable and descriptive.
 5. Create the inline icon:
    - Run `scripts/prepare_inline_icon.sh "$ASSETS_DIR/<slug>.png" "$ASSETS_DIR/<slug>-inline.png"`.
-   - This trims transparent padding to make HTML inline alignment deterministic.
+   - This trims transparent padding, scales the visible art into a `256x256` canvas, and pads against the bottom edge so HTML inline alignment is deterministic.
 6. Validate outputs:
    - Open both files.
    - Confirm the general icon reads well at normal size.
-   - Confirm the inline icon is tightly cropped and suitable for `<img ... style="vertical-align: text-bottom;" />`.
+   - Confirm the inline PNG stays legible at `24px` and is suitable for `<img ... style="vertical-align: text-bottom;" />`.
 7. Report the final assets and the style used.
 
 ## Output contract
@@ -47,7 +47,8 @@ Generate one primary icon with `imagegen`, then derive a deterministic inline ic
   - `<slug>.png`
   - `<slug>-inline.png`
 - Prefer transparent PNG for both files.
-- Do not hand-edit HTML alignment per image unless the user explicitly asks. Normalize the inline asset instead.
+- Keep the inline asset at `256x256` so the README can downsize from a higher-resolution raster source.
+- Do not rely on per-image CSS offsets. Solve inline alignment by trimming and bottom-padding the PNG.
 
 ## Prompt rules
 
@@ -55,10 +56,10 @@ Generate one primary icon with `imagegen`, then derive a deterministic inline ic
 - Preserve the user's requested subject and brand identity.
 - Avoid backgrounds, scenes, mockups, or text unless the user explicitly asks for them.
 - Prefer a compact silhouette with readable eyes, face, or key shape details when the style supports it.
-- Keep the inline icon visually centered but tightly trimmed.
+- Keep the inline icon readable at `24px` after downscaling from `256px`.
 
 ## References
 
 - Default style: `references/style-chibi.md`
 - Add new styles as `references/style-<style>.md`
-- Inline icon normalization: `scripts/prepare_inline_icon.sh`
+- Inline PNG normalization: `scripts/prepare_inline_icon.sh`
