@@ -138,6 +138,9 @@ Use this exact structure for each item to create a numbered list:
 
 Write learnings to %%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task].md.
 
+- When describing where learnings were saved, format the sentence as `Saved the learning note to <absolute-filepath> - <status/details>` with a space before and after the hyphen.
+- Do not end the filepath with a period before the trailing status/details text.
+
 - Use `ag-ledger session-id` or `$CODEX_THREAD_ID` for the active session when possible; use `dev.llm-session` only as fallback.
 - If `$HOME/.llm/skills/learn` does not exist, create it.
 - In review mode, write one file per reviewed session when needed, plus one rollup file for the current review session.
