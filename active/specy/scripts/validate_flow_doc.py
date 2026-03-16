@@ -31,6 +31,10 @@ def _has_h2(text: str, heading: str) -> bool:
     return pattern.search(text) is not None
 
 
+def _has_any_h2(text: str, headings: list[str]) -> bool:
+    return any(_has_h2(text, heading) for heading in headings)
+
+
 def _extract_h2_section(text: str, heading: str) -> str | None:
     start_re = re.compile(rf"(?im)^##\s+{re.escape(heading)}\s*$")
     match = start_re.search(text)
@@ -133,15 +137,17 @@ def _validate_ordered_call_path(scope: str, section: str, result: ValidationResu
 
 def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
     required_h2 = [
-        "Purpose / Question Answered",
+        "Purpose",
         "Entry points",
         "Call path",
-        "State, config, and gates",
         "Sequence diagram",
     ]
     for heading in required_h2:
         if not _has_h2(text, heading):
             result.errors.append(f"Missing required section: '## {heading}'")
+
+    if not _has_any_h2(text, ["State", "State, config, and gates"]):
+        result.errors.append("Missing required section: '## State'")
 
     call_path = _extract_h2_section(text, "Call path")
     if call_path is None:

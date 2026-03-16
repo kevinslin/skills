@@ -2,7 +2,7 @@
 
 Last updated: YYYY-MM-DD
 
-## Purpose / Question Answered
+## Purpose
 
 [1-3 sentences describing what this flow covers, what question(s) it answers, and why this flow exists]
 
@@ -105,34 +105,19 @@ Branch points:
 External boundaries:
 - [HTTP/RPC/service call or `None identified`]
 
-## State, config, and gates
+## State
 
-### Core state values (source of truth and usage)
+### Core state / ordering risks
 
-- `[state_name]`
-  - Source: [where the value is written/derived]
-  - Consumed by: [first/important consumers]
-  - Risk area: [ordering, representation, or branching caveat] (omit if none)
+- `[state_name]`: [where the value is written/derived], first consumed by [consumer], [ordering/representation caveat if any]
 
-### Statsig (or `None identified`)
+### Runtime controls (or `None identified`)
 
-| Name | Type | Where Read | Effect on Flow |
+| Name | Kind | Where Read | Effect on Flow |
 |---|---|---|---|
-| [e.g., migrate_gmail] | [gate/config/experiment/layer] | `path/to/file.ts` | [behavior change] |
+| [e.g., migrate_gmail] | [statsig/env/cli/config/request] | `path/to/file.ts` | [behavior change] |
 
-### Environment Variables (or `None identified`)
-
-| Name | Where Read | Default | Effect on Flow |
-|---|---|---|---|
-| [e.g., FEATURE_X_ENABLED] | `path/to/file.ts` | [default or unknown] | [behavior change] |
-
-### Other User-Settable Inputs (or `None identified`)
-
-| Name | Type | Where Read | Effect on Flow |
-|---|---|---|---|
-| [e.g., request param/header/tool toggle] | [field/header/query/tool setting] | `path/to/file.ts` | [behavior change] |
-
-### Important gates / branch controls
+### Notable gates
 
 - `[gate/check name]`: [what it gates and where]
 - `[route/type check]`: [how it changes the flow]
@@ -164,9 +149,6 @@ Metrics:
 
 Logs:
 - [log line/logger path and when it emits]
-
-Useful debug checkpoints:
-- [checkpoint / probe point]
 
 ## Related docs
 
