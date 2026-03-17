@@ -32,7 +32,9 @@
 - In `State, config, and gates`, capture user-settable configuration impacting the flow:
   Statsig gates/configs/experiments/layers, environment variables, and other user-controlled runtime flags/inputs.
 - If no user-settable configuration applies, explicitly write `None identified`.
-- `Sequence diagram` is required 
+- `Sequence diagram` is required.
+- Use `$dev.diagram` to draft or revise the `Sequence diagram`.
+- Prefer ASCII box diagrams for flow docs unless preserving an existing diagram format or the user explicitly asks for Mermaid.
 - `$sudocode` is required
 - Each `Ordered call path` entry should be a numbered step followed immediately by the relevant fenced sudocode block.
 - Keep ordered-call-path prose terse; put detailed logic, branch callouts, and side notes in the sudocode and sudocode comments.
@@ -58,7 +60,7 @@
 7. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations.
 8. Keep detailed logic, guard callouts, and external-call notes in the sudocode and sudocode comments instead of verbose step prose.
 9. Fill the required `State, config, and gates` section, including Statsig/env/user-settable inputs. If none apply, write `None identified`.
-10. Add a required `Sequence diagram` (prefer Mermaid) that matches the documented `Call path`.
+10. Use `$dev.diagram` to add or revise the required `Sequence diagram`. Prefer an ASCII box diagram unless preserving an existing format or the user explicitly asks for Mermaid.
 11. Fill in `Observability` and `Related docs`.
 12. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "$DOCS_ROOT/flows/{flow-name}.md"`

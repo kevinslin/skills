@@ -139,8 +139,22 @@ External boundaries:
 
 ## Sequence diagram
 
+Draft with `$dev.diagram`. Prefer an ASCII box diagram unless preserving an existing format or the user explicitly asks for Mermaid.
+
 ```
-[prefer ascii box diagrams]
++----------------------+
+| [entry / trigger]    |
++----------------------+
+          |
+          v
++----------------------+
+| [phase / decision]   |
++----------------------+
+   | yes         | no
+   v             v
++-----------+ +-----------+
+| [path A]  | | [path B]  |
++-----------+ +-----------+
 ```
 
 ## Observability
