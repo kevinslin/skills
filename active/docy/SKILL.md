@@ -48,8 +48,10 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 
 ```bash
 docy inject ref/no-back-compat
+docy inject vendor/lerna
 
 docy install ref/no-back-compat
+docy install vendor/lerna
 ```
 
 Command behavior:
@@ -60,6 +62,7 @@ Command behavior:
 
 ## Available Docs
 
+- `references/vendor/lerna.md`: Modern Lerna operating guidance for agents. Use before changing, validating, or releasing code in a Lerna-managed monorepo.
 - `references/ref/no-back-compat.md`: Hard-cut product policy. Use before changing
   codepaths that would otherwise introduce migrations, fallback behavior, adapters,
   or other backwards-compatibility glue.

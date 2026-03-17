@@ -28,6 +28,11 @@ ALIASES = {
     "ref/no-backward-compat": "ref/no-back-compat",
 }
 DOCS = {
+    "vendor/lerna": DocSpec(
+        slug="vendor/lerna",
+        rel_path="vendor/lerna.md",
+        description="Modern Lerna operating guidance for agents.",
+    ),
     "ref/no-back-compat": DocSpec(
         slug="ref/no-back-compat",
         rel_path="ref/no-back-compat.md",
