@@ -6,8 +6,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import sys
+import tempfile
+from dataclasses import dataclass, field
 from datetime import datetime, time
 from pathlib import Path
 from typing import Iterable, Mapping
@@ -15,10 +16,41 @@ from typing import Iterable, Mapping
 
 ENTRY_TIME_FORMAT = "%Y-%m-%d %H:%M"
 DEFAULT_ROOT = Path("~/.llm/ag-ledger").expanduser()
+DEFAULT_CODEX_HOME = Path("~/.codex").expanduser()
+DEFAULT_LOOKBACK_MINUTES = 24 * 60
+DEFAULT_SUMMARY_LENGTH = 240
 ENV_META_LEDGER_ROOT = "META_LEDGER_ROOT"
 ENV_CODEX_THREAD_ID = "CODEX_THREAD_ID"
-BLOCK_START = "<!-- ag-ledger:begin -->"
-BLOCK_END = "<!-- ag-ledger:end -->"
+ENV_CODEX_HOME = "CODEX_HOME"
+FINAL_PHASES = {"final", "final_answer"}
+SYNC_STATE_VERSION = 1
+
+
+@dataclass(frozen=True)
+class MessageEvent:
+    timestamp: datetime
+    line_number: int
+    role: str
+    phase: str | None
+    text: str
+
+
+@dataclass
+class TurnState:
+    turn_index: int
+    user_events: list[MessageEvent]
+    start_source: MessageEvent | None = None
+    notable_sources: list[MessageEvent] = field(default_factory=list)
+    end_sources: list[MessageEvent] = field(default_factory=list)
+    has_assistant_activity: bool = False
+
+
+@dataclass(frozen=True)
+class DerivedRecord:
+    entry_time: datetime
+    message: str
+    source_key: str
+    extra_fields: dict[str, object]
 
 
 def resolve_root(cli_root: str | None) -> Path:
@@ -30,12 +62,31 @@ def resolve_root(cli_root: str | None) -> Path:
     return DEFAULT_ROOT.resolve()
 
 
+def resolve_codex_home() -> Path:
+    env_home = os.environ.get(ENV_CODEX_HOME)
+    if env_home:
+        return Path(env_home).expanduser().resolve()
+    return DEFAULT_CODEX_HOME.resolve()
+
+
+def resolve_session_root(cli_session_root: str | None) -> Path:
+    if cli_session_root:
+        return Path(cli_session_root).expanduser().resolve()
+    return (resolve_codex_home() / "sessions").resolve()
+
+
+def resolve_state_file(root: Path, cli_state_file: str | None) -> Path:
+    if cli_state_file:
+        return Path(cli_state_file).expanduser().resolve()
+    return (root / "state" / "sync-state.json").resolve()
+
+
 def data_dir(root: Path) -> Path:
     return root / "data"
 
 
-def ledger_path_for_now(root: Path, now: datetime) -> Path:
-    return data_dir(root) / f"ledger-{now.strftime('%Y-%m-%d')}.md"
+def ledger_path_for_datetime(root: Path, when: datetime) -> Path:
+    return data_dir(root) / f"ledger-{when.strftime('%Y-%m-%d')}.md"
 
 
 def parse_time(value_parts: list[str] | None, *, is_to: bool = False) -> datetime | None:
@@ -83,6 +134,14 @@ def normalize_optional_field(value: str | None) -> str | None:
     return normalized
 
 
+def coerce_local_datetime(entry_time: datetime | None) -> datetime:
+    if entry_time is None:
+        return datetime.now().astimezone()
+    if entry_time.tzinfo is None:
+        return entry_time.astimezone()
+    return entry_time.astimezone()
+
+
 def append_entry(
     root: Path,
     session_id: str,
@@ -92,10 +151,12 @@ def append_entry(
     invoked_skill: str | None = None,
     mode: str | None = None,
     parent_session_id: str | None = None,
+    entry_time: datetime | None = None,
+    extra_fields: Mapping[str, object] | None = None,
 ) -> dict:
-    now = datetime.now()
+    local_time = coerce_local_datetime(entry_time)
     entry = {
-        "time": now.strftime(ENTRY_TIME_FORMAT),
+        "time": local_time.strftime(ENTRY_TIME_FORMAT),
         "workspace": workspace,
         "session": session_id,
         "msg": message,
@@ -109,7 +170,12 @@ def append_entry(
         if value is not None:
             entry[key] = value
 
-    path = ledger_path_for_now(root, now)
+    if extra_fields:
+        for key, value in extra_fields.items():
+            if value is not None:
+                entry[key] = value
+
+    path = ledger_path_for_datetime(root, local_time)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(entry, ensure_ascii=True) + "\n")
@@ -123,38 +189,42 @@ def iter_entries(root: Path) -> Iterable[tuple[dict, datetime]]:
         return
 
     for ledger_file in sorted(directory.glob("ledger-*.md")):
-        with ledger_file.open("r", encoding="utf-8") as handle:
-            for line_number, line in enumerate(handle, start=1):
-                stripped = line.strip()
-                if not stripped:
-                    continue
-                try:
-                    raw = json.loads(stripped)
-                except json.JSONDecodeError:
-                    print(
-                        f"Warning: Skipping invalid JSON in {ledger_file}:{line_number}",
-                        file=sys.stderr,
-                    )
-                    continue
+        yield from iter_entries_from_file(ledger_file)
 
-                raw_time = raw.get("time")
-                if not isinstance(raw_time, str):
-                    print(
-                        f"Warning: Skipping entry without valid time in {ledger_file}:{line_number}",
-                        file=sys.stderr,
-                    )
-                    continue
 
-                try:
-                    parsed_time = datetime.strptime(raw_time, ENTRY_TIME_FORMAT)
-                except ValueError:
-                    print(
-                        f"Warning: Skipping entry with invalid time in {ledger_file}:{line_number}",
-                        file=sys.stderr,
-                    )
-                    continue
+def iter_entries_from_file(path: Path) -> Iterable[tuple[dict, datetime]]:
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            try:
+                raw = json.loads(stripped)
+            except json.JSONDecodeError:
+                print(
+                    f"Warning: Skipping invalid JSON in {path}:{line_number}",
+                    file=sys.stderr,
+                )
+                continue
 
-                yield raw, parsed_time
+            raw_time = raw.get("time")
+            if not isinstance(raw_time, str):
+                print(
+                    f"Warning: Skipping entry without valid time in {path}:{line_number}",
+                    file=sys.stderr,
+                )
+                continue
+
+            try:
+                parsed_time = datetime.strptime(raw_time, ENTRY_TIME_FORMAT)
+            except ValueError:
+                print(
+                    f"Warning: Skipping entry with invalid time in {path}:{line_number}",
+                    file=sys.stderr,
+                )
+                continue
+
+            yield raw, parsed_time
 
 
 def normalize_workspace_path(value: str) -> str:
@@ -164,70 +234,402 @@ def normalize_workspace_path(value: str) -> str:
         return value
 
 
-def find_agents_file(start: Path) -> Path:
-    for directory in [start, *start.parents]:
-        candidate = directory / "AGENTS.md"
-        if candidate.exists():
-            return candidate
-    return start / "AGENTS.md"
+def parse_event_timestamp(raw_value: str, path: Path, line_number: int) -> datetime:
+    try:
+        normalized = raw_value.replace("Z", "+00:00")
+        return datetime.fromisoformat(normalized).astimezone()
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid event timestamp in {path}:{line_number}: {raw_value}"
+        ) from exc
 
 
-def build_agents_block(script_path: Path) -> str:
-    script_dir = script_path.parent
-    return "\n".join(
-        [
-            BLOCK_START,
-            "## ag-ledger",
-            "",
-            "Use `$ag-ledger` and the `ag-ledger` CLI for activity tracking.",
-            "Ensure the bundled CLI is on PATH in fresh shells:",
-            f'- `export PATH="{script_dir}:$PATH"`',
-            "",
-            "Always log these moments:",
-            "- Session start",
-            "- Notable change",
-            "- Session end",
-            "",
-            "Run:",
-            "- `ag-ledger append-current \"session start: <plan>\"`",
-            "- `ag-ledger append-current \"notable change: <what changed>\"`",
-            "- `ag-ledger append-current \"session end: <outcome>\"`",
-            "- `ag-ledger append-current --invoked-skill <skill-name> --mode <mode> \"<message>\"` when a skill workflow is active",
-            "- `ag-ledger append-current --parent-session-id <session-id> \"<message>\"` for subagent or fork lineage",
-            "- `ag-ledger session-id` (prints `CODEX_THREAD_ID`)",
-            "",
-            "Manual fallback (non-Codex or explicit session ids):",
-            "- `ag-ledger append <session-id> \"session start: <plan>\"`",
-            "- `ag-ledger append <session-id> \"notable change: <what changed>\"`",
-            "- `ag-ledger append <session-id> \"session end: <outcome>\"`",
-            BLOCK_END,
-        ]
+def extract_message_text(content: object) -> str:
+    if not isinstance(content, list):
+        return ""
+
+    parts: list[str] = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        item_type = item.get("type")
+        if item_type in {"input_text", "output_text"}:
+            text = item.get("text")
+            if isinstance(text, str):
+                parts.append(text)
+    return "".join(parts)
+
+
+def normalize_summary(text: str, *, max_length: int = DEFAULT_SUMMARY_LENGTH) -> str:
+    normalized = " ".join(text.split())
+    if len(normalized) <= max_length:
+        return normalized
+    return normalized[: max_length - 3].rstrip() + "..."
+
+
+def is_context_user_message(text: str) -> bool:
+    stripped = text.lstrip()
+    if stripped.startswith("# AGENTS.md instructions"):
+        return True
+    if stripped.startswith("<skill>"):
+        return True
+    return False
+
+
+def make_source_key(path: Path, line_number: int, entry_kind: str) -> str:
+    return f"{path.resolve()}:{line_number}:{entry_kind}"
+
+
+def build_record(
+    *,
+    path: Path,
+    session_id: str,
+    workspace: str,
+    turn_index: int,
+    entry_kind: str,
+    prefix: str,
+    source_event: MessageEvent,
+    message_text: str,
+) -> DerivedRecord:
+    source_key = make_source_key(path, source_event.line_number, entry_kind)
+    summary = normalize_summary(message_text)
+    return DerivedRecord(
+        entry_time=source_event.timestamp,
+        message=f"{prefix}: {summary}",
+        source_key=source_key,
+        extra_fields={
+            "entry_kind": entry_kind,
+            "source_key": source_key,
+            "source_path": str(path.resolve()),
+            "source_line": source_event.line_number,
+            "source_phase": source_event.phase,
+            "source_role": source_event.role,
+            "source_turn_index": turn_index,
+            "source_session_id": session_id,
+            "source_workspace": workspace,
+        },
     )
 
 
-def install_agents_prompt(agents_file: Path, script_path: Path) -> None:
-    block = build_agents_block(script_path)
-    agents_file.parent.mkdir(parents=True, exist_ok=True)
-
-    if agents_file.exists():
-        content = agents_file.read_text(encoding="utf-8")
+def finalize_turn(
+    *,
+    records: list[DerivedRecord],
+    path: Path,
+    session_id: str,
+    workspace: str,
+    turn: TurnState,
+) -> None:
+    start_source = turn.start_source
+    start_text = ""
+    if start_source is None:
+        start_source = turn.user_events[0]
+        user_summaries = [normalize_summary(event.text, max_length=80) for event in turn.user_events]
+        start_text = " | ".join(summary for summary in user_summaries if summary)
     else:
-        content = ""
+        start_text = start_source.text
 
-    pattern = re.compile(
-        rf"{re.escape(BLOCK_START)}.*?{re.escape(BLOCK_END)}\n?",
-        re.DOTALL,
-    )
-    if pattern.search(content):
-        updated = pattern.sub(block + "\n", content).rstrip() + "\n"
-    else:
-        trimmed = content.rstrip()
-        if trimmed:
-            updated = trimmed + "\n\n" + block + "\n"
-        else:
-            updated = block + "\n"
+    if start_text:
+        records.append(
+            build_record(
+                path=path,
+                session_id=session_id,
+                workspace=workspace,
+                turn_index=turn.turn_index,
+                entry_kind="session_start",
+                prefix="session start",
+                source_event=start_source,
+                message_text=start_text,
+            )
+        )
 
-    agents_file.write_text(updated, encoding="utf-8")
+    for notable_source in turn.notable_sources:
+        records.append(
+            build_record(
+                path=path,
+                session_id=session_id,
+                workspace=workspace,
+                turn_index=turn.turn_index,
+                entry_kind="notable_change",
+                prefix="notable change",
+                source_event=notable_source,
+                message_text=notable_source.text,
+            )
+        )
+
+    for end_source in turn.end_sources:
+        records.append(
+            build_record(
+                path=path,
+                session_id=session_id,
+                workspace=workspace,
+                turn_index=turn.turn_index,
+                entry_kind="session_end",
+                prefix="session end",
+                source_event=end_source,
+                message_text=end_source.text,
+            )
+        )
+
+
+def parse_rollout_file(path: Path) -> tuple[str, str, list[MessageEvent]]:
+    session_id: str | None = None
+    workspace: str | None = None
+    events: list[MessageEvent] = []
+
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            try:
+                raw = json.loads(stripped)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"Invalid JSON in {path}:{line_number}") from exc
+
+            raw_type = raw.get("type")
+            if raw_type == "session_meta":
+                payload = raw.get("payload", {})
+                if isinstance(payload, dict):
+                    raw_session_id = payload.get("id")
+                    raw_workspace = payload.get("cwd")
+                    if isinstance(raw_session_id, str):
+                        session_id = raw_session_id
+                    if isinstance(raw_workspace, str):
+                        workspace = raw_workspace
+                continue
+
+            if raw_type != "response_item":
+                continue
+
+            payload = raw.get("payload", {})
+            if not isinstance(payload, dict) or payload.get("type") != "message":
+                continue
+
+            raw_timestamp = raw.get("timestamp")
+            if not isinstance(raw_timestamp, str):
+                raise ValueError(f"Missing timestamp in {path}:{line_number}")
+
+            role = payload.get("role")
+            if not isinstance(role, str):
+                continue
+
+            text = extract_message_text(payload.get("content"))
+            if not text.strip():
+                continue
+
+            phase = payload.get("phase")
+            events.append(
+                MessageEvent(
+                    timestamp=parse_event_timestamp(raw_timestamp, path, line_number),
+                    line_number=line_number,
+                    role=role,
+                    phase=phase if isinstance(phase, str) else None,
+                    text=text,
+                )
+            )
+
+    if session_id is None:
+        raise ValueError(f"No session_meta id found in {path}")
+
+    resolved_workspace = workspace or str(path.parent.resolve())
+    return session_id, resolved_workspace, events
+
+
+def derive_records_for_rollout(
+    path: Path,
+    session_id: str,
+    workspace: str,
+    events: list[MessageEvent],
+) -> list[DerivedRecord]:
+    records: list[DerivedRecord] = []
+    current_turn: TurnState | None = None
+    turn_index = 0
+
+    for event in events:
+        if event.role == "user":
+            if is_context_user_message(event.text):
+                continue
+            if current_turn is None:
+                turn_index += 1
+                current_turn = TurnState(turn_index=turn_index, user_events=[event])
+                continue
+            if current_turn.has_assistant_activity:
+                finalize_turn(
+                    records=records,
+                    path=path,
+                    session_id=session_id,
+                    workspace=workspace,
+                    turn=current_turn,
+                )
+                turn_index += 1
+                current_turn = TurnState(turn_index=turn_index, user_events=[event])
+            else:
+                current_turn.user_events.append(event)
+            continue
+
+        if event.role != "assistant" or current_turn is None:
+            continue
+
+        current_turn.has_assistant_activity = True
+        if event.phase == "commentary":
+            if current_turn.start_source is None:
+                current_turn.start_source = event
+            else:
+                current_turn.notable_sources.append(event)
+        elif event.phase in FINAL_PHASES:
+            current_turn.end_sources.append(event)
+
+    if current_turn is not None:
+        finalize_turn(
+            records=records,
+            path=path,
+            session_id=session_id,
+            workspace=workspace,
+            turn=current_turn,
+        )
+
+    return records
+
+
+def file_fingerprint(path: Path) -> dict[str, int]:
+    stat_result = path.stat()
+    return {
+        "size": stat_result.st_size,
+        "mtime_ns": stat_result.st_mtime_ns,
+    }
+
+
+def load_sync_state(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {"version": SYNC_STATE_VERSION, "files": {}}
+
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid sync state JSON in {path}") from exc
+
+    version = raw.get("version")
+    files = raw.get("files")
+    if version != SYNC_STATE_VERSION or not isinstance(files, dict):
+        raise ValueError(f"Unsupported sync state format in {path}")
+
+    normalized_files: dict[str, dict[str, object]] = {}
+    for file_path, value in files.items():
+        if not isinstance(file_path, str) or not isinstance(value, dict):
+            continue
+        emitted_source_keys = value.get("emitted_source_keys", [])
+        normalized_files[file_path] = {
+            "size": int(value.get("size", 0)),
+            "mtime_ns": int(value.get("mtime_ns", 0)),
+            "emitted_source_keys": [
+                item for item in emitted_source_keys if isinstance(item, str)
+            ],
+        }
+
+    return {"version": SYNC_STATE_VERSION, "files": normalized_files}
+
+
+def write_json_atomic(path: Path, data: Mapping[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w",
+        encoding="utf-8",
+        dir=path.parent,
+        delete=False,
+    ) as handle:
+        json.dump(data, handle, ensure_ascii=True, indent=2, sort_keys=True)
+        handle.write("\n")
+        temp_path = Path(handle.name)
+
+    os.replace(temp_path, path)
+
+
+def discover_recent_rollout_files(session_root: Path, *, lookback_minutes: int) -> list[Path]:
+    cutoff_epoch = datetime.now().astimezone().timestamp() - (lookback_minutes * 60)
+    candidates: list[Path] = []
+    for path in session_root.rglob("rollout-*.jsonl"):
+        try:
+            if path.stat().st_mtime >= cutoff_epoch:
+                candidates.append(path.resolve())
+        except FileNotFoundError:
+            continue
+    return sorted(candidates)
+
+
+def load_source_keys_for_ledger(
+    ledger_path: Path,
+    cache: dict[Path, set[str]],
+) -> set[str]:
+    cached = cache.get(ledger_path)
+    if cached is not None:
+        return cached
+
+    source_keys: set[str] = set()
+    if ledger_path.exists():
+        for entry, _ in iter_entries_from_file(ledger_path):
+            source_key = entry.get("source_key")
+            if isinstance(source_key, str):
+                source_keys.add(source_key)
+
+    cache[ledger_path] = source_keys
+    return source_keys
+
+
+def sync_rollout_file(
+    *,
+    root: Path,
+    path: Path,
+    state_entry: Mapping[str, object] | None,
+    state_path: Path,
+    state: dict[str, object],
+    ledger_cache: dict[Path, set[str]],
+) -> tuple[int, int]:
+    session_id, workspace, events = parse_rollout_file(path)
+    records = derive_records_for_rollout(path, session_id, workspace, events)
+    seen_keys = set()
+    if state_entry:
+        emitted = state_entry.get("emitted_source_keys", [])
+        if isinstance(emitted, list):
+            seen_keys = {item for item in emitted if isinstance(item, str)}
+
+    appended_count = 0
+    existing_count = 0
+    for record in records:
+        if record.source_key in seen_keys:
+            continue
+
+        ledger_path = ledger_path_for_datetime(root, record.entry_time)
+        ledger_source_keys = load_source_keys_for_ledger(ledger_path, ledger_cache)
+        if record.source_key in ledger_source_keys:
+            seen_keys.add(record.source_key)
+            existing_count += 1
+            continue
+
+        append_entry(
+            root=root,
+            session_id=session_id,
+            message=record.message,
+            workspace=workspace,
+            entry_time=record.entry_time,
+            extra_fields=record.extra_fields,
+        )
+        ledger_source_keys.add(record.source_key)
+        seen_keys.add(record.source_key)
+        appended_count += 1
+
+    files = state.setdefault("files", {})
+    if not isinstance(files, dict):
+        raise ValueError(f"Invalid sync state structure in {state_path}")
+
+    fingerprint = file_fingerprint(path)
+    files[str(path)] = {
+        "size": fingerprint["size"],
+        "mtime_ns": fingerprint["mtime_ns"],
+        "emitted_source_keys": sorted(seen_keys),
+    }
+    write_json_atomic(state_path, state)
+    return appended_count, existing_count
 
 
 def cmd_append(args: argparse.Namespace) -> int:
@@ -321,21 +723,99 @@ def cmd_filter(args: argparse.Namespace) -> int:
 
 
 def cmd_init(args: argparse.Namespace) -> int:
-    script_path = Path(__file__).resolve()
-    if args.agents_file:
-        agents_file = Path(args.agents_file).expanduser().resolve()
-    else:
-        agents_file = find_agents_file(Path.cwd())
+    del args
+    print(
+        "ag-ledger init is deprecated and no longer edits AGENTS.md. "
+        "Use a recurring automation to run `ag-ledger sync` instead."
+    )
+    return 0
 
-    install_agents_prompt(agents_file, script_path)
-    print(f"Updated {agents_file}")
+
+def cmd_sync(args: argparse.Namespace) -> int:
+    if args.lookback_minutes < 0:
+        print("--lookback-minutes must be >= 0.", file=sys.stderr)
+        return 2
+
+    root = resolve_root(args.root)
+    session_root = resolve_session_root(args.session_root)
+    state_path = resolve_state_file(root, args.state_file)
+
+    if not session_root.exists() or not session_root.is_dir():
+        print(f"Session root does not exist: {session_root}", file=sys.stderr)
+        return 2
+
+    try:
+        state = load_sync_state(state_path)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    files = state.get("files", {})
+    if not isinstance(files, dict):
+        print(f"Invalid sync state structure in {state_path}", file=sys.stderr)
+        return 2
+
+    summary = {
+        "files_considered": 0,
+        "files_processed": 0,
+        "files_skipped_unchanged": 0,
+        "entries_appended": 0,
+        "entries_already_present": 0,
+        "files_failed": 0,
+        "session_root": str(session_root),
+        "state_file": str(state_path),
+    }
+    failures: list[dict[str, str]] = []
+    ledger_cache: dict[Path, set[str]] = {}
+
+    for path in discover_recent_rollout_files(
+        session_root, lookback_minutes=args.lookback_minutes
+    ):
+        summary["files_considered"] += 1
+        state_entry = files.get(str(path))
+        if isinstance(state_entry, dict):
+            fingerprint = file_fingerprint(path)
+            if (
+                int(state_entry.get("size", -1)) == fingerprint["size"]
+                and int(state_entry.get("mtime_ns", -1)) == fingerprint["mtime_ns"]
+            ):
+                summary["files_skipped_unchanged"] += 1
+                continue
+        else:
+            state_entry = None
+
+        try:
+            appended_count, existing_count = sync_rollout_file(
+                root=root,
+                path=path,
+                state_entry=state_entry,
+                state_path=state_path,
+                state=state,
+                ledger_cache=ledger_cache,
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"sync failed for {path}: {exc}", file=sys.stderr)
+            failures.append({"path": str(path), "error": str(exc)})
+            summary["files_failed"] += 1
+            continue
+
+        summary["files_processed"] += 1
+        summary["entries_appended"] += appended_count
+        summary["entries_already_present"] += existing_count
+
+    if failures:
+        summary["failures"] = failures
+
+    print(json.dumps(summary, ensure_ascii=True))
+    if failures:
+        return 1
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ag-ledger",
-        description="Append and query local agent activity ledgers.",
+        description="Append, query, and sync local agent activity ledgers.",
     )
     parser.add_argument(
         "--root",
@@ -424,13 +904,29 @@ def build_parser() -> argparse.ArgumentParser:
 
     init_parser = subparsers.add_parser(
         "init",
-        help="Insert or update ag-ledger instructions in AGENTS.md.",
-    )
-    init_parser.add_argument(
-        "--agents-file",
-        help="Explicit AGENTS.md path (defaults to nearest AGENTS.md or cwd).",
+        help="Print migration guidance for the automation-first sync workflow.",
     )
     init_parser.set_defaults(func=cmd_init)
+
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="Scan recent Codex rollout transcripts and append derived ledger entries.",
+    )
+    sync_parser.add_argument(
+        "--lookback-minutes",
+        type=int,
+        default=DEFAULT_LOOKBACK_MINUTES,
+        help="Only consider rollout files modified within this many minutes.",
+    )
+    sync_parser.add_argument(
+        "--session-root",
+        help="Root directory containing Codex rollout transcripts.",
+    )
+    sync_parser.add_argument(
+        "--state-file",
+        help="Path to the sync state file. Defaults under the ledger root.",
+    )
+    sync_parser.set_defaults(func=cmd_sync)
 
     return parser
 
