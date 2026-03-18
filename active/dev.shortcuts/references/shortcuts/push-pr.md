@@ -6,11 +6,9 @@ description: push a pr
 Instructions:
 1. if there are unstaged changes -> invoke:commit-code
 2. push code
-3. verify the PR base branch from repo metadata (do not assume `main`/`master`), then create a PR using a body file (do NOT inline markdown in shell arguments). Example:
+3. verify the PR base branch from repo metadata (do not assume `main`/`master`), then create a PR using a body file (do NOT inline markdown in shell arguments). Keep the one-line summary in `--title` only; start the body at a section header instead of repeating a title-like line. Example:
 ```bash
 cat > /tmp/pr_body.md << 'EOF'
-[feat|enhance|chore|fix|docs]: [description of change]
-
 ## Context
 [what this change does]
 
