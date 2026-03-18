@@ -30,6 +30,7 @@
    - snapshot boundaries
    - expected consumers
 7. Document root cause (or current best-supported hypothesis), fix strategy, and validation plan.
+8. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
 
 ## Authoring Requirements
 

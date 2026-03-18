@@ -115,4 +115,4 @@ Last updated: YYYY-MM-DD
 
 ## Changelog
 
-- [date]: [description of update] ([codex session id])
+- [date]: [description of update] ([agent session id])

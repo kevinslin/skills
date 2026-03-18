@@ -6,7 +6,7 @@ description: Create structured research documentation for codebase exploration a
   docs, service design docs, feature design docs, feature specs (execution plans),
   investigation specs, validation specs, recipes, vendor docs, frequently asked questions
   (FAQ), and FAQ specs that append Q&A to an existing research document.
-version: 1.12.1
+version: 1.12.2
 dependencies:
 - dev.llm-session
 - sudocode
@@ -66,6 +66,7 @@ Document types are listed here. Read each document type workflow for details, re
 2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `@references/[doc-type]/template.md` to the requested output location before filling in content.
 4. For in-place doc types (currently FAQ Specs), use the template as an insertion snippet instead of creating a new file.
+5. Before finalizing any created or revised document, resolve the current agent session id via `$dev.llm-session` and replace the changelog placeholder with the real session id.
 
 ## Context Triage Gate (Required Before Drafting)
 
@@ -121,7 +122,7 @@ verbatim and in this order. Keep the Manual Notes content unchanged across edits
 - [date]: [description of update] ([agent session id])
 ```
 
-For the session id, use `dev.llm-session` to find the current conversation session id.
+For the session id, use `dev.llm-session` to find the current conversation session id. Choose the lookup strategy that matches the active thread, and do not leave placeholder text such as `[agent session id]` or `[codex session id]` in a completed document.
 
 ## Shortcuts
 

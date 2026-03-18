@@ -29,6 +29,7 @@
 10. If the user asked to proceed without waiting, answer outstanding questions with best judgment and record assumptions in the spec.
 11. Simplify where possible (remove redundant phases, merge low-value steps, prefer one strong section over many thin ones).
 12. When editing an existing spec, preserve `## Manual Notes` unless the user explicitly asks to change it.
+13. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
 
 ## Authoring Requirements
 

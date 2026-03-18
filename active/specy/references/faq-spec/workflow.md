@@ -26,7 +26,7 @@
 8. If the document does not have `## FAQ`, insert `## FAQ` immediately before `## Manual Notes`.
 9. Use `@references/faq-spec/template.md` as the insertion snippet, then refine the answer so it matches the target document's tone and level of detail.
 10. Keep `## Manual Notes` and its content unchanged.
-11. Append a new `## Changelog` entry describing the FAQ-spec update.
+11. Append a new `## Changelog` entry describing the FAQ-spec update and include the current agent session id resolved via `dev.llm-session`.
 
 ## Authoring Requirements
 

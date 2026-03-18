@@ -18,4 +18,4 @@ Last updated: YYYY-MM-DD
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
-- [date]: [description of update] ([codex session id])
+- [date]: [description of update] ([agent session id])

@@ -71,3 +71,10 @@ context once implementation is complete.
 > - Add all feedback and requests for revisions below.
 >
 > - Add new Phase above and revise the implementation if necessary.
+
+## Manual Notes 
+
+[keep this for the user to add notes. do not change between edits]
+
+## Changelog
+- [date]: [description of update] ([agent session id])

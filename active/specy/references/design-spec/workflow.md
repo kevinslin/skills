@@ -22,6 +22,7 @@
 3. Copy `@references/design-spec/template.md` to `$DOCS_ROOT/specs/{YYYY-MM}-{feature-slug}/design.md`.
 4. Fill in the doc using source-backed details from code and docs (not guesses).
 5. If migration/parity is involved, add a dedicated parity audit section with explicit file-level follow-ups.
+6. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
 
 ## Required for Implementation Handoff
 
