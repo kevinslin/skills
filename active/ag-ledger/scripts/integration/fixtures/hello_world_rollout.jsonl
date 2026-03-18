@@ -1,0 +1,7 @@
+{"timestamp":"2026-01-02T10:00:00Z","type":"session_meta","payload":{"id":"sess-hello-world","timestamp":"2026-01-02T10:00:00Z","cwd":"/tmp/hello-world-workspace"}}
+{"timestamp":"2026-01-02T10:00:01Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions for /tmp/hello-world-workspace\n\n<INSTRUCTIONS>...</INSTRUCTIONS>"}]}}
+{"timestamp":"2026-01-02T10:00:02Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Write a hello world Python script and save it to hello_world.py."}]}}
+{"timestamp":"2026-01-02T10:00:03Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<skill>\n<name>sc</name>\n...</skill>"}]}}
+{"timestamp":"2026-01-02T10:00:04Z","type":"response_item","payload":{"type":"message","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"I'm starting to write hello_world.py with a simple hello world program."}]}}
+{"timestamp":"2026-01-02T10:00:05Z","type":"response_item","payload":{"type":"message","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"I'm writing the script body so it prints Hello, world! when run."}]}}
+{"timestamp":"2026-01-02T10:00:06Z","type":"response_item","payload":{"type":"message","role":"assistant","phase":"final_answer","content":[{"type":"output_text","text":"Created hello_world.py with a complete hello world script."}]}}
