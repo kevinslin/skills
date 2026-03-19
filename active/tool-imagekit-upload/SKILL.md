@@ -1,12 +1,22 @@
 ---
 name: imagekit-upload
-description: Upload images to ImageKit from file paths or clipboard, returning the CDN URL for easy sharing and embedding
+description: Upload images to ImageKit from file paths or clipboard, returning the CDN URL for easy sharing and embedding. Use when a user wants an existing image uploaded to ImageKit. 
 version: 1.0.0
 ---
 
 # ImageKit Upload
 
 This skill enables uploading images to ImageKit CDN from either local file paths or clipboard contents. The skill returns the uploaded image URL for immediate use.
+
+## Core Rule
+
+Upload only existing image bytes from a real file path or from the clipboard.
+
+If the requested image file cannot be found:
+- Stop.
+- Ask the user for the exact file path, or ask them to copy the image to the clipboard and confirm.
+
+Do not recreate, redraw, approximate, crop from another image, or generate an SVG fallback.
 
 ## Prerequisites
 
@@ -80,6 +90,8 @@ Common errors:
 - **Invalid file type**: ImageKit supports common image formats (JPG, PNG, GIF, WebP, SVG)
 - **Clipboard empty**: Ensure an image is copied to the clipboard before upload
 
+If the file is not discoverable locally, do not improvise a replacement asset. Ask the user for the missing file path or for a clipboard copy instead.
+
 ## When to Use This Skill
 
 Use this skill when:
@@ -107,4 +119,10 @@ Assistant: [Uses this skill with --clipboard flag to upload and returns the CDN 
 ```
 User: Upload logo.png to ImageKit in the /brand folder
 Assistant: [Uses this skill with --folder "/brand" parameter]
+```
+
+**Example 4: Missing attachment file**
+```
+User: Upload this attached image to ImageKit
+Assistant: [Searches for the exact local file. If it cannot be found, stops and asks the user for the file path or to upload from clipboard. Does not recreate the image.]
 ```
