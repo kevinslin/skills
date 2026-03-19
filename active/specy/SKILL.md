@@ -1,20 +1,16 @@
 ---
 name: specy
-description: Create structured research documentation for codebase exploration and
-  feature investigation. Enables agents to produce docs that capture findings, methodologies,
-  and recommendations. Covers architecture docs, research briefs, flow docs, state
-  docs, service design docs, feature design docs, feature specs (execution plans),
-  investigation specs, validation specs, recipes, vendor docs, frequently asked questions
-  (FAQ), and FAQ specs that append Q&A to an existing research document.
+description: Create structured docs and specs for codebase exploration and
+  feature work 
 version: 1.12.5
 dependencies:
 - dev.llm-session
 - sudocode
 ---
 
-# Research Documentation
+# Specy
 
-This skill creates structured research artifacts for codebase exploration and feature investigation.
+This skill creates structured research artifacts for codebase exploration and feature work.
 
 ## When to Use This Skill
 
