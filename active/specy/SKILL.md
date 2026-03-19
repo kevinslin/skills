@@ -6,7 +6,7 @@ description: Create structured research documentation for codebase exploration a
   docs, service design docs, feature design docs, feature specs (execution plans),
   investigation specs, validation specs, recipes, vendor docs, frequently asked questions
   (FAQ), and FAQ specs that append Q&A to an existing research document.
-version: 1.12.2
+version: 1.12.5
 dependencies:
 - dev.llm-session
 - sudocode
@@ -34,7 +34,7 @@ Use this skill when:
 
 ## Hard Trigger Rule (Flow Docs)
 
-If the request mentions any flow-doc intent (for example: `flow doc`, `flow docs`, `flowdoc`, `call path doc`, `end2end flow`, `execution flow doc`), you must run this skill and follow the matching flow-doc workflow before drafting or revising content.
+If the request mentions any flow-doc intent (for example: `flow doc`, `flow docs`, `flowdoc`, `call path doc`, `execution flow doc`), you must run this skill and follow the flow-doc workflow before drafting or revising content.
 
 ## Root Directory
 
@@ -43,22 +43,21 @@ Default `$DOCS_ROOT` is `./docs` (relative to the project root directory).
 
 ## Available Document Types
 
-Document types are listed here. Read each document type workflow for details, requirements, template location, and output path.
+Document types are listed here. Use the parenthesized doc-type key with the common workflow/template paths below.
 
-- Architecture Docs: System-level architecture docs covering boundaries, components, interfaces, and key decisions. Workflow: `@references/architecture/workflow.md`
-- Research Briefs: Structured technology/approach research with comparisons and recommendations. Workflow: `@references/research-brief/workflow.md`
-- Flow Docs (Normal): Focused execution-flow documentation for bootstrap/runtime/request lifecycle understanding. Workflow: `@references/flow-doc/workflow.md`
-- Flow Docs (End2End): Exhaustive lifecycle tracing across branches, retries, failures, and side effects. Workflow: `@references/flow-doc-end2end/workflow.md`
-- State Docs: Terminal-output mapping with predicates, required state, and derivation paths. Workflow: `@references/state-doc/workflow.md`
-- Service Design Docs: Staff-level service/system proposals covering architecture, APIs, reliability, and risks. Workflow: `@references/service-design-doc/workflow.md`
-- Feature Design Docs: Implementation-ready feature or migration designs with rollout/rollback planning. Workflow: `@references/design-spec/workflow.md`
-- Feature Specs (Execution Plans): Milestone-based implementation plans with dependencies, risks, and verification. Workflow: `@references/feature-spec/workflow.md`
-- Investigation Specs: Structured debugging plans for competing root-cause hypotheses and evidence capture. Workflow: `@references/investigation-spec/workflow.md`
-- Validation Specs: Validation coverage docs for automated and manual checks tied to specs. Workflow: `@references/validation-spec/workflow.md`
-- Recipes: Reproducible step-by-step change instructions derived from conversation or PR context. Workflow: `@references/recipe/workflow.md`
-- Frequently Asked Questions (FAQ): Reusable Q&A docs with concise answers and source citations. Workflow: `@references/faq-doc/workflow.md`
-- FAQ Specs: In-place FAQ additions that append a focused Q&A to the most recent research document type mentioned in the conversation. Workflow: `@references/faq-spec/workflow.md`
-- Vendor Docs: Project-focused third-party library documentation summaries and topic references. Workflow: `@references/vendor-doc/workflow.md`
+- Architecture Docs (`architecture`): System-level architecture docs covering boundaries, components, interfaces, and key decisions.
+- Research Briefs (`research-brief`): Structured technology/approach research with comparisons and recommendations.
+- Flow Docs (`flow-doc`): Focused execution-flow documentation for bootstrap/runtime/request lifecycle understanding.
+- State Docs (`state-doc`): Terminal-output mapping with predicates, required state, and derivation paths.
+- Service Design Docs (`service-design-doc`): Staff-level service/system proposals covering architecture, APIs, reliability, and risks.
+- Feature Design Docs (`design-spec`): Implementation-ready feature or migration designs with rollout/rollback planning.
+- Feature Specs (Execution Plans) (`feature-spec`): Milestone-based implementation plans with dependencies, risks, and verification.
+- Investigation Specs (`investigation-spec`): Structured debugging plans for competing root-cause hypotheses and evidence capture.
+- Validation Specs (`validation-spec`): Validation coverage docs for automated and manual checks tied to specs.
+- Recipes (`recipe`): Reproducible step-by-step change instructions derived from conversation or PR context.
+- Frequently Asked Questions (FAQ) (`faq-doc`): Reusable Q&A docs with concise answers and source citations.
+- FAQ Specs (`faq-spec`): In-place FAQ additions that append a focused Q&A to the most recent research document type mentioned in the conversation.
+- Vendor Docs (`vendor-doc`): Project-focused third-party library documentation summaries and topic references.
 
 ## Common Instructions (All Doc Types)
 
@@ -141,10 +140,6 @@ When invoked, follow the mapped workflow section exactly.
 
 - Follow `@references/flow-doc/workflow.md` section `Instructions`.
 
-### new-end2end-flow-doc
-
-- Follow `@references/flow-doc-end2end/workflow.md` section `Instructions`.
-
 ### new-state-doc
 
 - Follow `@references/state-doc/workflow.md` section `Instructions`.
@@ -176,7 +171,6 @@ When updating existing flow docs, use a preservation-first revision style.
 5. Before finalizing, run a scope check: if the diff removes unrelated detail or broadens beyond request, reduce to a minimal targeted patch.
 
 - For more details, follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
-- If the doc is end2end, also apply `@references/flow-doc-end2end/workflow.md` section `Revision Requirements`.
 
 ### new-recipe
 
@@ -218,7 +212,6 @@ $DOCS_ROOT/
       design.md
   flows/             # Flow documentation
     {date}-{topic}.md
-    {date}-end2end-{topic}.md
   state/             # State docs
     {state-name}.md
   recipes/           # Change recipes
@@ -250,8 +243,6 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/research-brief/template.md` -> `specy/references/research-brief/template.md`
 - `@references/flow-doc/workflow.md` -> `specy/references/flow-doc/workflow.md`
 - `@references/flow-doc/template.md` -> `specy/references/flow-doc/template.md`
-- `@references/flow-doc-end2end/workflow.md` -> `specy/references/flow-doc-end2end/workflow.md`
-- `@references/flow-doc-end2end/template.md` -> `specy/references/flow-doc-end2end/template.md`
 - `@references/state-doc/workflow.md` -> `specy/references/state-doc/workflow.md`
 - `@references/state-doc/template.md` -> `specy/references/state-doc/template.md`
 - `@references/service-design-doc/workflow.md` -> `specy/references/service-design-doc/workflow.md`

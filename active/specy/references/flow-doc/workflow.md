@@ -77,14 +77,13 @@
 5. Prefer additive edits over broad rewrites; remove or reshape major sections only when they are inaccurate or explicitly requested.
 6. Keep `## Manual Notes` and its content unchanged across revisions.
 7. If the request includes specific questions, add focused clarifications that answer each question directly with file citations.
-8. If the document is end2end, verify explicit lifecycle-complete inventory coverage across branch, retry, and error paths.
-9. For context/state-sensitive behavior, make ordering validity explicit in the `Call path` and `State` sections.
-10. Ensure the `State` section is accurate and complete, or explicitly says `None identified` under `Runtime controls` when no user-settable configuration applies.
-11. If updating to the new format, move per-phase `#### Sudocode (...)` content into the matching numbered `Ordered call path` entries. If no format migration was requested, preserving legacy separate sudocode subsections is acceptable.
-12. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
-13. Run validator from this skill root:
+8. For context/state-sensitive behavior, make ordering validity explicit in the `Call path` and `State` sections.
+9. Ensure the `State` section is accurate and complete, or explicitly says `None identified` under `Runtime controls` when no user-settable configuration applies.
+10. If updating to the new format, move per-phase `#### Sudocode (...)` content into the matching numbered `Ordered call path` entries. If no format migration was requested, preserving legacy separate sudocode subsections is acceptable.
+11. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
+12. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "<path-to-flow-doc>"`
-14. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
+13. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
 
 ## Pre-Handoff Checklist (Required)
 

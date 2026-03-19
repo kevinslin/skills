@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validate flow-doc structure and sudocode coverage for specy workflows.
+Validate normal flow-doc structure and sudocode coverage for specy workflows.
 
 Checks:
 - Required section headings
@@ -165,52 +165,7 @@ def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
         _validate_ordered_call_path(heading.strip(), segment, result)
 
 
-def _validate_end2end_flow_doc(text: str, result: ValidationResult) -> None:
-    required_h2 = [
-        "Overview",
-        "Lifecycle Boundaries",
-        "Config",
-        "Full Logic Inventory",
-        "Detailed Flow sudocode",
-    ]
-    for heading in required_h2:
-        if not _has_h2(text, heading):
-            result.errors.append(f"Missing required section: '## {heading}'")
-
-    logic_inventory = _extract_h2_section(text, "Full Logic Inventory")
-    if logic_inventory is not None and re.search(r"(?im)^###\s+E2E-\d+\b", logic_inventory) is None:
-        result.errors.append(
-            "Full Logic Inventory must include stable step headings (expected '### E2E-### - ...')."
-        )
-
-    sudocode_section = _extract_h2_section(text, "Detailed Flow sudocode")
-    if sudocode_section is None:
-        return
-
-    if CODE_BLOCK_RE.search(sudocode_section) is None:
-        result.errors.append("Detailed Flow sudocode must include at least one fenced code block.")
-        return
-
-    stage_segments = _extract_segments_by_heading(sudocode_section, r"^###\s+.+$")
-    if not stage_segments:
-        result.warnings.append(
-            "Detailed Flow sudocode has no stage subsections (expected '### Entry ...', etc.)."
-        )
-    else:
-        for heading, segment in stage_segments:
-            if CODE_BLOCK_RE.search(segment) is None:
-                result.errors.append(
-                    f"Detailed sudocode stage has no fenced code block: {heading.strip()}"
-                )
-            if re.search(r"(?im)\bsource\b\s*:|`[^`\n/]+/[^`\n]+`", segment) is None:
-                result.warnings.append(
-                    f"Detailed sudocode stage lacks explicit source citation: {heading.strip()}"
-                )
-
-
 def _auto_kind(text: str) -> str:
-    if _has_h2(text, "Full Logic Inventory") or re.search(r"(?im)^#\s+.*end2end.*flow", text):
-        return "end2end"
     return "normal"
 
 
@@ -218,7 +173,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Validate flow-doc structure and sudocode coverage.")
     parser.add_argument(
         "--kind",
-        choices=["auto", "normal", "end2end"],
+        choices=["auto", "normal"],
         default="auto",
         help="Flow doc type. Default: auto-detect.",
     )
@@ -237,10 +192,7 @@ def main() -> int:
     kind = _auto_kind(text) if args.kind == "auto" else args.kind
 
     result = ValidationResult()
-    if kind == "normal":
-        _validate_normal_flow_doc(text, result)
-    else:
-        _validate_end2end_flow_doc(text, result)
+    _validate_normal_flow_doc(text, result)
 
     if result.errors:
         print(f"FAIL [{kind}] {doc_path}")
