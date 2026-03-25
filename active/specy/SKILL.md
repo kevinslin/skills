@@ -2,7 +2,7 @@
 name: specy
 description: Create structured docs and specs for codebase exploration and
   feature work 
-version: 1.12.5
+version: 1.12.6
 dependencies:
 - dev.llm-session
 - sudocode
@@ -43,7 +43,7 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 
 - Architecture Docs (`architecture`): System-level architecture docs covering boundaries, components, interfaces, and key decisions.
 - Research Briefs (`research-brief`): Structured technology/approach research with comparisons and recommendations.
-- Flow Docs (`flow-doc`): Focused execution-flow documentation for bootstrap/runtime/request lifecycle understanding.
+- Flow Docs (`flow-doc`): Focused execution-flow documentation for core lifecycle, domain-specific behavior, and supporting reference flows.
 - State Docs (`state-doc`): Terminal-output mapping with predicates, required state, and derivation paths.
 - Service Design Docs (`service-design-doc`): Staff-level service/system proposals covering architecture, APIs, reliability, and risks.
 - Feature Design Docs (`design-spec`): Implementation-ready feature or migration designs with rollout/rollback planning.
@@ -77,9 +77,9 @@ Before drafting any research artifact, run a short temporal-context check:
 3. Answer: "Is the value initialized before the consuming context is captured?"
 4. If any answer is `no` or `unknown`, investigate ordering first before expanding downstream analysis.
 
-### Flow Docs in Isolated Scope (Bootstrap vs Runtime)
+### Flow Docs in Isolated Scope (Core vs Topic vs Reference)
 
-Flow docs in this skill are often intentionally isolated (for example `apitool-bootstrap` vs `apitool-runtime`).
+Flow docs in this skill are often intentionally isolated by lifecycle or domain (for example `core.init` vs `topic.orchestration` vs `ref.new-task-kickoff`).
 Do not force all phases into one document. Instead, each isolated flow doc must include boundary contracts:
 
 1. Entry assumptions: what state/context already exists at flow entry.
@@ -207,7 +207,10 @@ $DOCS_ROOT/
       README.md
       design.md
   flows/             # Flow documentation
-    {date}-{topic}.md
+    core.init.md
+    core.exit.md
+    topic.{name}.md
+    ref.{name}.md
   state/             # State docs
     {state-name}.md
   recipes/           # Change recipes

@@ -17,10 +17,14 @@
 
 ## Flow Naming Contract
 
-- Canonical bootstrap flow must be named `core.bootstrap.md`.
-- Canonical runtime invocation flow must be named `core.runtime_invoke.md`.
-- All non-canonical flows must be named `ref.{name-of-flow}.md`.
-- `{name-of-flow}` should be concise and kebab-case.
+- Core flows:
+  - `core.init.md`: how the system gets started.
+  - `core.exit.md`: how the system does cleanup.
+- Topic flows cover major functionality for a given domain (for example orchestration):
+  - `topic.{name}.md`
+- Ref flows cover anything that is not `core` or `topic` (for example how to kickstart a new task):
+  - `ref.{name}.md`
+- `{name}` should be concise and kebab-case.
 
 ## Authoring Requirements
 
@@ -53,9 +57,10 @@
 1. Review existing architecture documents and relevant patterns used in the project.
 2. Review existing flow docs in `$DOCS_ROOT/flows/` for consistency.
 3. Choose `{flow-name}` using the naming contract:
-   - `bootstrap` for initial build/context-establishment lifecycle.
-   - `runtime_invoke` for steady-state invocation lifecycle.
-   - `ref.{name-of-flow}` for all other flows.
+   - `core.init` for how the system gets started.
+   - `core.exit` for how the system does cleanup.
+   - `topic.{name}` for major functionality within a specific domain.
+   - `ref.{name}` for any supporting flow that is not `core` or `topic`.
 4. Copy `@references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
 5. Fill the required `Purpose` and `Entry points` sections first so scope is explicit.
 6. Draft the `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
