@@ -114,7 +114,7 @@ verbatim and in this order. Keep the Manual Notes content unchanged across edits
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
-- [date]: [description of update] ([agent session id])
+- [date]: [description of update] ([agent session id] - (current git sha))
 ```
 
 For the session id, use `dev.llm-session` to find the current conversation session id. Choose the lookup strategy that matches the active thread, and do not leave placeholder text such as `[agent session id]` or `[codex session id]` in a completed document.
