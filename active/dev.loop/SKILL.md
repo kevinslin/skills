@@ -69,6 +69,7 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 ### 5. Verify
 - Run the tests specified in the plan and ensure they pass.
 - Check features against validation plan and ensure existing tests pass
+- If there there unstaged changes relevant to your current work, commit changes via `trigger:commit-code`. Do not skip this step
 - Push is mandatory by default. Run `trigger:push-pr` for every dev.loop execution unless the user explicitly instructs not to push.
 - Do not treat push as optional due to caution, preference, or uncertainty; only skip push when the user says so explicitly.
 - Ensure the PR body includes manual testing steps with checkboxes.
