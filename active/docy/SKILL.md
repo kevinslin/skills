@@ -62,6 +62,9 @@ Command behavior:
 
 ## Available Docs
 
+- `references/core/main.md`: Core documentation hygiene. Use to keep adjacent
+  specs, flows, and other durable docs synchronized when an architectural change
+  invalidates older guidance.
 - `references/vendor/lerna.md`: Modern Lerna operating guidance for agents. Use before changing, validating, or releasing code in a Lerna-managed monorepo.
 - `references/ref/no-back-compat.md`: Hard-cut product policy. Use before changing
   codepaths that would otherwise introduce migrations, fallback behavior, adapters,
