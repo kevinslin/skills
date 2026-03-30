@@ -1,6 +1,6 @@
 ---
 name: docy
-description: Manage reusable reference docs for agent work through a small doc registry and CLI. Use when an agent should inject focused guidance into the current context or install durable rules into AGENTS.md, especially for language rules, core policies, framework/vendor behavior, or special-topic references such as backwards-compatibility policy.
+description: Manage reusable reference docs for agent work through a small doc registry and CLI. Use at startup for coding-related tasks to load the baseline rule set from `references/core/`, then use again as needed to add language-specific, vendor-specific, or special-topic guidance or to install durable rules into `AGENTS.md`.
 dependencies: []
 ---
 
@@ -8,9 +8,11 @@ dependencies: []
 
 ## Overview
 
-Keep policy and reference docs small, named, and injectable. Use the bundled `docy`
-CLI to print a doc into the active context with `inject` or to install a durable
-managed rule block into `AGENTS.md` with `install`.
+Keep policy and reference docs small, named, and injectable. For coding-related
+tasks, start by loading the baseline rules from `references/core/`, then return to
+this skill only when the task needs additional targeted guidance. Use the bundled
+`docy` CLI to print a doc into the active context with `inject` or to install a
+durable managed rule block into `AGENTS.md` with `install`.
 
 ## Doc Layout
 
@@ -31,16 +33,17 @@ references/
 
 ## Loading Rules
 
-Apply the lightest doc set that covers the task:
+For coding-related tasks, use this loading order:
 
-1. Always inject every relevant doc under `references/core/` before using any more
-   specialized material.
-2. Inject `references/lang/<language>.md` when the task depends on language-specific
-   rules or idioms.
-3. Inject `references/vendor/<dependency-or-framework>.md` when the task depends on
-   framework, library, or platform behavior.
-4. Inject `references/ref/<topic>.md` for focused policies, constraints, or one-off
-   topics that should shape the solution.
+1. At startup, inject every doc under `references/core/`. Treat these as the
+   default rule set, not an optional filter.
+2. After the core docs are loaded, add non-core docs selectively based on the task.
+3. Inject `references/lang/<language>.md` only when the task depends on
+   language-specific rules or idioms.
+4. Inject `references/vendor/<dependency-or-framework>.md` only when the task
+   depends on framework, library, or platform behavior.
+5. Inject `references/ref/<topic>.md` only for focused policies, constraints, or
+   one-off topics that should shape the solution.
 
 ## CLI
 
