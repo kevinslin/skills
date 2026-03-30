@@ -26,17 +26,17 @@ Entrypoints:
 Ordered call path:
 1. [Short, concrete action]
    ```ts
-   // Source: path/to/file.ts
+   // Source: path/to/file.ts#L28
    [use $sudocode skill for this step only; keep the description terse and move logic/branch callouts into comments]
    ```
 2. [Next short action]
    ```ts
-   // Source: path/to/file.ts
+   // Source: path/to/file.ts#L42-L58
    [sudocode for this step only]
    ```
 3. [Next short action]
    ```ts
-   // Source: path/to/file.ts
+   // Source: path/to/file.ts#L64
    [sudocode for this step only]
    ```
 
@@ -61,12 +61,12 @@ Entrypoints:
 Ordered call path:
 1. [Short, concrete action]
    ```ts
-   // Source: path/to/file.ts
+   // Source: path/to/file.ts#L28
    [sudocode for this step only]
    ```
 2. [Next short action]
    ```ts
-   // Source: path/to/file.ts
+   // Source: path/to/file.ts#L42-L58
    [sudocode for this step only]
    ```
 
@@ -91,7 +91,7 @@ Entrypoints:
 Ordered call path:
 1. [Short, concrete action]
    ```ts
-   // Source: path/to/file.ts
+   // Source: path/to/file.ts#L28
    [sudocode for this step only]
    ```
 

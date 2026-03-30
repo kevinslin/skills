@@ -18,6 +18,7 @@ from pathlib import Path
 
 
 CODE_BLOCK_RE = re.compile(r"```[A-Za-z0-9_-]*\n.*?```", re.S)
+LINE_NUMBERED_SOURCE_RE = re.compile(r"(?im)\bsource\b\s*:\s+\S+#L\d+(?:-L?\d+)?\b")
 
 
 @dataclass
@@ -88,6 +89,10 @@ def _validate_legacy_sudocode_sections(scope: str, section: str, result: Validat
             result.warnings.append(
                 f"{scope} has no explicit source annotation ('Source:') in legacy sudocode section: {heading.strip()}"
             )
+        elif LINE_NUMBERED_SOURCE_RE.search(segment) is None:
+            result.warnings.append(
+                f"{scope} source annotation should include a line reference like 'path/to/file.ts#L28' in legacy sudocode section: {heading.strip()}"
+            )
 
 
 def _validate_ordered_call_path(scope: str, section: str, result: ValidationResult) -> None:
@@ -126,6 +131,10 @@ def _validate_ordered_call_path(scope: str, section: str, result: ValidationResu
         if re.search(r"(?im)\bsource\b\s*:", segment) is None:
             result.warnings.append(
                 f"{scope} ordered step has no explicit source annotation ('Source:'): {heading.strip()}"
+            )
+        elif LINE_NUMBERED_SOURCE_RE.search(segment) is None:
+            result.warnings.append(
+                f"{scope} ordered step source annotation should include a line reference like 'path/to/file.ts#L28': {heading.strip()}"
             )
 
     if steps_with_code == 0 and _section_contains_sudocode_heading(section):

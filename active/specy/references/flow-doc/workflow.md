@@ -30,7 +30,8 @@
 
 - Flow docs are question-first and debugging-oriented. Optimize for traceability.
 - Use $sudocode with file annotations to describe code logic
-- Cite files where logic occurs.
+- Cite precise files and line numbers where logic occurs.
+- Format every sudocode source annotation as `path/to/file.ts#L28` or a tight range like `path/to/file.ts#L28-L42`.
 - Preserve any line ending with `// manual` exactly across updates.
 - Use a required `State` section.
 - Use the compact `State` structure:
@@ -64,7 +65,7 @@
 4. Copy `@references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
 5. Fill the required `Purpose` and `Entry points` sections first so scope is explicit.
 6. Draft the `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
-7. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations.
+7. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations with line numbers.
 8. Keep detailed logic, guard callouts, and external-call notes in the sudocode and sudocode comments instead of verbose step prose.
 9. Fill the required `State` section using the compact structure: summarize key state/ordering risks, list runtime controls in one table, and call out notable gates. If no runtime controls apply, write `None identified`.
 10. Use `$dev.diagram` to add or revise the required `Sequence diagram`. Prefer an ASCII box diagram unless preserving an existing diagram format or the user explicitly asks for Mermaid.
@@ -94,7 +95,7 @@
 
 - [ ] `## Call path` exists and is phase-based.
 - [ ] Each call-path phase includes numbered `Ordered call path` steps with embedded fenced sudocode blocks, or intentionally preserved legacy `#### Sudocode (...)` subsections when migration was not requested.
-- [ ] Ordered-call-path sudocode includes source annotations and reflects runtime branch ordering.
+- [ ] Ordered-call-path sudocode includes source annotations with line numbers and reflects runtime branch ordering.
 - [ ] `## State` and `## Sequence diagram` are present.
 - [ ] `validate_flow_doc.py` passes with no errors.
 
@@ -103,7 +104,7 @@
 - Focus on lifecycle and execution sequence, not only static architecture.
 - Link related docs where available.
 - Keep one lifecycle/behavior per document.
-- Keep sudocode readable and source-cited.
+- Keep sudocode readable and source-cited with tight line-numbered annotations.
 - Keep ordered-call-path descriptions terse; put nuance in sudocode/comments.
 - Keep call-path phases and ordered-step sudocode aligned (same phase boundaries and branch labels).
 - End your response with the exact flow-doc path (for discoverability).
