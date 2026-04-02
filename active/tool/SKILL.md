@@ -25,7 +25,7 @@ Also use this workflow for equivalent requests such as:
 - "install delta"
 - "set up uv locally"
 - "install ripgrep and document it"
-- Read [references/install.md](/Users/kevinlin/code/skills/active/tool/references/install.md) and follow it.
+- Read [references/install.md](references/install.md) and follow it.
 
 ### document
 
@@ -39,7 +39,7 @@ Also use this workflow for equivalent requests such as:
 - "document delta"
 - "create a vpkg note for uv"
 - "fill out the ripgrep note template without installing it"
-- Read [references/document.md](/Users/kevinlin/code/skills/active/tool/references/document.md) and follow it.
+- Read [references/document.md](references/document.md) and follow it.
 
 ## Dendron Note Rules
 
@@ -48,6 +48,7 @@ Also use this workflow for equivalent requests such as:
 - Standardize title casing in frontmatter title, but keep the file name lowercase.
 - Base the note on the exact template in the bundled reference.
 - If the note already exists, update the relevant sections in place instead of rewriting unrelated content.
+- For regular Markdown links inside the note, always write them relative to the current note file.
 
 ## Example
 
