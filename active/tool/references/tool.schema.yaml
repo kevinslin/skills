@@ -1,0 +1,8 @@
+vpkg:
+  "{{name}}":
+    description: general description
+    template: root.md.template
+    children:
+      concepts:
+        description: main concepts
+        template: concepts.md.template

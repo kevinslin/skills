@@ -34,21 +34,25 @@ Read this file when the request maps to `$tool install <name>`.
   - a minimal smoke test if the tool needs one to prove it starts cleanly
 - Capture any post-install caveats that matter in practice, such as shell completions, PATH changes, or required config.
 
-### 4. Create or update the Dendron note
+### 4. Create or update the Dendron note set
 
 - Use the `dendron` skill for vault discovery, note placement, and note editing.
-- Target note name: `vpkg.<name>`.
-- Reuse an existing note if present. Do not create duplicates.
-- Use the template in [vpkg-note-template.md](/Users/kevinlin/code/skills/active/tool/references/vpkg-note-template.md).
-- Fill the note from verified local behavior and official docs:
+- Use the schema in [tool.schema.yaml](/Users/kevinlin/code/skills/active/tool/references/tool.schema.yaml).
+- Resolve the schema placeholders with the chosen tool name.
+- Reuse existing notes if present. Do not create duplicates.
+- Create or update every note declared by the schema. The default note set is:
+  - `vpkg.<name>` from [root.md.template](/Users/kevinlin/code/skills/active/tool/references/root.md.template)
+  - `vpkg.<name>.concepts` from [concepts.md.template](/Users/kevinlin/code/skills/active/tool/references/concepts.md.template)
+- Fill `vpkg.<name>` from verified local behavior and official docs:
   - `Quickstart`: install command, verify command, first required setup
   - `Cheatsheet`: common commands and shortcuts worth remembering
   - `Gotchas`: package-name vs binary-name mismatches, pager/path/config pitfalls, easy mistakes
   - `Config`: tunable knobs with short explanations
   - `Tips`: non-obvious but high-value usage, shortcuts, or features that may require extra configuration
   - `Resources`: official repo, manual, package page
+- Fill `vpkg.<name>.concepts` with the core mental model, primary nouns, and the 3-7 concepts a first serious user needs to understand.
 - Use `Tips` for capabilities that are easy to miss on a first read. Example for `delta`: `git blame` rendering, `grep`/`ripgrep` syntax highlighting pipelines, or terminal hyperlink support when extra config is required.
-- Keep the note concise and practical. Summarize; do not paste long excerpts from docs.
+- Keep every note concise and practical. Summarize; do not paste long excerpts from docs.
 
 ### 5. Report back cleanly
 
@@ -56,5 +60,6 @@ Read this file when the request maps to `$tool install <name>`.
   - install status
   - executable path
   - version
-  - note path
+  - root note path
+  - any additional note paths created or updated from the schema
   - any optional next-step config the user might want
