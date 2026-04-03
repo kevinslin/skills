@@ -19,7 +19,7 @@ Use this path when the user wants the note and guidance but does not want a loca
   - version to mention or current stable release when the primary source exposes it clearly
   - first useful commands and config knobs for the note
 - Prefer primary sources only. Avoid blogspam and copied setup guides.
-- Keep the authoritative links you find handy. You will add them to the root note `Resources` section later.
+- Keep the authoritative links you find handy. Add package-wide links to the root note `Resources` section later, but keep note-specific research links in the note that uses them.
 - Expect package name and executable name to differ.
 
 ### 2. Check local state without changing it
@@ -52,7 +52,7 @@ Use this path when the user wants the note and guidance but does not want a loca
   - `last_refreshed`: current local timestamp in `YYYY-MM-DD HH:MM`
   - `last_refreshed_by`: `<agent_name>/<session id>`, for example `codex/<session id>`
 - Refresh `last_refreshed` and `last_refreshed_by` whenever you update an existing note.
-- If a root note already exists, read its `Resources` section before expanding the tool further. Reuse those authoritative links when they are still correct, and refresh them if they are stale or incomplete.
+- If a root note already exists, read its `Resources` section before expanding the tool further. Reuse those shared package-wide links when they are still correct, and refresh them if they are stale or incomplete.
 - Use CommonMark footnotes for factual claims drawn from external sources.
 - Add the footnote marker at the end of the sentence or bullet that makes the claim.
 - Prefer one footnote per claim cluster or paragraph rather than one per sentence when the same source supports the whole block.
@@ -65,16 +65,17 @@ Use this path when the user wants the note and guidance but does not want a loca
   - `Gotchas`: package-name vs binary-name mismatches, pager/path/config pitfalls, easy mistakes
   - `Config`: tunable knobs with short explanations
   - `Tips`: non-obvious but high-value usage, shortcuts, or features that may require extra configuration
-  - `Resources`: authoritative links first, preferably official GitHub repo and official docs/manual, plus the package page when useful
+  - `Resources`: package-wide authoritative links first, preferably official GitHub repo and official docs/manual, plus the package page when useful
 - Fill `vpkg.<name>.concepts` with the core mental model, primary nouns, and the 3-7 concepts a first serious user needs to understand.
 - Keep the concepts note terse. Do not invent filler headings just to satisfy the template.
 - Fill `vpkg.<name>.t.<topic>` with only the sections that are relevant for that domain. Omit unused sections instead of leaving placeholders behind.
-- Fill `vpkg.<name>.ref.<reference>` with the required frontmatter plus only the fields and headings that help the current discussion. Useful fields include `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, and `Related`, but only include what the referenced functionality actually needs.
+- If a topic, reference, or API note depends on self-contained research, add those links to the current note, usually in a local `Resources` section or note-local footnotes, instead of copying all of them into the root note.
+- Fill `vpkg.<name>.ref.<reference>` with the required frontmatter plus only the fields and headings that help the current discussion. Useful fields include `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, `Resources`, and `Related`, but only include what the referenced functionality actually needs.
 - Fill `vpkg.<name>.api.<api>` from GitHub and source inspection, covering all public defined interfaces for that module. Include only the fields and headings that help the current discussion and match the exported surface.
 - When needed, clone the upstream repo into `~/code/vendor` and inspect the relevant module source to verify exports, entrypoints, types, methods, options, or other public interfaces.
 - Keep `api` notes narrow to one module or public surface area so they remain useful as a namespace child.
-- When expanding a topic or reference note, check the root note `Resources` first before doing any additional sourcing.
-- When expanding an API note, check the root note `Resources` first, then prefer the official GitHub repo and source tree before any secondary source.
+- When expanding a topic, reference, or API note, check the current note's links first when they exist, then the root note `Resources` for shared package-wide sources before doing any additional sourcing.
+- When expanding an API note, after checking note-local and root links, prefer the official GitHub repo and source tree before any secondary source.
 - Keep `ref` notes narrow and pointer-like. They should make it easy to jump into one specific capability without turning into a second root note.
 - When the tool is not installed locally, write the note from official sources and leave local verification claims out.
 - Keep every note concise and practical. Summarize; do not paste long excerpts from docs.

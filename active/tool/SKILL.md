@@ -1,6 +1,6 @@
 ---
 name: tool
-description: Install and document local tools end to end, or document them without installing. Use when the user asks for commands like `$tool install NAME` or `$tool document NAME`, wants a CLI/app/tool installed on the current machine, or wants a schema-driven `vpkg.name` Dendron note set created or refreshed with practical usage instructions, including optional topic child notes for domain-specific package areas, optional reference child notes for self-contained package functionality, and optional source-backed API child notes for public module interfaces.
+description: Install and/or document local tools end to end. Use when the user asks for commands like `$tool install NAME` or `$tool document NAME`
 dependencies:
 - dendron
 ---
@@ -11,7 +11,7 @@ dependencies:
 
 Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then create or update the schema-defined Dendron note set rooted at `[[vpkg.<name>]]` with concise install and usage guidance.
 
-When documenting or refreshing tool notes, always research the tool on the internet instead of relying on internal knowledge alone. Find the authoritative sources first, prefer the official GitHub repo and official docs/manual, add those links to the root note's `Resources` section, and consult that `Resources` section first before expanding the tool with more detail.
+When documenting or refreshing tool notes, always research the tool on the internet instead of relying on internal knowledge alone. Find the authoritative sources first and prefer the official GitHub repo and official docs/manual. Keep package-wide links in the root note's `Resources` section, but when the research is self-contained to a topic, reference, or API note, keep those links in the current note instead of pushing everything up to the root.
 
 ## Command
 
@@ -67,12 +67,13 @@ Also use this workflow for equivalent requests such as:
 - Do not add footnotes for purely local observations you verified directly on the machine. Label those explicitly as local verification instead.
 - Always research the tool on the internet instead of relying on internal knowledge alone.
 - Find authoritative links first. Prefer the official GitHub repo and official docs/manual before using any secondary source.
-- Add authoritative links to the root note under `Resources`.
-- When expanding an existing tool note or adding topic/reference notes, check the root note `Resources` links first.
+- Keep package-wide authoritative links in the root note under `Resources`.
+- When the research is self-contained to the current topic, reference, or API note, add those links to the current note instead of duplicating them in the root note.
+- When expanding an existing tool note or adding topic/reference/api notes, check the current note's links first when they exist, then fall back to the root note `Resources` for shared package-wide links.
 - For `api` notes, treat the official GitHub repo and source code as authoritative. Official docs may help, but public interfaces are defined by the source.
 - If the docs do not fully answer an API question, clone the upstream repo into `~/code/vendor` and inspect the source to document the public interfaces accurately.
 - Base each templated note on the exact template mapped by the schema. For children without a template, derive only the fields and headings that help with the functionality being documented.
-- Keep `ref` notes freeform after the required frontmatter. Add fields on an as-needed basis as the user is talking about them, for example `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, or `Related`.
+- Keep `ref` notes freeform after the required frontmatter. Add fields on an as-needed basis as the user is talking about them, for example `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, `Resources`, or `Related`.
 - Keep `api` notes freeform after the required frontmatter. Cover all public defined interfaces for the module and choose the fields and headings that fit the exported surface.
 - If a note already exists, update the relevant sections in place instead of rewriting unrelated content.
 - For regular Markdown links inside a note, always write them relative to the current note file.
