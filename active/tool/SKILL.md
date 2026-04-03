@@ -1,6 +1,6 @@
 ---
 name: tool
-description: Install and document local tools end to end, or document them without installing. Use when the user asks for commands like `$tool install NAME` or `$tool document NAME`, wants a CLI/app/tool installed on the current machine, or wants a schema-driven `vpkg.name` Dendron note set created or refreshed with practical usage instructions, including optional topic child notes for domain-specific package areas and optional reference child notes for self-contained package functionality.
+description: Install and document local tools end to end, or document them without installing. Use when the user asks for commands like `$tool install NAME` or `$tool document NAME`, wants a CLI/app/tool installed on the current machine, or wants a schema-driven `vpkg.name` Dendron note set created or refreshed with practical usage instructions, including optional topic child notes for domain-specific package areas, optional reference child notes for self-contained package functionality, and optional source-backed API child notes for public module interfaces.
 dependencies:
 - dendron
 ---
@@ -52,18 +52,28 @@ Also use this workflow for equivalent requests such as:
 - Treat `t` as "topic". A topic is a large domain-specific area of package functionality, for example an AWS package might have topics like `ec2`, `networking`, or `iam`.
 - Add `vpkg.<name>.ref.<reference>` notes only as needed when the user is actively asking about a self-contained piece of package functionality.
 - Treat `ref` as "reference". A reference is a pointer to self-contained functionality of a package, such as a command, provider, API surface, subtool, or workflow that can stand on its own.
+- Add `vpkg.<name>.api.<api>` notes only as needed when the user is actively asking about a module's public interfaces or when the current task benefits from a dedicated API note.
+- Treat `api` as a namespace. Instantiate concrete children via `api.<name>`.
+- API notes often, but not always, have a one-to-one mapping with `vpkg.<name>.t.<topic>` notes. Do not assume the mapping exists.
 - Prefer the executable name for the root note when that is what the user will type, unless the package name is the clearer long-term identifier.
 - Standardize title casing in frontmatter title, but keep file names lowercase.
 - Every note page must include frontmatter with `last_refreshed` and `last_refreshed_by`.
 - Set `last_refreshed` to the current local timestamp in `YYYY-MM-DD HH:MM` format.
 - Set `last_refreshed_by` to `<agent_name>/<session id>`, for example `codex/<session id>`.
 - When updating an existing note, refresh those frontmatter fields along with the note content you changed.
+- For factual claims pulled from docs, source, or release metadata, use CommonMark footnotes in the note body so the claim is traceable to an authoritative source.
+- Prefer placing the footnote marker at the end of the sentence or bullet that contains the claim.
+- Footnote definitions should use authoritative URLs, ideally the official GitHub repo, official docs/manual, or upstream source file that supports the claim.
+- Do not add footnotes for purely local observations you verified directly on the machine. Label those explicitly as local verification instead.
 - Always research the tool on the internet instead of relying on internal knowledge alone.
 - Find authoritative links first. Prefer the official GitHub repo and official docs/manual before using any secondary source.
 - Add authoritative links to the root note under `Resources`.
 - When expanding an existing tool note or adding topic/reference notes, check the root note `Resources` links first.
+- For `api` notes, treat the official GitHub repo and source code as authoritative. Official docs may help, but public interfaces are defined by the source.
+- If the docs do not fully answer an API question, clone the upstream repo into `~/code/vendor` and inspect the source to document the public interfaces accurately.
 - Base each templated note on the exact template mapped by the schema. For children without a template, derive only the fields and headings that help with the functionality being documented.
 - Keep `ref` notes freeform after the required frontmatter. Add fields on an as-needed basis as the user is talking about them, for example `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, or `Related`.
+- Keep `api` notes freeform after the required frontmatter. Cover all public defined interfaces for the module and choose the fields and headings that fit the exported surface.
 - If a note already exists, update the relevant sections in place instead of rewriting unrelated content.
 - For regular Markdown links inside a note, always write them relative to the current note file.
 
@@ -85,3 +95,4 @@ the expected flow is:
 6. Fill `[[vpkg.delta.concepts]]` with the core `delta` concepts and mental model.
 7. Create a `[[vpkg.delta.t.<topic>]]` note only when the user is digging into a specific `delta` domain that deserves its own note.
 8. Create a `[[vpkg.delta.ref.<reference>]]` note only when the user is digging into one self-contained `delta` capability that deserves a dedicated pointer note.
+9. Create a `[[vpkg.<tool>.api.<name>]]` note only when the tool exposes a concrete module or API surface that the user needs documented from the public source definitions.

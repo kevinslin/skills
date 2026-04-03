@@ -13,3 +13,9 @@ vpkg:
       ref:
         description: self-contained functionality references
         dynamic_child: true
+      api:
+        description: public module API namespace
+        children:
+          "{{name}}":
+            description: public interfaces for a module
+            dynamic_child: true
