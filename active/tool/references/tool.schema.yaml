@@ -6,3 +6,10 @@ vpkg:
       concepts:
         description: main concepts
         template: concepts.md.template
+      t:
+        description: domain-specific topics
+        template: topic.md.template
+        dynamic_child: true
+      ref:
+        description: self-contained functionality references
+        dynamic_child: true
