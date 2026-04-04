@@ -2,7 +2,7 @@
 name: specy
 description: Create structured docs and specs for codebase exploration and
   feature work 
-version: 1.12.6
+version: 1.12.7
 dependencies:
 - dev.llm-session
 - sudocode
@@ -198,13 +198,9 @@ $DOCS_ROOT/
     {date}-research-{topic}.md
   design/            # Service design docs
     {date}-design-{topic}.md
-  specs/             # Feature design doc projects
-    active/          # Feature specs 
-      {YYYY-MM-DD}-{topic}.md
-    investigation-{YYYY-MM-DD}-{topic}.md
-    {YYYY-MM}-{feature-slug}/
-      README.md
-      design.md
+  specs/             # Active and archived specs
+    .archive/        # Completed specs moved here
+    {YYYY-MM-DD}-{topic}.md
   flows/             # Flow documentation
     core.init.md
     core.exit.md
@@ -214,10 +210,6 @@ $DOCS_ROOT/
     {state-name}.md
   recipes/           # Change recipes
     {recipe-name}.md
-  project/
-    specs/
-      active/
-        valid-{date}-{topic}.md
   faq/
     {date}-{topic}.md
   vendor/            # Vendor documentation
@@ -228,6 +220,9 @@ $DOCS_ROOT/
       topics/
         {name}.md
 ```
+
+Active specs live directly under `$DOCS_ROOT/specs/`. When a spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
+If multiple spec types exist for the same topic, keep the filename format and distinguish them in the `{topic}` slug, for example `payments-design` or `payments-validation`.
 
 FAQ Specs do not create standalone files. They update the target research document in place.
 

@@ -14,23 +14,25 @@
 ## Constants
 
 - %%OUTPUT_DIR: $DOCS_ROOT/specs/
-- %%OUTPUT_FILE: %%OUTPUT_DIR/investigation-{YYYY-MM-DD}-{topic}.md
+- %%OUTPUT_FILE: %%OUTPUT_DIR{YYYY-MM-DD}-{topic}.md
 
 ## Instructions
 
 1. Define the bug symptom, expected behavior, and current impact.
-2. Copy `@references/investigation-spec/template.md` to %%OUTPUT_FILE.
-3. Build a hypothesis table with a fastest falsifier for each branch.
-4. Build a state timeline for critical values from write to read.
-5. Record evidence (logs, code locations, traces) per hypothesis outcome.
-6. Include a `Context Propagation Contract` section that captures:
+2. Choose a `{topic}` slug that stays within the `{YYYY-MM-DD}-{topic}.md` filename format and includes an `-investigation` qualifier when needed to avoid collisions.
+3. Copy `@references/investigation-spec/template.md` to %%OUTPUT_FILE.
+4. Build a hypothesis table with a fastest falsifier for each branch.
+5. Build a state timeline for critical values from write to read.
+6. Record evidence (logs, code locations, traces) per hypothesis outcome.
+7. Include a `Context Propagation Contract` section that captures:
    - source of truth
    - initialization timing
    - transform rules
    - snapshot boundaries
    - expected consumers
-7. Document root cause (or current best-supported hypothesis), fix strategy, and validation plan.
-8. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
+8. Document root cause (or current best-supported hypothesis), fix strategy, and validation plan.
+9. Keep in-progress specs under `$DOCS_ROOT/specs/`. When the spec is complete, move it to `$DOCS_ROOT/specs/.archive/` without renaming it.
+10. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
 
 ## Authoring Requirements
 
