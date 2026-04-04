@@ -21,6 +21,8 @@ User will ask you to run dev.loop. This is usually with either an existing desig
 
 If user gives you an existing spec - go straight to step 2 (Gather Context). Otherwise, start at step 1 (Plan).
 
+If the task is straightforward, you can skip creating a spec and go straight to step 3.
+
 In addition to running the whole dev.loop, users can also invoke an individual phase of the dev.loop by referring to it (eg. re-run the "verify" phase)
 
 Whenever practical - use one or more subagents to run any given phase to preserve context
@@ -32,7 +34,6 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 - Bias toward answering plan questions yourself; only ask the user when blocked or when user tells you to check with them.
 - Ensure the plan includes explicit tests (prefer integration tests).
 - Capture the plan prefix from the plan filename: `{YYYY-MM-DD}-{title-in-kebab-case}`.
-- use $specy to create validation spec against the feature spec
 
 ### 2. Gather Context
 - Given the spec/plan, identify remaining ambiguities, gaps, and unresolved assumptions.
