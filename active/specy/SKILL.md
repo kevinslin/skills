@@ -185,7 +185,6 @@ When updating existing flow docs, use a preservation-first revision style.
 - Read only the workflow(s) relevant to the document type requested.
 - Preserve stable IDs and manually maintained sections when revising existing docs.
 - Keep source citations explicit and actionable.
-- Prioritize temporal correctness before topology: verify ordering and snapshot semantics before deep downstream tracing.
 
 ## Directory Structure
 
