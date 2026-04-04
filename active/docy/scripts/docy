@@ -33,6 +33,16 @@ DOCS = {
         rel_path="vendor/lerna.md",
         description="Modern Lerna operating guidance for agents.",
     ),
+    "ref/python-preferred-modules": DocSpec(
+        slug="ref/python-preferred-modules",
+        rel_path="ref/python-preferred-modules.md",
+        description="Python dependency preferences for runtime validation and CLIs.",
+    ),
+    "ref/typescript-preferred-modules": DocSpec(
+        slug="ref/typescript-preferred-modules",
+        rel_path="ref/typescript-preferred-modules.md",
+        description="TypeScript dependency preferences for runtime validation and CLIs.",
+    ),
     "ref/no-back-compat": DocSpec(
         slug="ref/no-back-compat",
         rel_path="ref/no-back-compat.md",

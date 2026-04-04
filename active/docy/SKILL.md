@@ -51,9 +51,11 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 
 ```bash
 docy inject ref/no-back-compat
+docy inject ref/python-preferred-modules
 docy inject vendor/lerna
 
 docy install ref/no-back-compat
+docy install ref/typescript-preferred-modules
 docy install vendor/lerna
 ```
 
@@ -69,6 +71,8 @@ Command behavior:
   specs, flows, and other durable docs synchronized when an architectural change
   invalidates older guidance.
 - `references/vendor/lerna.md`: Modern Lerna operating guidance for agents. Use before changing, validating, or releasing code in a Lerna-managed monorepo.
+- `references/ref/python-preferred-modules.md`: Python dependency preferences. Use before building runtime validation or CLI behavior from scratch in Python projects.
+- `references/ref/typescript-preferred-modules.md`: TypeScript dependency preferences. Use before building runtime validation or CLI behavior from scratch in TypeScript projects.
 - `references/ref/no-back-compat.md`: Hard-cut product policy. Use before changing
   codepaths that would otherwise introduce migrations, fallback behavior, adapters,
   or other backwards-compatibility glue.
