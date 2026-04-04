@@ -23,6 +23,8 @@ If user gives you an existing spec - go straight to step 2 (Gather Context). Oth
 
 If the task is straightforward, you can skip creating a spec and go straight to step 3.
 
+If the user asks you to "check in after creating the spec" or uses similar wording, treat that as a pause point before implementation, not as permission to skip the immediate post-spec gather-context work. Unless the user explicitly says to stop before review, still complete the required spec review, ambiguity/gap analysis, and recommendation fold-in from step 2 before checking in.
+
 In addition to running the whole dev.loop, users can also invoke an individual phase of the dev.loop by referring to it (eg. re-run the "verify" phase)
 
 Whenever practical - use one or more subagents to run any given phase to preserve context
@@ -48,6 +50,7 @@ Whenever practical - use one or more subagents to run any given phase to preserv
   - `Proposed Flow Docs`
 - After creating the spec, spawn subagent to critical review design doc with $dev.review skill and provide recommendations
 - Apply recommendations provided by the subagent
+- If the user asked for a post-spec check-in, perform that check-in only after the review feedback and ambiguity summary are incorporated, unless they explicitly asked to stop earlier.
 
 ### 3. Execute
 - Create a new branch for implementation unless given explicit instructions not to. If user explicitly asks for worktree, create worktree. If a plan branch exists, branch off it to keep the plan commit(s).
