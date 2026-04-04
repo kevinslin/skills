@@ -22,7 +22,7 @@
 3. Copy `@references/feature-spec/template.md` to the output location.
 4. Fill the required sections with concrete, source-backed details from the repository and current task context. Omit optional subsections when they would only add boilerplate.
 5. Use `@references/feature-spec/effective-planning.md` for planning quality standards.
-6. Include a concrete `Required Pre-Read (LLM Agent)` list and explicit integration touchpoints (files/services/endpoints), because these are frequently reused during implementation sessions.
+6. Include a concrete `## Context` section with project-root-relative markdown links and a short explanation of what each item is for, so the agent can decide what to read based on need instead of following a blind pre-read checklist.
 7. Record resolved ambiguities and explicit decisions in the spec as they are discovered; do not leave important pivots buried in chat history.
 8. Include explicit acceptance criteria, validation plan, and done criteria. Acceptance criteria answer "what must be true," validation answers "how it is proven," and done criteria answer "what must be complete before handoff." If a dedicated validation spec is created, link it instead of duplicating a large matrix in the feature spec.
 9. If the repository uses beads for tracking, follow `@references/feature-spec/beads.md`.
@@ -35,8 +35,9 @@
 
 ## Authoring Requirements
 
-- Required sections: `Goal and Scope`, `Context and Constraints`, `Approach and Touchpoints`, `Acceptance Criteria`, `Phases and Dependencies`, `Validation Plan`, `Done Criteria`, `Open Items and Risks`, `Manual Notes`, `Changelog`.
+- Required sections: `Goal and Scope`, `Context`, `Approach and Touchpoints`, `Acceptance Criteria`, `Phases and Dependencies`, `Validation Plan`, `Done Criteria`, `Open Items and Risks`, `Manual Notes`, `Changelog`.
 - Optional subsections should be omitted when empty or generic (for example, `Non-obvious Dependencies or Access`, `Important Implementation Notes`, `Unit tests`, `Separate Validation Spec`, `Simplifications and Assumptions`).
+- Use project-root-relative links in spec bodies. Do not use absolute filesystem paths in feature-spec links or citations.
 - `Acceptance Criteria` is required and feature-level, not per-phase. Use it for observable outcomes and important invariants, not test commands, implementation tasks, or completion/admin items such as "docs updated."
 - `Validation Plan` is required. Use it for automated and manual checks that prove the acceptance criteria, and link a separate validation spec when a larger matrix would be redundant here.
 - `Done Criteria` is required, but keep it short and process-oriented (for example: implementation complete, validation reviewed, docs/specs updated, rollout or handoff complete where applicable). It may reference acceptance or validation completion, but must not restate the acceptance bullets or validation checklist.

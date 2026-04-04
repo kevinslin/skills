@@ -18,7 +18,7 @@
 
 ---
 
-## Context and Constraints
+## Context
 
 ### Background
 [Why this task is needed - user impact, technical debt, or business requirement]
@@ -26,8 +26,8 @@
 ### Current State
 [How the system behaves today, including the key code paths or architectural reality]
 
-### Required Pre-Read 
-- [Flow docs, design docs, specs, or code paths to read before implementing]
+### Context
+- [relative/path/to/context-item.md](docs/or/src/path): [what this context is for and when it is useful]
 
 ### Constraints
 - [Technical constraints]
