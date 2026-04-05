@@ -28,7 +28,7 @@ Recommended automation cadence:
 
 Recommended automation command:
 ```bash
-/Users/kevinlin/code/skills-public/active/ag-ledger/scripts/ag-ledger sync
+/Users/kevinlin/code/skills/active/ag-ledger/scripts/ag-ledger sync
 ```
 
 ## CLI Commands
@@ -103,10 +103,16 @@ file:
 }
 ```
 
-Optional structured fields supported on manual entries:
+Optional structured fields supported on manual entries and sync-derived rows:
 - `invoked_skill`: canonical skill name when the entry is part of a specific skill workflow
+- `invoked_skills`: ordered list of skill names when a transcript turn names more than one
+- `invocation_trigger`: heuristic classification such as `explicit`, `implicit`, `required-by-repo`, or `catalog-only`
 - `mode`: execution mode such as `review`, `code`, or `apply`
 - `parent_session_id`: parent/fork/root session id for subagent lineage
+
+`sync` fills `invoked_skill` and `invoked_skills` when a transcript message explicitly
+names known skills, and also sets `invocation_trigger` so review tooling can filter
+structured data instead of parsing prose.
 
 ## Notes
 

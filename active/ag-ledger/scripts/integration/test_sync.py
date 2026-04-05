@@ -145,6 +145,109 @@ class AgLedgerSyncIntegrationTests(unittest.TestCase):
         self.assertIn("punny programming joke", joke_entries[0]["msg"])
         self.assertIn("punny programming joke", joke_entries[1]["msg"])
 
+    def test_sync_emits_structured_invocation_metadata_for_named_skills(self) -> None:
+        rollout_path = self.install_fixture(
+            "hello_world_rollout.jsonl",
+            "2026/01/04/rollout-2026-01-04T12-00-00-sess-swarm.jsonl",
+        )
+        rollout_path.write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "timestamp": "2026-01-04T12:00:00Z",
+                            "type": "session_meta",
+                            "payload": {
+                                "id": "sess-swarm",
+                                "timestamp": "2026-01-04T12:00:00Z",
+                                "cwd": "/tmp/swarm-workspace",
+                            },
+                        },
+                        ensure_ascii=True,
+                    ),
+                    json.dumps(
+                        {
+                            "timestamp": "2026-01-04T12:00:01Z",
+                            "type": "response_item",
+                            "payload": {
+                                "type": "message",
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "input_text",
+                                        "text": "Run the multi-agent feature loop.",
+                                    }
+                                ],
+                            },
+                        },
+                        ensure_ascii=True,
+                    ),
+                    json.dumps(
+                        {
+                            "timestamp": "2026-01-04T12:00:02Z",
+                            "type": "response_item",
+                            "payload": {
+                                "type": "message",
+                                "role": "assistant",
+                                "phase": "commentary",
+                                "content": [
+                                    {
+                                        "type": "output_text",
+                                        "text": "Using `sw-loop` with `specy` and `gen-notifier`.",
+                                    }
+                                ],
+                            },
+                        },
+                        ensure_ascii=True,
+                    ),
+                    json.dumps(
+                        {
+                            "timestamp": "2026-01-04T12:00:03Z",
+                            "type": "response_item",
+                            "payload": {
+                                "type": "message",
+                                "role": "assistant",
+                                "phase": "final_answer",
+                                "content": [
+                                    {
+                                        "type": "output_text",
+                                        "text": "Finished the loop.",
+                                    }
+                                ],
+                            },
+                        },
+                        ensure_ascii=True,
+                    ),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = self.run_cli(
+            "sync",
+            "--session-root",
+            str(self.session_root),
+            "--lookback-minutes",
+            "1440",
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+        entries = self.read_all_entries()
+        swarm_entries = [entry for entry in entries if entry["session"] == "sess-swarm"]
+        self.assertEqual([entry["entry_kind"] for entry in swarm_entries], ["session_start", "session_end"])
+
+        start_entry = swarm_entries[0]
+        self.assertEqual(start_entry["invoked_skill"], "sw-loop")
+        self.assertEqual(start_entry["invoked_skills"], ["sw-loop", "specy", "gen-notifier"])
+        self.assertEqual(start_entry["invocation_trigger"], "explicit")
+
+        by_secondary_skill = self.run_cli("filter", "--invoked-skill", "specy")
+        self.assertEqual(by_secondary_skill.returncode, 0, msg=by_secondary_skill.stderr)
+        filtered = [json.loads(line) for line in by_secondary_skill.stdout.splitlines() if line.strip()]
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(filtered[0]["session"], "sess-swarm")
+
     def test_sync_is_idempotent_recovers_from_stale_state_and_rechecks_changed_rollout(self) -> None:
         rollout_path = self.install_fixture(
             "hello_world_rollout.jsonl",

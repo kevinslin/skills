@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import tempfile
+from functools import lru_cache
 from dataclasses import dataclass, field
 from datetime import datetime, time
 from pathlib import Path
@@ -24,6 +26,8 @@ ENV_CODEX_THREAD_ID = "CODEX_THREAD_ID"
 ENV_CODEX_HOME = "CODEX_HOME"
 FINAL_PHASES = {"final", "final_answer"}
 SYNC_STATE_VERSION = 1
+SKILL_ROOT = Path(__file__).resolve().parents[2]
+SKILL_TOKEN_PATTERN = re.compile(r"`(?:\$)?([A-Za-z0-9][A-Za-z0-9_.-]*)`")
 
 
 @dataclass(frozen=True)
@@ -267,6 +271,49 @@ def normalize_summary(text: str, *, max_length: int = DEFAULT_SUMMARY_LENGTH) ->
     return normalized[: max_length - 3].rstrip() + "..."
 
 
+@lru_cache(maxsize=1)
+def known_skill_names() -> set[str]:
+    names: set[str] = set()
+    if not SKILL_ROOT.exists():
+        return names
+
+    for child in SKILL_ROOT.iterdir():
+        if child.is_dir() and (child / "SKILL.md").exists():
+            names.add(child.name)
+    return names
+
+
+def infer_invocation_trigger(message_text: str) -> str:
+    stripped = message_text.lstrip()
+    lowered = message_text.lower()
+
+    if stripped.startswith("# AGENTS.md instructions") or stripped.startswith("<skill>"):
+        return "catalog-only"
+    if "required" in lowered and "skill" in lowered:
+        return "required-by-repo"
+    if "using `" in lowered or "running `" in lowered or "use `" in lowered:
+        return "explicit"
+    return "implicit"
+
+
+def infer_invocation_metadata(message_text: str) -> dict[str, object]:
+    matched: list[str] = []
+    available = known_skill_names()
+    for match in SKILL_TOKEN_PATTERN.finditer(message_text):
+        candidate = match.group(1)
+        if candidate in available and candidate not in matched:
+            matched.append(candidate)
+
+    if not matched:
+        return {}
+
+    return {
+        "invoked_skill": matched[0],
+        "invoked_skills": matched,
+        "invocation_trigger": infer_invocation_trigger(message_text),
+    }
+
+
 def is_context_user_message(text: str) -> bool:
     stripped = text.lstrip()
     if stripped.startswith("# AGENTS.md instructions"):
@@ -292,6 +339,7 @@ def build_record(
     message_text: str,
 ) -> DerivedRecord:
     source_key = make_source_key(path, source_event.line_number, entry_kind)
+    invocation_fields = infer_invocation_metadata(message_text)
     summary = normalize_summary(message_text)
     return DerivedRecord(
         entry_time=source_event.timestamp,
@@ -307,6 +355,7 @@ def build_record(
             "source_turn_index": turn_index,
             "source_session_id": session_id,
             "source_workspace": workspace,
+            **invocation_fields,
         },
     )
 
@@ -700,8 +749,12 @@ def cmd_filter(args: argparse.Namespace) -> int:
     for entry, entry_time in iter_entries(root) or []:
         if args.session and entry.get("session") != args.session:
             continue
-        if args.invoked_skill and entry.get("invoked_skill") != args.invoked_skill:
-            continue
+        if args.invoked_skill:
+            entry_invoked_skill = entry.get("invoked_skill")
+            entry_invoked_skills = entry.get("invoked_skills")
+            if entry_invoked_skill != args.invoked_skill:
+                if not isinstance(entry_invoked_skills, list) or args.invoked_skill not in entry_invoked_skills:
+                    continue
         if args.mode and entry.get("mode") != args.mode:
             continue
         if args.parent_session_id and entry.get("parent_session_id") != args.parent_session_id:
