@@ -63,20 +63,6 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 4. For in-place doc types (currently FAQ Specs), use the template as an insertion snippet instead of creating a new file.
 5. Before finalizing any created or revised document, resolve the current agent session id via `$dev.llm-session` and replace the changelog placeholder with the real session id.
 
-## Context Triage Gate (Required Before Drafting)
-
-Before drafting any research artifact, run a short temporal-context check:
-
-1. Identify 3-7 critical state values or flags for the behavior being documented.
-2. For each value, capture:
-   - source of truth
-   - representation (for example id vs name)
-   - initialization point
-   - snapshot/capture point
-   - first consumer
-3. Answer: "Is the value initialized before the consuming context is captured?"
-4. If any answer is `no` or `unknown`, investigate ordering first before expanding downstream analysis.
-
 ### Flow Docs in Isolated Scope (Core vs Topic vs Reference)
 
 Flow docs in this skill are often intentionally isolated by lifecycle or domain (for example `core.init` vs `topic.orchestration` vs `ref.new-task-kickoff`).
