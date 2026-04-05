@@ -1,6 +1,6 @@
 ---
 name: dev.shortcuts
-description: Explicit shortcut trigger and usage guidance. Only check when a shortcut trigger is present.
+description: Explicit shortcut trigger and usage guidance. Use when users invoke via `trigger` keyword
 dependencies: []
 ---
 
