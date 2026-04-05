@@ -40,6 +40,16 @@ Always ask the user where they want the new skill to be created if they haven't 
 
 When user tells you the name of a skill (eg. `dev.create-foo`), create a skill in a folder with the same name. the `SKILL.md` file within should have the frontmatter name also set to the same name.
 
+When the user asks for a predefined skill shape, use template-based creation. Preferred phrasing:
+
+- `$sc create {{name}} skill using {{template}} template`
+
+When the user uses that phrasing, run `scripts/init_skill.py <skill-name> --path <output-directory> --template <template>`.
+
+Supported template:
+
+- `subcommands`: Use for skills that primarily route to multiple subcommands. Put each subcommand's full usage in `./references/{{command}}.md`. Keep the main `SKILL.md` as a router only: list each subcommand, give a one-line hint for when to lead with it, and point to the matching reference file.
+
 Before editing, run a deterministic source preflight:
 
 1. Resolve the real editable root under `~/code/skills/active`, `~/code/skills-private`, or `./.agents/skills`.
@@ -311,12 +321,22 @@ Usage:
 scripts/init_skill.py <skill-name> --path <output-directory>
 ```
 
+Template-based usage:
+
+```bash
+scripts/init_skill.py <skill-name> --path <output-directory> --template <template>
+```
+
 The script:
 
 - Creates the skill directory at the specified path
-- Generates a SKILL.md template with proper frontmatter and TODO placeholders
-- Creates example resource directories: `scripts/`, `references/`, and `assets/`
-- Adds example files in each directory that can be customized or deleted
+- Generates a template-specific `SKILL.md` scaffold with proper frontmatter and TODO placeholders
+- Creates only the resource directories needed by the selected template
+- Adds template-specific example files that can be customized or deleted
+
+Current template:
+
+- `subcommands`: creates a router-style `SKILL.md` plus per-command references in `./references/{{command}}.md`
 
 After initialization, customize or remove the generated SKILL.md and example files as needed.
 
@@ -339,7 +359,7 @@ To begin implementation, start with the reusable resources identified above: `sc
 
 Added scripts must be tested by actually running them to ensure there are no bugs and that the output matches what is expected. If there are many similar scripts, only a representative sample needs to be tested to ensure confidence that they all work while balancing time to completion.
 
-Any example files and directories not needed for the skill should be deleted. The initialization script creates example files in `scripts/`, `references/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
+Any example files and directories not needed for the skill should be deleted. The initialization script creates only the files needed by the selected template, but the generated placeholders should still be trimmed to the actual skill.
 
 #### Editing SKILL.md
 

@@ -3,14 +3,16 @@
 Skill Initializer - Creates a new skill from template
 
 Usage:
-    init_skill.py <skill-name> --path <path>
+    init_skill.py <skill-name> --path <path> [--template <template>]
 
 Examples:
     init_skill.py my-new-skill --path skills/public
     init_skill.py my-api-helper --path skills/private
     init_skill.py custom-skill --path /custom/location
+    init_skill.py command-skill --path skills/public --template subcommands
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -103,6 +105,30 @@ Files not intended to be loaded into context, but rather used within the output 
 **Any unneeded directories can be deleted.** Not every skill requires all three types of resources.
 """
 
+SUBCOMMANDS_SKILL_TEMPLATE = """---
+name: {skill_name}
+description: [TODO: Describe what this skill does and when to use it. Mention that the skill routes requests to specific subcommands documented under ./references/*.md.]
+dependencies: []
+---
+
+# {skill_title}
+
+Keep this file lean. Use it only to route the agent to the right subcommand reference.
+
+## Subcommands
+
+When the user clearly asks for one of these flows, lead with that subcommand and read the matching reference before acting.
+
+- `{command_one}`: [TODO: Add a one-line hint for when to use this subcommand.] See `./references/{command_one}.md`.
+- `{command_two}`: [TODO: Add a one-line hint for when to use this subcommand.] See `./references/{command_two}.md`.
+
+## Maintenance Rules
+
+- Put the full workflow, guardrails, examples, and output requirements for each subcommand in `./references/{{command}}.md`.
+- Add one reference file per subcommand and keep filenames identical to the subcommand name.
+- Do not duplicate detailed command behavior in this file. Keep only routing guidance here.
+"""
+
 EXAMPLE_SCRIPT = '''#!/usr/bin/env python3
 """
 Example helper script for {skill_name}
@@ -186,23 +212,97 @@ Example asset files from other skills:
 Note: This is a text placeholder. Actual assets can be any file type.
 """
 
+SUBCOMMAND_REFERENCE_TEMPLATE = """# `{command_name}`
+
+Use this reference when the user asks for the `{command_name}` subcommand or when the main skill routes here.
+
+## When To Lead With This Command
+
+- [TODO: Describe the user requests or contexts that should trigger `{command_name}`.]
+
+## Inputs
+
+- [TODO: Required inputs]
+- [TODO: Optional inputs]
+
+## Workflow
+
+1. [TODO: First step]
+2. [TODO: Second step]
+3. [TODO: Verification or close-out]
+
+## Output
+
+- [TODO: Describe the expected result or artifact]
+"""
+
+DEFAULT_TEMPLATE_NAME = "default"
+SUBCOMMANDS_TEMPLATE_NAME = "subcommands"
+SUBCOMMAND_PLACEHOLDERS = ("command-a", "command-b")
+
 
 def title_case_skill_name(skill_name):
     """Convert hyphenated skill name to Title Case for display."""
     return ' '.join(word.capitalize() for word in skill_name.split('-'))
 
 
-def init_skill(skill_name, path):
+def render_default_template(skill_name):
+    """Return files for the default skill scaffold."""
+    skill_title = title_case_skill_name(skill_name)
+    files = {
+        "SKILL.md": SKILL_TEMPLATE.format(
+            skill_name=skill_name,
+            skill_title=skill_title,
+        ),
+        "scripts/example.py": EXAMPLE_SCRIPT.format(skill_name=skill_name),
+        "references/api_reference.md": EXAMPLE_REFERENCE.format(skill_title=skill_title),
+        "assets/example_asset.txt": EXAMPLE_ASSET,
+    }
+    executable_paths = {"scripts/example.py"}
+    return files, executable_paths
+
+
+def render_subcommands_template(skill_name):
+    """Return files for a subcommand-oriented skill scaffold."""
+    skill_title = title_case_skill_name(skill_name)
+    command_one, command_two = SUBCOMMAND_PLACEHOLDERS
+    files = {
+        "SKILL.md": SUBCOMMANDS_SKILL_TEMPLATE.format(
+            skill_name=skill_name,
+            skill_title=skill_title,
+            command_one=command_one,
+            command_two=command_two,
+        ),
+    }
+    for command_name in SUBCOMMAND_PLACEHOLDERS:
+        files[f"references/{command_name}.md"] = SUBCOMMAND_REFERENCE_TEMPLATE.format(
+            command_name=command_name,
+        )
+    return files, set()
+
+
+TEMPLATE_RENDERERS = {
+    DEFAULT_TEMPLATE_NAME: render_default_template,
+    SUBCOMMANDS_TEMPLATE_NAME: render_subcommands_template,
+}
+
+
+def init_skill(skill_name, path, template=DEFAULT_TEMPLATE_NAME):
     """
     Initialize a new skill directory with template SKILL.md.
 
     Args:
         skill_name: Name of the skill
         path: Path where the skill directory should be created
+        template: Template name to scaffold
 
     Returns:
         Path to created skill directory, or None if error
     """
+    if template not in TEMPLATE_RENDERERS:
+        print(f"❌ Error: Unknown template '{template}'. Available templates: {', '.join(sorted(TEMPLATE_RENDERERS))}")
+        return None
+
     # Determine skill directory path
     skill_dir = Path(path).resolve() / skill_name
 
@@ -219,81 +319,59 @@ def init_skill(skill_name, path):
         print(f"❌ Error creating directory: {e}")
         return None
 
-    # Create SKILL.md from template
-    skill_title = title_case_skill_name(skill_name)
-    skill_content = SKILL_TEMPLATE.format(
-        skill_name=skill_name,
-        skill_title=skill_title
-    )
-
-    skill_md_path = skill_dir / 'SKILL.md'
+    files, executable_paths = TEMPLATE_RENDERERS[template](skill_name)
     try:
-        skill_md_path.write_text(skill_content)
-        print("✅ Created SKILL.md")
+        for relative_path, content in files.items():
+            file_path = skill_dir / relative_path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
+            if relative_path in executable_paths:
+                file_path.chmod(0o755)
+            print(f"✅ Created {relative_path}")
     except Exception as e:
-        print(f"❌ Error creating SKILL.md: {e}")
-        return None
-
-    # Create resource directories with example files
-    try:
-        # Create scripts/ directory with example script
-        scripts_dir = skill_dir / 'scripts'
-        scripts_dir.mkdir(exist_ok=True)
-        example_script = scripts_dir / 'example.py'
-        example_script.write_text(EXAMPLE_SCRIPT.format(skill_name=skill_name))
-        example_script.chmod(0o755)
-        print("✅ Created scripts/example.py")
-
-        # Create references/ directory with example reference doc
-        references_dir = skill_dir / 'references'
-        references_dir.mkdir(exist_ok=True)
-        example_reference = references_dir / 'api_reference.md'
-        example_reference.write_text(EXAMPLE_REFERENCE.format(skill_title=skill_title))
-        print("✅ Created references/api_reference.md")
-
-        # Create assets/ directory with example asset placeholder
-        assets_dir = skill_dir / 'assets'
-        assets_dir.mkdir(exist_ok=True)
-        example_asset = assets_dir / 'example_asset.txt'
-        example_asset.write_text(EXAMPLE_ASSET)
-        print("✅ Created assets/example_asset.txt")
-    except Exception as e:
-        print(f"❌ Error creating resource directories: {e}")
+        print(f"❌ Error creating template files: {e}")
         return None
 
     # Print next steps
     print(f"\n✅ Skill '{skill_name}' initialized successfully at {skill_dir}")
+    print(f"   Template: {template}")
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
-    print("2. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
-    print("3. Customize or delete the example files in scripts/, references/, and assets/")
+    if template == SUBCOMMANDS_TEMPLATE_NAME:
+        print("2. Replace the placeholder subcommand names with real command names and keep each command in references/<command>.md")
+        print("3. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+    else:
+        print("2. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("3. Customize or delete the example files in scripts/, references/, and assets/")
     print("4. Run the validator when ready to check the skill structure")
 
     return skill_dir
 
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[2] != '--path':
-        print("Usage: init_skill.py <skill-name> --path <path>")
-        print("\nSkill name requirements:")
-        print("  - Hyphen-case identifier (e.g., 'data-analyzer')")
-        print("  - Lowercase letters, digits, and hyphens only")
-        print("  - Max 40 characters")
-        print("  - Must match directory name exactly")
-        print("\nExamples:")
-        print("  init_skill.py my-new-skill --path skills/public")
-        print("  init_skill.py my-api-helper --path skills/private")
-        print("  init_skill.py custom-skill --path /custom/location")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Create a new skill scaffold.",
+    )
+    parser.add_argument("skill_name")
+    parser.add_argument("--path", required=True)
+    parser.add_argument(
+        "--template",
+        default=DEFAULT_TEMPLATE_NAME,
+        choices=sorted(TEMPLATE_RENDERERS),
+        help="Scaffold shape to use.",
+    )
+    args = parser.parse_args()
 
-    skill_name = sys.argv[1]
-    path = sys.argv[3]
+    skill_name = args.skill_name
+    path = args.path
+    template = args.template
 
     print(f"🚀 Initializing skill: {skill_name}")
     print(f"   Location: {path}")
+    print(f"   Template: {template}")
     print()
 
-    result = init_skill(skill_name, path)
+    result = init_skill(skill_name, path, template=template)
 
     if result:
         sys.exit(0)

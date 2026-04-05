@@ -16,6 +16,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import dependency_tools
+import init_skill
 import package_skill
 import quick_validate
 import sync_dependencies
@@ -57,7 +58,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertTrue(dependency_tools.is_valid_skill_name("dev.review"))
         self.assertTrue(dependency_tools.is_valid_skill_name("sc"))
 
-        self.assertFalse(dependency_tools.is_valid_skill_name("specy"))
+        self.assertFalse(dependency_tools.is_valid_skill_name("Specy"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc--helper"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc..helper"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc-"))
@@ -144,6 +145,58 @@ class ScScriptsIntegrationTests(unittest.TestCase):
 
         self.assertFalse(valid)
         self.assertIn("cannot list itself", message)
+
+    def test_init_skill_default_template_creates_example_resources(self) -> None:
+        skill_dir = init_skill.init_skill("default-skill", self.root)
+
+        self.assertIsNotNone(skill_dir)
+        assert skill_dir is not None
+        self.assertTrue((skill_dir / "SKILL.md").exists())
+        self.assertTrue((skill_dir / "scripts" / "example.py").exists())
+        self.assertTrue((skill_dir / "references" / "api_reference.md").exists())
+        self.assertTrue((skill_dir / "assets" / "example_asset.txt").exists())
+
+    def test_init_skill_subcommands_template_creates_router_and_references(self) -> None:
+        skill_dir = init_skill.init_skill(
+            "subcommand-skill",
+            self.root,
+            template=init_skill.SUBCOMMANDS_TEMPLATE_NAME,
+        )
+
+        self.assertIsNotNone(skill_dir)
+        assert skill_dir is not None
+
+        skill_body = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Keep this file lean. Use it only to route the agent", skill_body)
+        self.assertIn("`command-a`", skill_body)
+        self.assertIn("./references/command-a.md", skill_body)
+        self.assertIn("./references/command-b.md", skill_body)
+
+        command_reference = (skill_dir / "references" / "command-a.md").read_text(encoding="utf-8")
+        self.assertIn("When To Lead With This Command", command_reference)
+        self.assertFalse((skill_dir / "scripts").exists())
+        self.assertFalse((skill_dir / "assets").exists())
+
+    def test_init_skill_cli_accepts_template_flag(self) -> None:
+        init_script = SCRIPT_DIR / "init_skill.py"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(init_script),
+                "cli-subcommands-skill",
+                "--path",
+                str(self.root),
+                "--template",
+                init_skill.SUBCOMMANDS_TEMPLATE_NAME,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("Template: subcommands", result.stdout)
+        self.assertTrue((self.root / "cli-subcommands-skill" / "references" / "command-a.md").exists())
 
     def test_rename_skill_cli_updates_dependencies_and_body(self) -> None:
         old_skill_dir = self.root / "active" / "old-skill"
