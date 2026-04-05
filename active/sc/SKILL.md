@@ -40,6 +40,12 @@ Always ask the user where they want the new skill to be created if they haven't 
 
 When user tells you the name of a skill (eg. `dev.create-foo`), create a skill in a folder with the same name. the `SKILL.md` file within should have the frontmatter name also set to the same name.
 
+Before editing, run a deterministic source preflight:
+
+1. Resolve the real editable root under `~/code/skills/active`, `~/code/skills-private`, or `./.agents/skills`.
+2. Confirm the skill lives in the editable source tree, not `~/.codex` or `~/.claude`.
+3. Lock the canonical edit path once and reuse it for the rest of the task so you do not re-discover mirror-vs-source rules later.
+
 ### AGENTS.md Install Guardrail
 
 When installing or documenting the `sc` skill in an `AGENTS.md`, add this line:
