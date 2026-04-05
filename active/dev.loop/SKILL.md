@@ -74,9 +74,13 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 - Run the tests specified in the plan and ensure they pass.
 - Check features against validation plan and ensure existing tests pass
 - If there there unstaged changes relevant to your current work, commit changes via `trigger:commit-code`. Do not skip this step
-- NEVER skip `trigger:push-pr` during Verify unless the user explicitly instructs not to push.
-- Verify is not complete until `trigger:push-pr` has succeeded and a PR exists for the current work.
 - Do not treat push as optional due to caution, preference, uncertainty, “waiting for review,” or because the implementation already appears done. Only skip push when the user says so explicitly.
+- Hard completion gate for any full dev.loop run with code changes:
+  - do not send a final handoff until the branch is pushed and a PR URL exists
+  - NEVER skip `trigger:push-pr` during Verify unless the user explicitly instructs not to push.
+  - include the PR URL in the final handoff
+  - if push or PR creation fails, report the exact command error and what retry was attempted, and treat the run as incomplete
+- If the user asks a status question such as `did you push a pr?` and the truthful answer is `no`, do not stop after answering. Resume Verify immediately and run `trigger:push-pr` unless the user explicitly told you not to push.
 - Ensure the PR body includes manual testing steps with checkboxes.
 - After push succeeds, spawn two subagents:
   - spawn `worker` subagent to verify CI for the pushed branch is green via `trigger:check-ci`.
@@ -88,6 +92,7 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 - unless you require user input, don't stop until you finish EVERY phase of the dev.loop
 - Verify phase includes push, CI check, and review. These are required by default and are NEVER optional unless the user explicitly instructs not to push.
 - A dev.loop run that ends without a pushed branch and PR should be treated as incomplete unless the user explicitly said not to push.
+- A final answer for a code-changing dev.loop run must include the PR URL, or explicitly state that the run is incomplete because push/PR creation failed. Never end a dev.loop run with only local branch or commit status.
 
 ## Phase Overrides
 Users can substitute any phase in the dev loop by mentioning they would like to override a particular phase with another set of instrctions. 
