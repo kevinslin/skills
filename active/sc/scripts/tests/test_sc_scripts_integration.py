@@ -177,6 +177,28 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertFalse((skill_dir / "scripts").exists())
         self.assertFalse((skill_dir / "assets").exists())
 
+    def test_init_skill_template_template_creates_router_and_references(self) -> None:
+        skill_dir = init_skill.init_skill(
+            "templated-skill",
+            self.root,
+            template=init_skill.TEMPLATES_TEMPLATE_NAME,
+        )
+
+        self.assertIsNotNone(skill_dir)
+        assert skill_dir is not None
+
+        skill_body = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Use it only to route the agent to the right template reference", skill_body)
+        self.assertIn("positional command", skill_body)
+        self.assertIn("./references/template-a.md", skill_body)
+        self.assertIn("./references/template-b.md", skill_body)
+
+        template_reference = (skill_dir / "references" / "template-a.md").read_text(encoding="utf-8")
+        self.assertIn("When To Use This Template", template_reference)
+        self.assertIn("positional command", template_reference)
+        self.assertFalse((skill_dir / "scripts").exists())
+        self.assertFalse((skill_dir / "assets").exists())
+
     def test_init_skill_cli_accepts_template_flag(self) -> None:
         init_script = SCRIPT_DIR / "init_skill.py"
         result = subprocess.run(
@@ -197,6 +219,27 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("Template: subcommands", result.stdout)
         self.assertTrue((self.root / "cli-subcommands-skill" / "references" / "command-a.md").exists())
+
+    def test_init_skill_cli_accepts_template_router_template_flag(self) -> None:
+        init_script = SCRIPT_DIR / "init_skill.py"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(init_script),
+                "cli-templated-skill",
+                "--path",
+                str(self.root),
+                "--template",
+                init_skill.TEMPLATES_TEMPLATE_NAME,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("Template: template", result.stdout)
+        self.assertTrue((self.root / "cli-templated-skill" / "references" / "template-a.md").exists())
 
     def test_rename_skill_cli_updates_dependencies_and_body(self) -> None:
         old_skill_dir = self.root / "active" / "old-skill"

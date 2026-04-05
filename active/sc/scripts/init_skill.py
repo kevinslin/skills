@@ -10,6 +10,7 @@ Examples:
     init_skill.py my-api-helper --path skills/private
     init_skill.py custom-skill --path /custom/location
     init_skill.py command-skill --path skills/public --template subcommands
+    init_skill.py templated-skill --path skills/public --template template
 """
 
 import argparse
@@ -129,6 +130,30 @@ When the user clearly asks for one of these flows, lead with that subcommand and
 - Do not duplicate detailed command behavior in this file. Keep only routing guidance here.
 """
 
+TEMPLATES_SKILL_TEMPLATE = """---
+name: {skill_name}
+description: [TODO: Describe what this skill does and when to use it. Mention that the skill routes named template invocations to references under ./references/*.md.]
+dependencies: []
+---
+
+# {skill_title}
+
+Keep this file lean. Use it only to route the agent to the right template reference.
+
+## Templates
+
+When the user invokes this skill with one of these template names as the positional command, read the matching reference before acting.
+
+- `{template_one}`: [TODO: Add a one-line hint for when this template should be used.] See `./references/{template_one}.md`.
+- `{template_two}`: [TODO: Add a one-line hint for when this template should be used.] See `./references/{template_two}.md`.
+
+## Maintenance Rules
+
+- Put the full workflow, guardrails, examples, and output requirements for each template in `./references/{{template}}.md`.
+- Add one reference file per template and keep filenames identical to the template name.
+- Do not duplicate detailed template behavior in this file. Keep only routing guidance here.
+"""
+
 EXAMPLE_SCRIPT = '''#!/usr/bin/env python3
 """
 Example helper script for {skill_name}
@@ -236,9 +261,35 @@ Use this reference when the user asks for the `{command_name}` subcommand or whe
 - [TODO: Describe the expected result or artifact]
 """
 
+TEMPLATE_REFERENCE_TEMPLATE = """# `{template_name}`
+
+Use this reference when the user invokes the skill with `{template_name}` as the positional command or when the main skill routes here.
+
+## When To Use This Template
+
+- [TODO: Describe the user requests or contexts that should trigger `{template_name}`.]
+
+## Inputs
+
+- [TODO: Required inputs]
+- [TODO: Optional inputs]
+
+## Workflow
+
+1. [TODO: First step]
+2. [TODO: Second step]
+3. [TODO: Verification or close-out]
+
+## Output
+
+- [TODO: Describe the expected result or artifact]
+"""
+
 DEFAULT_TEMPLATE_NAME = "default"
 SUBCOMMANDS_TEMPLATE_NAME = "subcommands"
+TEMPLATES_TEMPLATE_NAME = "template"
 SUBCOMMAND_PLACEHOLDERS = ("command-a", "command-b")
+TEMPLATE_PLACEHOLDERS = ("template-a", "template-b")
 
 
 def title_case_skill_name(skill_name):
@@ -281,9 +332,29 @@ def render_subcommands_template(skill_name):
     return files, set()
 
 
+def render_templates_template(skill_name):
+    """Return files for a template-oriented skill scaffold."""
+    skill_title = title_case_skill_name(skill_name)
+    template_one, template_two = TEMPLATE_PLACEHOLDERS
+    files = {
+        "SKILL.md": TEMPLATES_SKILL_TEMPLATE.format(
+            skill_name=skill_name,
+            skill_title=skill_title,
+            template_one=template_one,
+            template_two=template_two,
+        ),
+    }
+    for template_name in TEMPLATE_PLACEHOLDERS:
+        files[f"references/{template_name}.md"] = TEMPLATE_REFERENCE_TEMPLATE.format(
+            template_name=template_name,
+        )
+    return files, set()
+
+
 TEMPLATE_RENDERERS = {
     DEFAULT_TEMPLATE_NAME: render_default_template,
     SUBCOMMANDS_TEMPLATE_NAME: render_subcommands_template,
+    TEMPLATES_TEMPLATE_NAME: render_templates_template,
 }
 
 
@@ -340,10 +411,16 @@ def init_skill(skill_name, path, template=DEFAULT_TEMPLATE_NAME):
     if template == SUBCOMMANDS_TEMPLATE_NAME:
         print("2. Replace the placeholder subcommand names with real command names and keep each command in references/<command>.md")
         print("3. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("4. Run the validator when ready to check the skill structure")
+    elif template == TEMPLATES_TEMPLATE_NAME:
+        print("2. Replace the placeholder template names with real template names and keep each template in references/<template>.md")
+        print("3. Teach the main SKILL.md to route positional template invocations to the matching reference")
+        print("4. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("5. Run the validator when ready to check the skill structure")
     else:
         print("2. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
         print("3. Customize or delete the example files in scripts/, references/, and assets/")
-    print("4. Run the validator when ready to check the skill structure")
+        print("4. Run the validator when ready to check the skill structure")
 
     return skill_dir
 

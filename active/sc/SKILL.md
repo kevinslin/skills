@@ -46,9 +46,10 @@ When the user asks for a predefined skill shape, use template-based creation. Pr
 
 When the user uses that phrasing, run `scripts/init_skill.py <skill-name> --path <output-directory> --template <template>`.
 
-Supported template:
+Supported templates:
 
 - `subcommands`: Use for skills that primarily route to multiple subcommands. Put each subcommand's full usage in `./references/{{command}}.md`. Keep the main `SKILL.md` as a router only: list each subcommand, give a one-line hint for when to lead with it, and point to the matching reference file.
+- `template`: Use for skills that primarily route to multiple named templates. Put each template's full usage in `./references/{{template}}.md`. Keep the main `SKILL.md` as a router only: list each template, explain when a user invoking the skill with that template as the positional command should route there, and point to the matching reference file.
 
 Before editing, run a deterministic source preflight:
 
@@ -334,9 +335,10 @@ The script:
 - Creates only the resource directories needed by the selected template
 - Adds template-specific example files that can be customized or deleted
 
-Current template:
+Current templates:
 
 - `subcommands`: creates a router-style `SKILL.md` plus per-command references in `./references/{{command}}.md`
+- `template`: creates a router-style `SKILL.md` plus per-template references in `./references/{{template}}.md`
 
 After initialization, customize or remove the generated SKILL.md and example files as needed.
 
