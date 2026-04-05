@@ -1,179 +1,265 @@
-# Architecture Doc: [System Name]
+# Architecture
 
-**Last Updated**: YYYY-MM-DD
+> High-level architecture, code organization, data flows, and key invariants for `PROJECT_NAME`.
+> This document is for contributors making changes to the system.
+> For setup and local development, see `README.md` and `CONTRIBUTING.md`.
 
-**Status**: [Draft | In Progress | Complete]
+## Who This Is For
 
-**Owners**: [Team / Maintainer]
+Use this doc if you need to:
+- understand the system before making changes
+- find the right layer, module, or entry point to edit
+- understand important boundaries and invariants
+- avoid breaking architectural assumptions
 
-**Related**:
+## Scope
 
-- [Links to specs, design docs, ADRs, or runbooks]
+This document covers:
+- the major components and how they fit together
+- source code layout and ownership boundaries
+- request, job, and data flow through the system
+- architectural invariants and non-goals
 
-* * *
+This document does not cover:
+- step-by-step setup
+- API reference details
+- end-user documentation
 
-## 0. Context
+## System Overview
 
-### Purpose
+`PROJECT_NAME` is a `ONE_SENTENCE_DESCRIPTION`.
 
-[What this system does and why it exists]
-
-* * *
-
-## 1. Scope
-
-### In Scope
-
-- [Responsibility]
-- [Responsibility]
-
-### Out of Scope
-
-- [Non-goal]
-- [Non-goal]
-
-* * *
-
-## 2. System Boundaries and External Dependencies
-
-### Boundary Definition
-
-[What this system owns vs what it delegates]
-
-### External Systems
-
-| Dependency | Purpose | Failure Impact |
-| --- | --- | --- |
-| [System] | [Reason] | [Impact] |
-
-* * *
-
-## 3. Architecture Overview
-
-### High-Level Diagram (Required)
-
-Use Mermaid or ASCII.
+At a high level, the system consists of:
+- `Component A`: purpose
+- `Component B`: purpose
+- `Component C`: purpose
 
 ```mermaid
-flowchart LR
-  Client --> API
-  API --> Service
-  Service --> Database
+graph TD
+  Client["Client / Caller"] --> API["API / Entry Point"]
+  API --> Core["Core Logic"]
+  Core --> Storage["Storage"]
+  Core --> External["External Services"]
 ```
 
-### Component Responsibilities
+## Goals
 
-| Component | Responsibility | Key Interface |
-| --- | --- | --- |
-| [Component] | [Responsibility] | [Interface] |
+The architecture is optimized for:
+- `Goal 1`
+- `Goal 2`
+- `Goal 3`
 
-### Primary Flows
+## Non-Goals
 
-1. [Flow step]
-2. [Flow step]
-3. [Flow step]
+The architecture is explicitly not trying to:
+- `Non-goal 1`
+- `Non-goal 2`
 
-* * *
+## Entry Points
 
-## 4. Interfaces and Contracts
+If you are new to the codebase, start here:
+- `path/to/main_entry`: primary runtime entry point
+- `path/to/request_or_job_dispatch`: request or job routing
+- `path/to/core_api`: main internal API surface
+- `path/to/tests_or_fixtures`: fastest way to see real usage
 
-### Internal Interfaces
+## Major Components
 
-- [Module/service interface and constraints]
+### `component-or-package-a`
+- Purpose: what it does
+- Lives in: `path/`
+- Depends on: allowed dependencies
+- Used by: callers or consumers
+- Notes: important implementation detail
 
-### External Interfaces
+### `component-or-package-b`
+- Purpose: what it does
+- Lives in: `path/`
+- Depends on: allowed dependencies
+- Used by: callers or consumers
 
-- [API/event/queue contract and guarantees]
+## Code Map
 
-* * *
+Key directories and what belongs in them:
 
-## 5. Data and State
+| Path | Purpose | Notes |
+|------|---------|-------|
+| `src/...` | core business logic | no transport concerns |
+| `api/...` | request handling or transport | thin layer only |
+| `db/...` | persistence | no UI logic |
+| `tests/...` | integration and end-to-end coverage | prefer real workflows |
 
-### Source of Truth
+## Layering Rules
 
-[Where authoritative state lives]
+Dependency direction should flow like this:
 
-### Data Lifecycle
+```text
+interfaces -> orchestration -> domain/core -> persistence/integrations
+```
 
-[Creation, update, retention, deletion, archival]
+Rules:
+- lower layers must not import higher layers
+- transport code must stay out of domain or core
+- shared utilities must not become a grab-bag for feature logic
+- cross-layer shortcuts require explicit justification
 
-### Consistency and Invariants
+## Data / Request / Job Flow
 
-- [Invariant]
-- [Invariant]
+Describe the main runtime path.
 
-* * *
+### Example: request lifecycle
+1. request enters through `ENTRY_POINT`
+2. auth or validation happens in `LAYER_OR_MODULE`
+3. orchestration happens in `LAYER_OR_MODULE`
+4. core logic computes result
+5. persistence or external side effects happen
+6. response or result is returned
 
-## 6. Reliability, Failure Modes, and Observability
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API
+  participant Service
+  participant Store
+  Client->>API: request
+  API->>Service: validated input
+  Service->>Store: read or write
+  Store-->>Service: data
+  Service-->>API: result
+  API-->>Client: response
+```
 
-### Reliability Expectations
+## State Model
 
-[Latency/availability/error budget targets as applicable]
+If the system has important entities, define them here.
 
-### Failure Modes
+### `EntityName`
+- Represents: what it is
+- Created by: where
+- Updated by: where
+- Persisted in: where
 
-- [Failure mode + mitigation]
-- [Failure mode + mitigation]
+### State transitions
+```mermaid
+stateDiagram-v2
+  [*] --> pending
+  pending --> running
+  running --> completed
+  running --> failed
+```
 
-### Observability
+## Key Abstractions
 
-- Metrics: [Key metrics]
-- Logs: [Critical events]
-- Traces: [Critical spans]
+Document the concepts contributors must understand.
 
-* * *
+| Abstraction | Location | Responsibility |
+|------------|----------|----------------|
+| `TypeA` | `path/...` | what it means |
+| `InterfaceB` | `path/...` | boundary or contract |
+| `ServiceC` | `path/...` | orchestration |
 
-## 7. Security and Compliance
+## Architectural Invariants
 
-- Authentication and authorization model
-- Sensitive data handling
-- Compliance or policy constraints
+These are the most important rules in the document.
 
-* * *
+- `Invariant 1`: precise statement of what must remain true
+- `Invariant 2`: precise statement of what must remain true
+- `Invariant 3`: precise statement of what must remain true
 
-## 8. Key Decisions and Tradeoffs
+Examples:
+- parsing never performs network I/O
+- core models do not depend on transport types
+- failed runs do not persist cursor advancement
+- one module is the only place that knows about external protocol `X`
 
-| Decision | Chosen Option | Alternatives Considered | Rationale |
-| --- | --- | --- | --- |
-| [Decision] | [Option] | [Alt A, Alt B] | [Why] |
+## Boundaries and Ownership
 
-* * *
+Call out the places where rules change.
 
-## 9. Evolution Plan
+### API boundary
+- Public surface: `path/...`
+- Consumers should depend on this, not internals
+- Backward compatibility expectations: `strict|best-effort|none`
 
-### Near-Term Changes
+### Internal-only modules
+- `path/...`
+- `path/...`
 
-- [Planned change]
-- [Planned change]
+### External integrations
+- `service or library name`: role, wrapper location, failure behavior
 
-### Long-Term Considerations
+## Concurrency / Performance Model
 
-- [Potential future direction]
+Only include if relevant.
 
-* * *
+- units of concurrency: threads, goroutines, workers, or queues
+- what can run in parallel
+- what must stay serialized
+- hot paths
+- caching strategy
+- backpressure or batching rules
 
-## 10. Risks and Open Questions
+## Configuration Model
 
-### Risks
+Document the settings that materially affect architecture.
 
-- [Risk and impact]
-- [Risk and impact]
+| Config | Effect | Default | Notes |
+|--------|--------|---------|-------|
+| `FEATURE_X` | what it changes | `...` | compatibility concerns |
+| `TIMEOUT_Y` | what it changes | `...` | runtime implications |
 
-### Open Questions
+## Failure Model
 
-1. [Question]
-2. [Question]
+What happens when things go wrong:
+- retry behavior
+- partial failure behavior
+- persistence guarantees
+- idempotency expectations
+- rollback or cleanup behavior
 
-* * *
+## Testing Strategy
 
-## References
+Tie tests to architecture.
 
-- [Source 1]
-- [Source 2]
+- unit tests cover: local logic and invariants
+- integration tests cover: component boundaries and real flows
+- end-to-end tests cover: user-visible workflows
+
+Critical scenarios that must stay covered:
+- `scenario 1`
+- `scenario 2`
+- `scenario 3`
+
+## Change Guide
+
+When making changes:
+- update the relevant section of this document if architecture changes
+- preserve invariants unless intentionally redesigning them
+- add coverage for changed boundaries, migrations, and failure modes
+- prefer extending an existing layer over bypassing it
+
+If you need to change:
+- data model: check `FILES_OR_TESTS`
+- request flow: check `FILES_OR_TESTS`
+- persistence contract: check `FILES_OR_TESTS`
+
+## Open Questions / Known Tensions
+
+Use this section to be honest about weak spots.
+- `Tension 1`
+- `Tension 2`
+- `Planned cleanup or redesign`
+
+## Further Reading
+
+- `README.md`
+- `CONTRIBUTING.md`
+- `docs/...`
+- sibling `ARCHITECTURE.md` files for subpackages or subsystems
 
 ## Manual Notes 
 
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
-- [date]: [description of update] ([agent session id])
+- [date]: [description of update] ([agent session id] - (current git sha))
