@@ -4,7 +4,7 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
-1. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is committed. And that you’ve already followed the pre-commit rules before (or at least after) the last commit.  If not, follow the full pre-commit review process and commit.
+1. **Review and commit:** Follow trigger:precommit-process and sure everything is committed. And that you’ve already followed the pre-commit rules before (or at least after) the last commit.  If not, follow the full pre-commit review process and commit.
 
 2. **Run tests:** Follow @docs/development.md and ensure all tests pass. If not, fix them and commit changes. Summarize what went wrong and how you fixed it. 
 
@@ -25,7 +25,7 @@ Create a to-do list with the following items then perform all of them:
    - If you can’t run the GitHub CLI (`gh`) see
      @docs/general/agent-setup/github-cli-setup.md
 
-4. **Validate CI:** Invoke @shortcut:check-ci.md so the PR uses the canonical awaiter-based
+4. **Validate CI:** Invoke trigger:check-ci so the PR uses the canonical awaiter-based
    CI watch flow, sparse status updates, and Buildkite job-first triage rules.
    If checks fail, reproduce and fix them locally when possible, then rerun CI until the
    PR passes.

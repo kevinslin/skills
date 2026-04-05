@@ -11,4 +11,4 @@ Create a to-do list with the following items then perform all of them:
 
 3. Implement the plan step-by-step, adding or updating tests as needed.
 
-4. Follow @shortcut:create-pr-simple.md after task is complete
+4. Follow trigger:create-pr-simple after task is complete

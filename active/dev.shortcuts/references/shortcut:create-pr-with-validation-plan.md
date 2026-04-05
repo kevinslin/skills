@@ -26,7 +26,7 @@ Create a to-do list with the following items then perform all of them:
    new information in the summary; be sure that all information is in the validation
    plan the user can review later.
 
-5. **Review and commit:** Follow @shortcut:precommit-process.md and sure everything is
+5. **Review and commit:** Follow trigger:precommit-process and sure everything is
    committed. And that you’ve already followed the pre-commit rules before (or at least
    after) the last commit.
    If not, follow the full pre-commit review process and commit.

@@ -15,8 +15,7 @@ Create a to-do list with the following items then perform all of them:
      needed) following `sc` rules.
 
 3. Replace shortcut invocations with the new skill:
-   - Search existing skills for `@shortcut:<shortcut-name>`, `@shortcuts:<shortcut-name>`,
-     and `trigger:<shortcut-name>`.
+   - Search existing skills for `trigger:<shortcut-name>` and concrete forms like `trigger:merge-pr`.
    - Replace each reference with `use skill [new-skillname]` to accomplish the same task.
 
 4. Remove or update the original shortcut entry:

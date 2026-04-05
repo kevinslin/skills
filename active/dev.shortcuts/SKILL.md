@@ -1,12 +1,11 @@
 ---
 name: dev.shortcuts
-description: Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut.
-  Applies before responding to ANY coding or development request.
+description: Explicit shortcut trigger and usage guidance. Only check when a shortcut trigger is present.
 dependencies: []
 ---
 
 ## Context
-Shortcuts are a small self-contained workflow that can be triggered via the keywords `@shortcut:[shortcut]` or `trigger:[shortcut]` 
+Shortcuts are a small self-contained workflow that can be triggered via `trigger:<shortcut-name>`, for example `trigger:merge-pr`.
 
 ## Shortcut Location
 Shortcuts can be in the following locations:
@@ -56,12 +55,12 @@ This sync rule applies to:
 - Chaining guidance or examples in this `SKILL.md` that mention affected shortcuts
 
 ## Shortcut Trigger and Usage
-Any `@shortcut:[shortcut]` or `trigger:[shortcut]` invokes a shortcut and resolves in this order:
+Only `trigger:<shortcut-name>` invokes a shortcut. When present, resolve it in this order:
 
 1. Exact file match in this skill's `./references/shortcuts/[shortcut].md`
 2. Exact inlined match under `## Shortcuts` in active instructions
 
-If the user asks to promote a shortcut to a skill, use `@shortcut:promote-shortcut-to-skill.md`.
+If the user asks to promote a shortcut to a skill, use `trigger:promote-shortcut-to-skill`.
 
 If a shortcut doesn’t resolve, quickly scan the most relevant skill for similarly-named shortcuts before doing broader repo-wide searches.
 
@@ -69,21 +68,11 @@ If a shortcut doesn’t resolve, quickly scan the most relevant skill for simila
 This involves using multiple shortcuts in sequence. Shortcut chaining is denoted by [shortcut1] -> [shortcut2]
 
 Example:
-`@shortcut:precommit-process.md -> @shortcut:create-pr.md`
+`trigger:precommit-process -> trigger:create-pr`
 
-## Mandatory Check Protocol
+## Trigger Gate
 
-1. Scan this skill's `./references/shortcuts` directory first (canonical source).
-2. If a shortcut matches -> Announce: "Using [shortcut name]"
-3. Follow the shortcut exactly
-
-## This is NOT Optional
-
-If a shortcut exists for your task, you must use it.
-Do not rationalize skipping it.
-Common rationalizations to avoid:
-
-- "This is simple, I don't need a shortcut" -> WRONG. Use the shortcut.
-- "I know how to do this" -> WRONG. The shortcut may have steps you'll forget.
-- "The user didn't ask for a shortcut" -> WRONG. Shortcuts are mandatory when applicable.
-- "The shortcut is overkill" -> WRONG. Shortcuts ensure consistency and quality.
+1. If the user request includes `trigger:`, scan this skill's `./references/shortcuts` directory first (canonical source).
+2. If a shortcut matches, announce `Using [shortcut name]`.
+3. Follow the shortcut exactly.
+4. If no `trigger:` token is present, do not check or invoke shortcuts.

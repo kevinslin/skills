@@ -6,34 +6,34 @@ instructions.
 
 | If user request involves... | Use shortcut |
 | --- | --- |
-| Implementing a feature from a spec | @shortcut:implement-spec.md |
-| Implementing an execution plan | @shortcut:implement-execution-plan.md |
-| Creating a new feature plan | @shortcut:new-plan-spec.md |
-| Promoting a shortcut to a skill | @shortcut:promote-shortcut-to-skill.md |
-| Creating an implementation spec | @shortcut:new-implementation-spec.md |
-| Creating a validation/test spec | @shortcut:new-validation-spec.md |
-| Committing or pushing code | @shortcut:precommit-process.md -> @shortcut:commit-code.md |
-| Creating a PR | @shortcut:precommit-process.md -> @shortcut:create-pr.md |
-| Checking CI status | @shortcut:check-ci.md |
-| Fixing a PR from review comments | @shortcut:fix-pr.md |
-| Creating architecture documentation | @shortcut:new-architecture-doc.md |
-| Updating/revising architecture docs | @shortcut:revise-architecture-doc.md |
-| Creating flow documentation| dev.flow-docs + @shortcut:new-flow-doc.md |
-| Exploratory coding / prototype / spike | @shortcut:coding-spike.md |
-| Refining or clarifying an existing spec | @shortcut:refine-spec.md |
-| Updating a spec with new information | @shortcut:update-spec.md |
-| Code cleanup or refactoring | @shortcut:cleanup-all.md |
-| Removing trivial tests | @shortcut:cleanup-remove-trivial-tests.md |
-| Updating docstrings | @shortcut:cleanup-update-docstrings.md |
-| Merging from upstream | @shortcut:merge-upstream.md |
-| Reviewing code, specs, docs | @shortcut:review-all-code-specs-docs-convex.md |
+| Implementing a feature from a spec | trigger:implement-spec |
+| Implementing an execution plan | trigger:implement-execution-plan |
+| Creating a new feature plan | trigger:new-plan-spec |
+| Promoting a shortcut to a skill | trigger:promote-shortcut-to-skill |
+| Creating an implementation spec | trigger:new-implementation-spec |
+| Creating a validation/test spec | trigger:new-validation-spec |
+| Committing or pushing code | trigger:precommit-process -> trigger:commit-code |
+| Creating a PR | trigger:precommit-process -> trigger:create-pr |
+| Checking CI status | trigger:check-ci |
+| Fixing a PR from review comments | trigger:fix-pr |
+| Creating architecture documentation | trigger:new-architecture-doc |
+| Updating/revising architecture docs | trigger:revise-architecture-doc |
+| Creating flow documentation| dev.flow-docs + trigger:new-flow-doc |
+| Exploratory coding / prototype / spike | trigger:coding-spike |
+| Refining or clarifying an existing spec | trigger:refine-spec |
+| Updating a spec with new information | trigger:update-spec |
+| Code cleanup or refactoring | trigger:cleanup-all |
+| Removing trivial tests | trigger:cleanup-remove-trivial-tests |
+| Updating docstrings | trigger:cleanup-update-docstrings |
+| Merging from upstream | trigger:merge-upstream |
+| Reviewing code, specs, docs | trigger:review-all-code-specs-docs-convex |
 
 ## Shortcut Chaining
 
 Some workflows require multiple shortcuts in sequence:
 Always complete the full chain when applicable.
 
-- **Commit flow:** @shortcut:precommit-process.md -> @shortcut:commit-code.md
-- **PR flow:** @shortcut:precommit-process.md -> @shortcut:create-pr.md
-- **Full feature:** @shortcut:new-plan-spec.md -> @shortcut:implement-spec.md -> commit
+- **Commit flow:** trigger:precommit-process -> trigger:commit-code
+- **PR flow:** trigger:precommit-process -> trigger:create-pr
+- **Full feature:** trigger:new-plan-spec -> trigger:implement-spec -> commit
   flow
