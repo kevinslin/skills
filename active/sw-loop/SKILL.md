@@ -22,6 +22,10 @@ Use this skill to run multi-agent feature work as a controlled swarm. Keep orche
 disciplined: define the critical path, delegate bounded sidecars, integrate results
 centrally, and do not let review or verification turn into unowned follow-up.
 
+Treat the active milestone stack as sticky session context. Once a thread has an approved
+bundle, keep that bundle in the thread state and only restate it when the stack or phase
+changes.
+
 ## Entry Gate
 
 1. Restate the goal, required deliverable, and completion condition.
@@ -53,6 +57,9 @@ centrally, and do not let review or verification turn into unowned follow-up.
 - Adopt the `$sw-ctrl` manager role immediately.
 - Identify the critical path and keep the immediate blocker local.
 - Delegate only sidecar work that is concrete, bounded, and non-overlapping.
+- Keep a short session header for the current milestone: goal, active skill bundle,
+  current phase, and unresolved blockers. Reuse it across turns instead of re-announcing
+  the full bundle each time.
 
 ### 2. Plan and Gate
 
@@ -68,6 +75,8 @@ centrally, and do not let review or verification turn into unowned follow-up.
   remind subagents they are not alone in the codebase.
 - Integrate changes centrally instead of letting multiple agents edit the same surface
   opportunistically.
+- If the approved bundle has not changed, continue from the existing session context
+  rather than re-describing the same orchestration stack.
 
 ### 4. Review Swarm
 
