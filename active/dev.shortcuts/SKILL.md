@@ -34,7 +34,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `fix-pr` | Check out a PR, address review feedback, resolve review threads, and rerun CI. |
 | `inline-shortcut` | Inline one or more shortcut definitions into another skill. |
 | `merge-pr-basic` | Merge the current remote PR after confirming the branch is committed and checks passed. |
-| `merge-pr` | Merge the remote PR, switch back to the main branch locally, and clean up the local branch. |
+| `merge-pr` | Merge the remote PR, reconcile local main, remove attached worktrees, and delete the merged local branch. |
 | `plan-and-review` | Draft a feature spec with `specy`, review it with `dev.review`, then fold accepted feedback back into the spec. |
 | `precommit-process` | Run the canonical pre-commit review and validation workflow before committing. |
 | `promote-shortcut-to-skill` | Convert a shortcut into a standalone skill and replace old shortcut references. |
