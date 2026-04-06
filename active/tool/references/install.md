@@ -49,6 +49,7 @@ Read this file when the request maps to `$tool install <prefix> <name>`.
 - Create or update every required note declared by the schema. The default required note set is:
   - `<prefix>.<name>` from [root.md.template](root.md.template)
   - `<prefix>.<name>.concepts` from [concepts.md.template](concepts.md.template)
+  - `<prefix>.<name>.cli` from [cli.md.template](cli.md.template)
   - `<prefix>.<name>.dev` from [dev.md.template](dev.md.template)
 - Create `<prefix>.<name>.t.<topic>` only as needed from [topic.md.template](topic.md.template).
 - `t` stands for topic. Topics represent large domain-specific areas of package functionality.
@@ -73,6 +74,11 @@ Read this file when the request maps to `$tool install <prefix> <name>`.
   - `Tips`: non-obvious but high-value usage, shortcuts, or features that may require extra configuration
   - `Resources`: package-wide authoritative links first, preferably official GitHub repo and official docs/manual, plus the package page when useful
 - Fill `<prefix>.<name>.concepts` with the core mental model, primary nouns, and the 3-7 concepts a first serious user needs to understand.
+- Fill `<prefix>.<name>.cli` with only the terminal-facing guidance that helps the user operate the executable:
+  - `Cheatsheet`: common commands and shortcuts
+  - `Gotchas`: easy mistakes, argument-order traps, shell-quoting pitfalls, or package-name versus executable-name mismatches
+  - `Tips`: shortcuts, hidden features, or extra setup that unlocks useful workflows
+  - `Resources`: authoritative CLI-facing links first, preferably the official GitHub repo and official docs/manual
 - Fill `<prefix>.<name>.dev` with contributor-facing workflows:
   - `Setup`: how to install dependencies, build from source, start the development server, and enable watch mode
   - `Tests`: how to run the main test suite and any targeted test commands

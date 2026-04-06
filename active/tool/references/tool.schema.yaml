@@ -6,6 +6,9 @@
       concepts:
         description: main concepts
         template: concepts.md.template
+      cli:
+        description: command-line usage guidance
+        template: cli.md.template
       dev:
         description: development setup, tests, and debugging
         template: dev.md.template

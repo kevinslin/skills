@@ -41,6 +41,7 @@ Use this path when the user wants the note and guidance but does not want a loca
   - `<prefix>.<name>` from [root.md.template](root.md.template)
   - `<prefix>.<name>.concepts` from [concepts.md.template](concepts.md.template)
   - `<prefix>.<name>.dev` from [dev.md.template](dev.md.template)
+  - `<prefix>.<name>.cli` from [cli.md.template](/Users/kevinlin/code/skills/active/tool/references/cli.md.template)
 - Create `<prefix>.<name>.t.<topic>` only as needed from [topic.md.template](topic.md.template).
 - `t` stands for topic. Topics represent large domain-specific areas of package functionality.
 - Only add topic notes when the user is talking about that domain or when the current task would clearly benefit from splitting it out.
@@ -76,6 +77,11 @@ Use this path when the user wants the note and guidance but does not want a loca
   - `Tests`: how to run the main test suite and any targeted test commands
   - `Tips`: helpful debugging shortcuts, logs, env vars, or local verification steps
   - `Resources`: development-focused links such as contributor docs, source tree entrypoints, and relevant upstream manuals
+- Fill `<prefix>.<name>.cli` with only the terminal-facing guidance that helps the user operate the executable:
+  - `Cheatsheet`: common commands and shortcuts
+  - `Gotchas`: easy mistakes, argument-order traps, shell-quoting pitfalls, or package-name versus executable-name mismatches
+  - `Tips`: shortcuts, hidden features, or extra setup that unlocks useful workflows
+  - `Resources`: authoritative CLI-facing links first, preferably the official GitHub repo and official docs/manual
 - Fill `<prefix>.<name>.t.<topic>` with only the sections that are relevant for that domain. Omit unused sections instead of leaving placeholders behind.
 - If a topic, reference, or API note depends on self-contained research, add those links to the current note, usually in a local `Resources` section or note-local footnotes, instead of copying all of them into the root note.
 - Fill `<prefix>.<name>.ref.<reference>` with the required frontmatter plus only the fields and headings that help the current discussion. Useful fields include `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, `Resources`, and `Related`, but only include what the referenced functionality actually needs.
