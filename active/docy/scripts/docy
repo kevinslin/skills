@@ -43,6 +43,11 @@ DOCS = {
         rel_path="ref/typescript-preferred-modules.md",
         description="TypeScript dependency preferences for runtime validation and CLIs.",
     ),
+    "ref/openclaw-agent-plugins": DocSpec(
+        slug="ref/openclaw-agent-plugins",
+        rel_path="ref/openclaw-agent-plugins.md",
+        description="OpenClaw agent plugin authoring guidance rooted in capability ownership and focused SDK imports.",
+    ),
     "ref/no-back-compat": DocSpec(
         slug="ref/no-back-compat",
         rel_path="ref/no-back-compat.md",

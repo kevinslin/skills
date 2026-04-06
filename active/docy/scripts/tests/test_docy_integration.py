@@ -15,6 +15,7 @@ SKILL_ROOT = SCRIPT_PATH.parents[1]
 REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "no-back-compat.md"
 VENDOR_REFERENCE_PATH = SKILL_ROOT / "references" / "vendor" / "lerna.md"
 PYTHON_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "python-preferred-modules.md"
+OPENCLAW_PLUGIN_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "openclaw-agent-plugins.md"
 
 
 class DocyIntegrationTests(unittest.TestCase):
@@ -63,6 +64,16 @@ class DocyIntegrationTests(unittest.TestCase):
         )
         self.assertIn("Prefer `pydantic`", result.stdout)
         self.assertIn("Prefer `click`", result.stdout)
+
+    def test_inject_openclaw_agent_plugins_doc(self) -> None:
+        result = self.run_cli("inject", "ref/openclaw-agent-plugins")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            OPENCLAW_PLUGIN_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
+        self.assertIn("## Plugin SDK import paths", result.stdout)
+        self.assertIn("openclaw/plugin-sdk/plugin-entry", result.stdout)
 
     def test_install_creates_agents_file_in_current_workspace(self) -> None:
         result = self.run_cli("install", "ref/no-backward-compat")

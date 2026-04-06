@@ -55,10 +55,12 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 ```bash
 docy inject ref/no-back-compat
 docy inject ref/remove-feature
+docy inject ref/openclaw-agent-plugins
 docy inject vendor/lerna
 
 docy install ref/no-back-compat
 docy install ref/remove-feature
+docy install ref/openclaw-agent-plugins
 docy install vendor/lerna
 ```
 
@@ -76,6 +78,7 @@ Command behavior:
 - `references/vendor/lerna.md`: Modern Lerna operating guidance for agents. Use before changing, validating, or releasing code in a Lerna-managed monorepo.
 - `references/ref/python-preferred-modules.md`: Python dependency preferences. Use before building runtime validation or CLI behavior from scratch in Python projects.
 - `references/ref/typescript-preferred-modules.md`: TypeScript dependency preferences. Use before building runtime validation or CLI behavior from scratch in TypeScript projects.
+- `references/ref/openclaw-agent-plugins.md`: OpenClaw plugin authoring guidance. Use before creating or expanding an OpenClaw plugin so capability ownership, entrypoint shape, SDK imports, and route/setup boundaries stay aligned with the architecture docs.
 - `references/ref/no-back-compat.md`: Hard-cut product policy. Use before changing
   codepaths that would otherwise introduce migrations, fallback behavior, adapters,
   or other backwards-compatibility glue.
