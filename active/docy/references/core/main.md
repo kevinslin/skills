@@ -4,6 +4,10 @@ When a design or implementation change invalidates a nearby flow doc, spec, or
 other durable reference, update that adjacent document in the same pass or mark
 it stale/superseded immediately.
 
+Task-specific reference docs may override this default. For feature removals,
+keep historical specs unchanged when the removal policy says to preserve them,
+and record the divergence in changelog instead.
+
 Do not leave contradictory docs side by side. A stale adjacent doc is active
 misinformation for the next agent or reader.
 

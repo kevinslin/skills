@@ -29,6 +29,8 @@ references/
 # special topics
 - ref/
     - no-back-compat.md: Hard-cut product policy; no backwards compatibility
+    - remove-feature.md: Feature removal hygiene; remove stale docs/tests and
+      record spec drift in changelog
 ```
 
 ## Loading Rules
@@ -43,7 +45,8 @@ For coding-related tasks, use this loading order:
 4. Inject `references/vendor/<dependency-or-framework>.md` only when the task
    depends on framework, library, or platform behavior.
 5. Inject `references/ref/<topic>.md` only for focused policies, constraints, or
-   one-off topics that should shape the solution.
+   one-off topics that should shape the solution. For example, inject
+   `references/ref/remove-feature.md` before removing an existing feature.
 
 ## CLI
 
@@ -51,11 +54,11 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 
 ```bash
 docy inject ref/no-back-compat
-docy inject ref/python-preferred-modules
+docy inject ref/remove-feature
 docy inject vendor/lerna
 
 docy install ref/no-back-compat
-docy install ref/typescript-preferred-modules
+docy install ref/remove-feature
 docy install vendor/lerna
 ```
 
@@ -76,3 +79,6 @@ Command behavior:
 - `references/ref/no-back-compat.md`: Hard-cut product policy. Use before changing
   codepaths that would otherwise introduce migrations, fallback behavior, adapters,
   or other backwards-compatibility glue.
+- `references/ref/remove-feature.md`: Feature removal hygiene. Use before deleting
+  or sunsetting an existing feature so docs, tests, and changelog entries stay
+  consistent while historical specs remain unchanged.
