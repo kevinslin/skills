@@ -50,6 +50,7 @@ Learn from the current session, or run a multi-session review over a time interv
    - `--invoked-skill ag-learn`
    - `--mode default|review|code`
    - `--parent-session-id <session-id>` when the learn run is following a parent/forked/subagent session
+8. When writing or updating files under `%%LEARN_ROOT`, do not use the `apply_patch` tool. Use a direct shell write or move operation instead, then verify the exact saved path exists on disk.
 
 ## Workflow
 ### Default (current session)
@@ -140,6 +141,7 @@ Write learnings to %%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[k
 
 - Use `ag-ledger session-id` or `$CODEX_THREAD_ID` for the active session when possible; use `dev.llm-session` only as fallback.
 - If `$HOME/.llm/skills/learn` does not exist, create it.
+- Do not use `apply_patch` for files under `%%LEARN_ROOT`; write them with a direct shell operation and then verify the target path exists.
 - In review mode, write one file per reviewed session when needed, plus one rollup file for the current review session.
 
 ### Learning Summaries
