@@ -62,6 +62,7 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 3. Copy `@references/[doc-type]/template.md` to the requested output location before filling in content.
 4. For in-place doc types (currently FAQ Specs), use the template as an insertion snippet instead of creating a new file.
 5. Before finalizing any created or revised document, resolve the current agent session id via `$dev.llm-session` and replace the changelog placeholder with the real session id.
+6. For links that point to files inside the current repo, prefer repo-relative markdown targets instead of absolute local checkout or worktree paths. Do not emit `/Users/...` or similar machine-local link targets under `$DOCS_ROOT` unless the document is intentionally pointing outside the repo.
 
 ### Flow Docs in Isolated Scope (Core vs Topic vs Reference)
 
@@ -171,6 +172,7 @@ When updating existing flow docs, use a preservation-first revision style.
 - Read only the workflow(s) relevant to the document type requested.
 - Preserve stable IDs and manually maintained sections when revising existing docs.
 - Keep source citations explicit and actionable.
+- Keep repo-internal markdown links portable: use repo-relative targets under `$DOCS_ROOT` and avoid absolute local filesystem paths in generated docs.
 
 ## Directory Structure
 

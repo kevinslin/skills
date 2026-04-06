@@ -32,6 +32,7 @@
 - Use $sudocode with file annotations to describe code logic
 - Cite precise files and line numbers where logic occurs.
 - Format every sudocode source annotation as `path/to/file.ts#L28` or a tight range like `path/to/file.ts#L28-L42`.
+- Use repo-relative markdown links for `Related docs` and other repo-internal references. Do not embed absolute local checkout or worktree paths such as `/Users/...` in flow docs.
 - Preserve any line ending with `// manual` exactly across updates.
 - Use a required `State` section.
 - Use the compact `State` structure:
@@ -70,9 +71,10 @@
 9. Fill the required `State` section using the compact structure: summarize key state/ordering risks, list runtime controls in one table, and call out notable gates. If no runtime controls apply, write `None identified`.
 10. Use `$dev.diagram` to add or revise the required `Sequence diagram`. Prefer an ASCII box diagram unless preserving an existing diagram format or the user explicitly asks for Mermaid.
 11. Fill in `Observability` and `Related docs`.
-12. Run validator from this skill root:
+12. Before handoff, scan markdown links and convert any repo-internal absolute local paths to repo-relative targets.
+13. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "$DOCS_ROOT/flows/{flow-name}.md"`
-13. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
+14. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
 
 ## Instructions: Revise Flow Doc
 
@@ -87,9 +89,10 @@
 9. Ensure the `State` section is accurate and complete, or explicitly says `None identified` under `Runtime controls` when no user-settable configuration applies.
 10. If updating to the new format, move per-phase `#### Sudocode (...)` content into the matching numbered `Ordered call path` entries. If no format migration was requested, preserving legacy separate sudocode subsections is acceptable.
 11. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
-12. Run validator from this skill root:
+12. Convert any repo-internal absolute local markdown links to repo-relative targets before finalizing.
+13. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "<path-to-flow-doc>"`
-13. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
+14. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
 
 ## Pre-Handoff Checklist (Required)
 
@@ -97,6 +100,7 @@
 - [ ] Each call-path phase includes numbered `Ordered call path` steps with embedded fenced sudocode blocks, or intentionally preserved legacy `#### Sudocode (...)` subsections when migration was not requested.
 - [ ] Ordered-call-path sudocode includes source annotations with line numbers and reflects runtime branch ordering.
 - [ ] `## State` and `## Sequence diagram` are present.
+- [ ] Repo-internal markdown links use repo-relative targets rather than absolute local filesystem paths.
 - [ ] `validate_flow_doc.py` passes with no errors.
 
 ## Best Practices

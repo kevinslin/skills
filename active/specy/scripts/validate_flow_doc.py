@@ -19,6 +19,9 @@ from pathlib import Path
 
 CODE_BLOCK_RE = re.compile(r"```[A-Za-z0-9_-]*\n.*?```", re.S)
 LINE_NUMBERED_SOURCE_RE = re.compile(r"(?im)\bsource\b\s*:\s+\S+#L\d+(?:-L?\d+)?\b")
+LOCAL_ABSOLUTE_MARKDOWN_LINK_RE = re.compile(
+    r"\[[^\]]+\]\(((?:/Users/|/home/)[^)]+)\)"
+)
 
 
 @dataclass
@@ -174,6 +177,15 @@ def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
         _validate_ordered_call_path(heading.strip(), segment, result)
 
 
+def _validate_portable_repo_links(text: str, result: ValidationResult) -> None:
+    scrubbed = CODE_BLOCK_RE.sub("", text)
+    for match in LOCAL_ABSOLUTE_MARKDOWN_LINK_RE.finditer(scrubbed):
+        result.errors.append(
+            "Markdown links must not use machine-local absolute paths; "
+            f"use a repo-relative target instead: {match.group(1)}"
+        )
+
+
 def _auto_kind(text: str) -> str:
     return "normal"
 
@@ -202,6 +214,7 @@ def main() -> int:
 
     result = ValidationResult()
     _validate_normal_flow_doc(text, result)
+    _validate_portable_repo_links(text, result)
 
     if result.errors:
         print(f"FAIL [{kind}] {doc_path}")
