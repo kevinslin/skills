@@ -145,5 +145,6 @@ Write learnings to %%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[k
 ### Learning Summaries
 
 When summarizing learnings for the user, present the high-signal learnings as a numbered list using `1.`, `2.`, `3.`, and so on. Keep each item self-contained so the user can reference a specific learning number later, including from `ag-ledger`.
+After each numbered summary item, include a compact `Routing:` line that carries the routing decision from the learning (`target`, `skill action`, `skill name`, `scope`, `promote`). Keep this routing line terse and stable so the user can see immediately where the follow-up belongs without reopening the saved note.
 When describing where learnings were saved, format the sentence as `Saved the learning note to <absolute-filepath> - <status/details>` with a space before and after the hyphen.
 Do not end the filepath with a period before the trailing status/details text.
