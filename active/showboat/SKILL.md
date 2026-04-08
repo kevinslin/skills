@@ -1,6 +1,6 @@
 ---
 name: showboat
-description: Create executable demo documents with Showboat that prove a workflow, feature, CLI, or test actually works. Use when asked to produce a reproducible demo, `demo.md`, proof-of-work document, captured command transcript, or verification artifact that should be replayable with `showboat verify`.
+description: Create executable demo documents with Showboat that some logic actually works. Use when asked to produce a reproducible demo. 
 dependencies: []
 ---
 
@@ -13,7 +13,7 @@ Use `uvx showboat` to build Markdown documents that mix short notes, executable 
 ## Workflow
 
 1. Confirm the CLI is available with `uvx showboat --help`.
-2. Pick the document path. Default to `demo.md` in the current workspace unless the user specifies another file.
+2. Pick the document path. Default to `demo-{num}-{title}.md` in the current workspace unless the user specifies another file. Use the next available integer for `{num}` and a short kebab-case summary for `{title}`.
 3. Initialize the document with `uvx showboat init <file> <title>`.
 4. Add short context blocks with `uvx showboat note <file> ...`.
 5. Record proof steps with `uvx showboat exec <file> <lang> <code>`.
@@ -37,7 +37,7 @@ Use `uvx showboat` to build Markdown documents that mix short notes, executable 
 
 ## Good Fits
 
-- Creating a reproducible `demo.md` for a feature or CLI workflow
+- Creating a reproducible `demo-{num}-{title}.md` for a feature or CLI workflow
 - Proving that tests, smoke checks, or integration flows pass
 - Capturing a bug reproduction plus the command that fixes or validates it
 - Handing off a workflow another agent can replay with `showboat verify`
