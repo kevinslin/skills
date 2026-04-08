@@ -78,6 +78,7 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 - Hard completion gate for any full dev.loop run with code changes:
   - do not send a final handoff until the branch is pushed and a PR URL exists
   - NEVER skip `trigger:push-pr` during Verify unless the user explicitly instructs not to push.
+  - open the PR as ready for review by default; never make it a draft PR unless the user explicitly asks for a draft
   - include the PR URL in the final handoff
   - if push or PR creation fails, report the exact command error and what retry was attempted, and treat the run as incomplete
 - If the user asks a status question such as `did you push a pr?` and the truthful answer is `no`, do not stop after answering. Resume Verify immediately and run `trigger:push-pr` unless the user explicitly told you not to push.
@@ -91,6 +92,7 @@ Whenever practical - use one or more subagents to run any given phase to preserv
 ## Important Reminders
 - unless you require user input, don't stop until you finish EVERY phase of the dev.loop
 - Verify phase includes push, CI check, and review. These are required by default and are NEVER optional unless the user explicitly instructs not to push.
+- When Verify creates a PR, it should be a ready PR by default. Draft PRs require explicit user instruction.
 - A dev.loop run that ends without a pushed branch and PR should be treated as incomplete unless the user explicitly said not to push.
 - A final answer for a code-changing dev.loop run must include the PR URL, or explicitly state that the run is incomplete because push/PR creation failed. Never end a dev.loop run with only local branch or commit status.
 
