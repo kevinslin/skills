@@ -6,6 +6,9 @@ vpkg:
       concepts:
         description: main concepts
         template: concepts.md.template
+      dev:
+        description: development setup, tests, and debugging
+        template: dev.md.template
       t:
         description: domain-specific topics
         template: topic.md.template

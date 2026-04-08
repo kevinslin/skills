@@ -41,13 +41,14 @@ Read this file when the request maps to `$tool install <name>`.
 ### 4. Create or update the Dendron note set
 
 - Use the `dendron` skill for vault discovery, note placement, and note editing.
-- Use the schema in [tool.schema.yaml](/Users/kevinlin/code/skills/active/tool/references/tool.schema.yaml).
+- Use the schema in [tool.schema.yaml](tool.schema.yaml).
 - Resolve the schema placeholders with the chosen tool name.
 - Reuse existing notes if present. Do not create duplicates.
 - Create or update every required note declared by the schema. The default required note set is:
-  - `vpkg.<name>` from [root.md.template](/Users/kevinlin/code/skills/active/tool/references/root.md.template)
-  - `vpkg.<name>.concepts` from [concepts.md.template](/Users/kevinlin/code/skills/active/tool/references/concepts.md.template)
-- Create `vpkg.<name>.t.<topic>` only as needed from [topic.md.template](/Users/kevinlin/code/skills/active/tool/references/topic.md.template).
+  - `vpkg.<name>` from [root.md.template](root.md.template)
+  - `vpkg.<name>.concepts` from [concepts.md.template](concepts.md.template)
+  - `vpkg.<name>.dev` from [dev.md.template](dev.md.template)
+- Create `vpkg.<name>.t.<topic>` only as needed from [topic.md.template](topic.md.template).
 - `t` stands for topic. Topics represent large domain-specific areas of package functionality.
 - Only add topic notes when the user is talking about that domain or when the current install/configuration work would clearly benefit from splitting it out.
 - Create `vpkg.<name>.ref.<reference>` only as needed. These notes are intentionally freeform and do not use a fixed template.
@@ -70,6 +71,11 @@ Read this file when the request maps to `$tool install <name>`.
   - `Tips`: non-obvious but high-value usage, shortcuts, or features that may require extra configuration
   - `Resources`: package-wide authoritative links first, preferably official GitHub repo and official docs/manual, plus the package page when useful
 - Fill `vpkg.<name>.concepts` with the core mental model, primary nouns, and the 3-7 concepts a first serious user needs to understand.
+- Fill `vpkg.<name>.dev` with contributor-facing workflows:
+  - `Setup`: how to install dependencies, build from source, start the development server, and enable watch mode
+  - `Tests`: how to run the main test suite and any targeted test commands
+  - `Tips`: helpful debugging shortcuts, logs, env vars, or local verification steps
+  - `Resources`: development-focused links such as contributor docs, source tree entrypoints, and relevant upstream manuals
 - Fill `vpkg.<name>.t.<topic>` with only the sections that are relevant for that domain. Omit unused sections instead of leaving placeholders behind.
 - If a topic, reference, or API note depends on self-contained research, add those links to the current note, usually in a local `Resources` section or note-local footnotes, instead of copying all of them into the root note.
 - Fill `vpkg.<name>.ref.<reference>` with the required frontmatter plus only the fields and headings that help the current discussion. Useful fields include `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, `Resources`, and `Related`, but only include what the referenced functionality actually needs.

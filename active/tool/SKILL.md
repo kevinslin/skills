@@ -47,7 +47,8 @@ Also use this workflow for equivalent requests such as:
 
 - Use the schema in [references/tool.schema.yaml](references/tool.schema.yaml) to determine which notes to create or update.
 - Use dot-delimited Dendron naming exactly, with `vpkg.<name>` as the root note for the tool.
-- Create or update every required note declared in the schema for the resolved tool name. The default required note set includes `vpkg.<name>` and `vpkg.<name>.concepts`.
+- Create or update every required note declared in the schema for the resolved tool name. The default required note set includes `vpkg.<name>`, `vpkg.<name>.concepts`, and `vpkg.<name>.dev`.
+- Fill `vpkg.<name>.dev` with contributor-facing development guidance: source build or dependency setup, development server and watch-mode commands, tests, helpful debugging tips, and development-focused resources.
 - Add `vpkg.<name>.t.<topic>` notes only as needed when the user is actively asking about or working through a domain-specific area of the package.
 - Treat `t` as "topic". A topic is a large domain-specific area of package functionality, for example an AWS package might have topics like `ec2`, `networking`, or `iam`.
 - Add `vpkg.<name>.ref.<reference>` notes only as needed when the user is actively asking about a self-contained piece of package functionality.
@@ -94,6 +95,7 @@ the expected flow is:
 4. Use the `dendron` skill to create or update the schema-defined note set rooted at `[[vpkg.delta]]`.
 5. Fill `[[vpkg.delta]]` with install steps, `git config` examples, common `delta` commands, gotchas, config options, and official links.
 6. Fill `[[vpkg.delta.concepts]]` with the core `delta` concepts and mental model.
-7. Create a `[[vpkg.delta.t.<topic>]]` note only when the user is digging into a specific `delta` domain that deserves its own note.
-8. Create a `[[vpkg.delta.ref.<reference>]]` note only when the user is digging into one self-contained `delta` capability that deserves a dedicated pointer note.
-9. Create a `[[vpkg.<tool>.api.<name>]]` note only when the tool exposes a concrete module or API surface that the user needs documented from the public source definitions.
+7. Fill `[[vpkg.delta.dev]]` with source build steps, local development or watch-mode commands, test commands, helpful debug tips, and contributor links.
+8. Create a `[[vpkg.delta.t.<topic>]]` note only when the user is digging into a specific `delta` domain that deserves its own note.
+9. Create a `[[vpkg.delta.ref.<reference>]]` note only when the user is digging into one self-contained `delta` capability that deserves a dedicated pointer note.
+10. Create a `[[vpkg.<tool>.api.<name>]]` note only when the tool exposes a concrete module or API surface that the user needs documented from the public source definitions.
