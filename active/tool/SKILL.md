@@ -1,6 +1,6 @@
 ---
 name: tool
-description: Install and/or document local tools end to end. Use when the user asks for commands like `$tool install NAME` or `$tool document NAME`
+description: Install and/or document local tools end to end. 
 dependencies:
 - dendron
 ---
@@ -9,7 +9,9 @@ dependencies:
 
 ## Overview
 
-Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then create or update the schema-defined Dendron note set rooted at `[[vpkg.<name>]]` with concise install and usage guidance.
+Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then create or update the schema-defined Dendron note set rooted at `[[<prefix>.<name>]]` with concise install and usage guidance.
+
+Require the user to choose the root prefix explicitly. The only valid prefixes are `vpkg` and `pkg`. If the request does not specify one, ask which prefix to use before creating or updating notes.
 
 When documenting or refreshing tool notes, always research the tool on the internet instead of relying on internal knowledge alone. Find the authoritative sources first and prefer the official GitHub repo and official docs/manual. Keep package-wide links in the root note's `Resources` section, but when the research is self-contained to a topic, reference, or API note, keep those links in the current note instead of pushing everything up to the root.
 
@@ -20,11 +22,14 @@ When documenting or refreshing tool notes, always research the tool on the inter
 Primary trigger:
 
 ```text
-$tool install <name>
+$tool install <prefix> <name>
 ```
+
+`<prefix>` must be either `vpkg` or `pkg`.
 
 Also use this workflow for equivalent requests such as:
 - "install delta"
+- "install delta and use the pkg prefix"
 - "set up uv locally"
 - "install ripgrep and document it"
 - Read [references/install.md](references/install.md) and follow it.
@@ -34,28 +39,32 @@ Also use this workflow for equivalent requests such as:
 Primary trigger:
 
 ```text
-$tool document <name>
+$tool document <prefix> <name>
 ```
+
+`<prefix>` must be either `vpkg` or `pkg`.
 
 Also use this workflow for equivalent requests such as:
 - "document delta"
 - "create a vpkg note set for uv"
+- "create a pkg note set for uv"
 - "fill out the ripgrep note template without installing it"
 - Read [references/document.md](references/document.md) and follow it.
 
 ## Dendron Note Rules
 
 - Use the schema in [references/tool.schema.yaml](references/tool.schema.yaml) to determine which notes to create or update.
-- Use dot-delimited Dendron naming exactly, with `vpkg.<name>` as the root note for the tool.
-- Create or update every required note declared in the schema for the resolved tool name. The default required note set includes `vpkg.<name>`, `vpkg.<name>.concepts`, and `vpkg.<name>.dev`.
-- Fill `vpkg.<name>.dev` with contributor-facing development guidance: source build or dependency setup, development server and watch-mode commands, tests, helpful debugging tips, and development-focused resources.
-- Add `vpkg.<name>.t.<topic>` notes only as needed when the user is actively asking about or working through a domain-specific area of the package.
+- Use dot-delimited Dendron naming exactly, with `<prefix>.<name>` as the root note for the tool.
+- `<prefix>` must come from the user and must be either `vpkg` or `pkg`. Do not guess or silently default.
+- Create or update every required note declared in the schema for the resolved prefix and tool name. The default required note set includes `<prefix>.<name>`, `<prefix>.<name>.concepts`, and `<prefix>.<name>.dev`.
+- Fill `<prefix>.<name>.dev` with contributor-facing development guidance: source build or dependency setup, development server and watch-mode commands, tests, helpful debugging tips, and development-focused resources.
+- Add `<prefix>.<name>.t.<topic>` notes only as needed when the user is actively asking about or working through a domain-specific area of the package.
 - Treat `t` as "topic". A topic is a large domain-specific area of package functionality, for example an AWS package might have topics like `ec2`, `networking`, or `iam`.
-- Add `vpkg.<name>.ref.<reference>` notes only as needed when the user is actively asking about a self-contained piece of package functionality.
+- Add `<prefix>.<name>.ref.<reference>` notes only as needed when the user is actively asking about a self-contained piece of package functionality.
 - Treat `ref` as "reference". A reference is a pointer to self-contained functionality of a package, such as a command, provider, API surface, subtool, or workflow that can stand on its own.
-- Add `vpkg.<name>.api.<api>` notes only as needed when the user is actively asking about a module's public interfaces or when the current task benefits from a dedicated API note.
+- Add `<prefix>.<name>.api.<api>` notes only as needed when the user is actively asking about a module's public interfaces or when the current task benefits from a dedicated API note.
 - Treat `api` as a namespace. Instantiate concrete children via `api.<name>`.
-- API notes often, but not always, have a one-to-one mapping with `vpkg.<name>.t.<topic>` notes. Do not assume the mapping exists.
+- API notes often, but not always, have a one-to-one mapping with `<prefix>.<name>.t.<topic>` notes. Do not assume the mapping exists.
 - Prefer the executable name for the root note when that is what the user will type, unless the package name is the clearer long-term identifier.
 - Standardize title casing in frontmatter title, but keep file names lowercase.
 - Every note page must include frontmatter with `last_refreshed` and `last_refreshed_by`.
@@ -84,7 +93,7 @@ Also use this workflow for equivalent requests such as:
 For:
 
 ```text
-$tool install delta
+$tool install vpkg delta
 ```
 
 the expected flow is:
@@ -98,4 +107,6 @@ the expected flow is:
 7. Fill `[[vpkg.delta.dev]]` with source build steps, local development or watch-mode commands, test commands, helpful debug tips, and contributor links.
 8. Create a `[[vpkg.delta.t.<topic>]]` note only when the user is digging into a specific `delta` domain that deserves its own note.
 9. Create a `[[vpkg.delta.ref.<reference>]]` note only when the user is digging into one self-contained `delta` capability that deserves a dedicated pointer note.
-10. Create a `[[vpkg.<tool>.api.<name>]]` note only when the tool exposes a concrete module or API surface that the user needs documented from the public source definitions.
+10. Create a `[[vpkg.delta.api.<name>]]` note only when the tool exposes a concrete module or API surface that the user needs documented from the public source definitions.
+
+For a `pkg` request, mirror the exact same flow with `pkg` as the root prefix instead of `vpkg`.

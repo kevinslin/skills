@@ -1,4 +1,4 @@
-vpkg:
+"{{prefix}}":
   "{{name}}":
     description: general description
     template: root.md.template
