@@ -17,6 +17,7 @@ Run `fin [context]`.
 
 - `gh`: finalize from a GitHub PR context. Use this when the task should land by merging the current remote PR. The original `fin` workflow maps to this context.
 - `local`: finalize from a local checkout. Use this when the task should land directly from local git state without depending on GitHub PR state.
+- If the current checkout is detached `HEAD`, treat that as a preflight issue, not a valid finalization state. Create a short-lived local branch from the current commit before auto-detecting context, checking mergeability, or attempting worktree cleanup.
 - If the argument is `gh` or `local`, respect it throughout the flow. Do not silently switch later just because repo state would make the other path easier.
 - If the argument is omitted, detect the context from the current branch before any archival or landing work:
   - Choose `gh` when the current branch has an active PR that corresponds to the branch being finalized.
@@ -30,6 +31,8 @@ Run `fin [context]`.
 - Use this flow only when the requested scope is complete.
 - If work is partial or blocked, do not archive specs and do not present the task as finished.
 - Before archiving any spec or attempting to land the change, determine the current branch, whether it is attached to a linked worktree, and where the non-worktree `main` checkout lives.
+- If the checkout is detached `HEAD`, create a temporary local branch from the current commit first. Prefer the repo's normal task-branch prefix when one exists, otherwise use a short `codex/` branch name derived from the task.
+- After converting detached `HEAD` into a named branch, lock that branch identity for the rest of the run. Do not continue finalization from anonymous detached state.
 - When the user omitted the context, lock the detected context once and use it for the rest of the run. Do not re-detect after archiving or mid-landing.
 - Do not silently switch contexts after selection. If the user requested `gh`, do not fall back to local-only landing. If the user requested `local`, do not silently land via PR merge just because a PR exists.
 - For `gh`, confirm the current PR is mergeable against `main` or its base branch.
@@ -132,6 +135,7 @@ Run `fin [context]`.
 
 - Do not move a spec into `.archive` unless the task is actually complete.
 - Do not archive unrelated active specs.
+- Do not try to finalize directly from detached `HEAD`; create a named branch first.
 - Do not archive a spec or land the change before the current branch or PR is confirmed mergeable for the chosen context.
 - Do not silently switch from `gh` to `local` or from `local` to `gh`.
 - Do not ask the user to choose `gh` vs `local` when the argument is omitted and branch PR state clearly determines the context.
@@ -150,6 +154,7 @@ Run `fin [context]`.
 ## Done Checklist
 
 - `fin` was run with either an explicit `gh` / `local` argument or no argument and a context auto-detected from current-branch PR state.
+- If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
 - The chosen or detected context was locked once and respected throughout the flow.
 - Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, and any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
 - Matching active spec, if any, is marked complete and moved to `$DOCS_ROOT/specs/.archive/`.
