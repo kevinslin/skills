@@ -51,14 +51,16 @@ Read this file when the request maps to `$tool install <prefix> <name>`.
   - `<prefix>.<name>.concepts` from [concepts.md.template](concepts.md.template)
   - `<prefix>.<name>.cli` from [cli.md.template](cli.md.template)
   - `<prefix>.<name>.dev` from [dev.md.template](dev.md.template)
+- Treat `t` as a namespace for topic notes.
 - Create `<prefix>.<name>.t.<topic>` only as needed from [topic.md.template](topic.md.template).
-- `t` stands for topic. Topics represent large domain-specific areas of package functionality.
+- Topics represent large domain-specific areas of package functionality.
+- Allow topic notes to grow arbitrary named child notes when deeper structure helps, for example `<prefix>.<name>.t.<topic>.<child>`.
 - Only add topic notes when the user is talking about that domain or when the current install/configuration work would clearly benefit from splitting it out.
 - Create `<prefix>.<name>.ref.<reference>` only as needed. These notes are intentionally freeform and do not use a fixed template.
 - `ref` stands for reference. References point to self-contained functionality of the package rather than a broad domain.
 - Only add reference notes when the user is talking about that functionality or when the current install/configuration work would clearly benefit from a dedicated pointer note.
 - Create `<prefix>.<name>.api.<api>` only as needed. `api` is a namespace, so instantiate concrete children via `api.<name>`.
-- API notes often, but not always, map one-to-one with `<prefix>.<name>.t.<topic>`. Reuse that overlap when it helps, but do not force it.
+- API notes often, but not always, map one-to-one with top-level `<prefix>.<name>.t.<topic>`. Reuse that overlap when it helps, but do not force it.
 - Only add API notes when the user is asking about a module's public surface or when the current install/configuration work would clearly benefit from dedicated API coverage.
 - Every created or updated note must include frontmatter with:
   - `title`
@@ -84,13 +86,13 @@ Read this file when the request maps to `$tool install <prefix> <name>`.
   - `Tests`: how to run the main test suite and any targeted test commands
   - `Tips`: helpful debugging shortcuts, logs, env vars, or local verification steps
   - `Resources`: development-focused links such as contributor docs, source tree entrypoints, and relevant upstream manuals
-- Fill `<prefix>.<name>.t.<topic>` with only the sections that are relevant for that domain. Omit unused sections instead of leaving placeholders behind.
-- If a topic, reference, or API note depends on self-contained research, add those links to the current note, usually in a local `Resources` section or note-local footnotes, instead of copying all of them into the root note.
+- Fill topic notes under `<prefix>.<name>.t.*` with only the sections that are relevant for that branch of the domain. Omit unused sections instead of leaving placeholders behind.
+- If a topic, topic-child, reference, or API note depends on self-contained research, add those links to the current note, usually in a local `Resources` section or note-local footnotes, instead of copying all of them into the root note.
 - Fill `<prefix>.<name>.ref.<reference>` with the required frontmatter plus only the fields and headings that help the current discussion. Useful fields include `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, `Resources`, and `Related`, but only include what the referenced functionality actually needs.
 - Fill `<prefix>.<name>.api.<api>` from GitHub and source inspection, covering all public defined interfaces for that module. Include only the fields and headings that help the current discussion and match the exported surface.
 - When needed, clone the upstream repo into `~/code/vendor` and inspect the relevant module source to verify exports, entrypoints, types, methods, options, or other public interfaces.
 - Keep `api` notes narrow to one module or public surface area so they remain useful as a namespace child.
-- When expanding a topic, reference, or API note, check the current note's links first when they exist, then the root note `Resources` for shared package-wide sources before doing any additional sourcing.
+- When expanding a topic, topic-child, reference, or API note, check the current note's links first when they exist, then the root note `Resources` for shared package-wide sources before doing any additional sourcing.
 - When expanding an API note, after checking note-local and root links, prefer the official GitHub repo and source tree before any secondary source.
 - Keep `ref` notes narrow and pointer-like. They should make it easy to jump into one specific capability without turning into a second root note.
 - Use `Tips` for capabilities that are easy to miss on a first read. Example for `delta`: `git blame` rendering, `grep`/`ripgrep` syntax highlighting pipelines, or terminal hyperlink support when extra config is required.

@@ -13,9 +13,12 @@
         description: development setup, tests, and debugging
         template: dev.md.template
       t:
-        description: domain-specific topics
-        template: topic.md.template
-        dynamic_child: true
+        description: domain-specific topic namespace
+        children:
+          "{{name}}":
+            description: domain-specific topic note
+            template: topic.md.template
+            dynamic_child: true
       ref:
         description: self-contained functionality references
         dynamic_child: true
