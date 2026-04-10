@@ -13,7 +13,11 @@ Last updated: YYYY-MM-DD
 
 ## Call path
 
-[Organize by phases. Each phase should include trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.]
+[Start with `### Overview` using `@references/flow-overview/template.md`. Keep the overview linear and move branch detail into the phase sections below.]
+
+### Overview
+
+[Required. Insert a single linear `ts` block using `@references/flow-overview/template.md`.]
 
 ### Phase 1: [Short phase name]
 

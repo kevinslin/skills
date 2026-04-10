@@ -2,7 +2,7 @@
 name: specy
 description: Create structured docs and specs for codebase exploration and
   feature work 
-version: 1.12.7
+version: 1.12.9
 dependencies:
 - dev.llm-session
 - sudocode
@@ -73,6 +73,15 @@ Do not force all phases into one document. Instead, each isolated flow doc must 
 2. Snapshot points: where state is copied/frozen inside this flow.
 3. Exit/handoff: what this flow produces for the next flow.
 4. Adjacent flow links: explicit references to related phase docs.
+
+### Flow Overview Snippet
+
+Every flow doc should begin `## Call path` with a linear `### Overview` subsection. Use:
+
+- `@references/flow-overview/workflow.md`
+- `@references/flow-overview/template.md`
+
+Treat `flow-overview` as a reusable subsection/snippet, not as a standalone document type. The overview should be one linear sudocode block across the major phases. Keep the main path readable top-to-bottom and move branch detail into the detailed phase sections below it.
 
 ## Shared References
 
@@ -188,7 +197,7 @@ $DOCS_ROOT/
     {date}-design-{topic}.md
   specs/             # Active and archived specs
     .archive/        # Completed specs moved here
-    {YYYY-MM-DD}-{topic}.md
+    {NN}-{topic}.md
   flows/             # Flow documentation
     core.init.md
     core.exit.md
@@ -209,8 +218,8 @@ $DOCS_ROOT/
         {name}.md
 ```
 
-Active specs live directly under `$DOCS_ROOT/specs/`. When a spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
-If multiple spec types exist for the same topic, keep the filename format and distinguish them in the `{topic}` slug, for example `payments-design` or `payments-validation`.
+Active feature specs live directly under `$DOCS_ROOT/specs/` with a monotonic two-digit integer prefix starting at `01`; choose the next prefix by scanning active and archived specs and do not reuse gaps. When a spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
+If multiple spec types exist for the same topic, keep the filename format and distinguish them in the `{topic}` slug, for example `01-payments-design.md` or `02-payments-validation.md`.
 
 FAQ Specs do not create standalone files. They update the target research document in place.
 
@@ -224,6 +233,8 @@ Throughout this skill, paths prefixed with `@` are relative to this skill root.
 - `@references/research-brief/template.md` -> `specy/references/research-brief/template.md`
 - `@references/flow-doc/workflow.md` -> `specy/references/flow-doc/workflow.md`
 - `@references/flow-doc/template.md` -> `specy/references/flow-doc/template.md`
+- `@references/flow-overview/workflow.md` -> `specy/references/flow-overview/workflow.md`
+- `@references/flow-overview/template.md` -> `specy/references/flow-overview/template.md`
 - `@references/state-doc/workflow.md` -> `specy/references/state-doc/workflow.md`
 - `@references/state-doc/template.md` -> `specy/references/state-doc/template.md`
 - `@references/service-design-doc/workflow.md` -> `specy/references/service-design-doc/workflow.md`
