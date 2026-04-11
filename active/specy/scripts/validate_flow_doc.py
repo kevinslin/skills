@@ -35,6 +35,12 @@ def _has_h2(text: str, heading: str) -> bool:
     return pattern.search(text) is not None
 
 
+def _h2_position(text: str, heading: str) -> int | None:
+    pattern = re.compile(rf"(?im)^##\s+{re.escape(heading)}\s*$")
+    match = pattern.search(text)
+    return match.start() if match else None
+
+
 def _has_any_h2(text: str, headings: list[str]) -> bool:
     return any(_has_h2(text, heading) for heading in headings)
 
@@ -98,6 +104,13 @@ def _validate_legacy_sudocode_sections(scope: str, section: str, result: Validat
             )
 
 
+def _is_detailed_phase_segment(section: str) -> bool:
+    return re.search(
+        r"(?im)^(Trigger / entry condition:|Entrypoints:|Ordered call path:)\s*$",
+        section,
+    ) is not None
+
+
 def _validate_ordered_call_path(scope: str, section: str, result: ValidationResult) -> None:
     ordered_call_path = _extract_labeled_block(
         section,
@@ -158,6 +171,11 @@ def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
         if not _has_h2(text, heading):
             result.errors.append(f"Missing required section: '## {heading}'")
 
+    sequence_pos = _h2_position(text, "Sequence diagram")
+    call_path_pos = _h2_position(text, "Call path")
+    if sequence_pos is not None and call_path_pos is not None and sequence_pos > call_path_pos:
+        result.errors.append("Section order must place '## Sequence diagram' before '## Call path'")
+
     if not _has_any_h2(text, ["State", "State, config, and gates"]):
         result.errors.append("Missing required section: '## State'")
 
@@ -173,7 +191,19 @@ def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
         _validate_ordered_call_path("Call path", call_path, result)
         return
 
-    for heading, segment in phase_segments:
+    detailed_phase_segments = [
+        (heading, segment)
+        for heading, segment in phase_segments
+        if _is_detailed_phase_segment(segment)
+    ]
+    if not detailed_phase_segments:
+        result.errors.append(
+            "Call path has '### Phase ...' headings but no detailed phase blocks with "
+            "'Trigger / entry condition:', 'Entrypoints:', or 'Ordered call path:'."
+        )
+        return
+
+    for heading, segment in detailed_phase_segments:
         _validate_ordered_call_path(heading.strip(), segment, result)
 
 

@@ -76,7 +76,7 @@ Do not force all phases into one document. Instead, each isolated flow doc must 
 
 ### Flow Overview Snippet
 
-Every flow doc should begin `## Call path` with a linear `### Overview` subsection. Use:
+Every flow doc should place `## Sequence diagram` before `## Call path`, and `## Call path` should begin with a linear `### Overview` subsection. Use:
 
 - `@references/flow-overview/workflow.md`
 - `@references/flow-overview/template.md`

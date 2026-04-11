@@ -11,6 +11,7 @@
 
 - `@references/flow-doc/template.md`
 - `@references/flow-overview/template.md` for the required `### Overview` subsection at the beginning of `## Call path`
+- The flow-doc template places `## Sequence diagram` before `## Call path` so readers see the high-level shape before the detailed call path.
 
 ## Output Location
 
@@ -44,9 +45,10 @@
 - `Sequence diagram` is required.
 - Use `$dev.diagram` to draft or revise the `Sequence diagram`.
 - Prefer ASCII box diagrams for flow docs unless preserving an existing diagram format or the user explicitly asks for Mermaid.
+- Place `## Sequence diagram` before `## Call path`.
 - `$sudocode` is required
 - Start `## Call path` with a `### Overview` subsection using `@references/flow-overview/template.md`.
-- The `### Overview` subsection should be one linear sudocode block across the main phases. Keep branch logic out of the overview and document it in the detailed phase sections below.
+- Refer to `@references/flow-overview/workflow.md` for instructions on filling out the section. The overview uses `### Phase N: ...` headings with separate fenced `ts` blocks before the detailed phase sections.
 - Each `Ordered call path` entry should be a numbered step followed immediately by the relevant fenced sudocode block.
 - Keep ordered-call-path prose terse; put detailed logic, branch callouts, and side notes in the sudocode and sudocode comments.
 - The `Call path` section must be phase-based and must include:
@@ -68,12 +70,12 @@
    - `ref.{name}` for any supporting flow that is not `core` or `topic`.
 4. Copy `@references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
 5. Fill the required `Purpose` and `Entry points` sections first so scope is explicit.
-6. Draft a `### Overview` subsection at the beginning of `## Call path` using `@references/flow-overview/workflow.md` and `@references/flow-overview/template.md`.
-7. Draft the detailed `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
-8. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations with line numbers.
-9. Keep detailed logic, guard callouts, and external-call notes in the sudocode and sudocode comments instead of verbose step prose.
-10. Fill the required `State` section using the compact structure: summarize key state/ordering risks, list runtime controls in one table, and call out notable gates. If no runtime controls apply, write `None identified`.
-11. Use `$dev.diagram` to add or revise the required `Sequence diagram`. Prefer an ASCII box diagram unless preserving an existing diagram format or the user explicitly asks for Mermaid.
+6. Draft `## Sequence diagram` before `## Call path` using `$dev.diagram`. Prefer an ASCII box diagram unless preserving an existing diagram format or the user explicitly asks for Mermaid; revise it after the detailed call path if the phase boundaries change.
+7. Draft a `### Overview` subsection at the beginning of `## Call path` using `@references/flow-overview/workflow.md` and `@references/flow-overview/template.md`.
+8. Draft the detailed `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
+9. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations with line numbers.
+10. Keep detailed logic, guard callouts, and external-call notes in the sudocode and sudocode comments instead of verbose step prose.
+11. Fill the required `State` section using the compact structure: summarize key state/ordering risks, list runtime controls in one table, and call out notable gates. If no runtime controls apply, write `None identified`.
 12. Fill in `Observability` and `Related docs`.
 13. Before handoff, scan markdown links and convert any repo-internal absolute local paths to repo-relative targets.
 14. Run validator from this skill root:
@@ -93,19 +95,21 @@
 9. Ensure the `State` section is accurate and complete, or explicitly says `None identified` under `Runtime controls` when no user-settable configuration applies.
 10. Add or revise `### Overview` at the beginning of `## Call path` using `@references/flow-overview/workflow.md`.
 11. If updating to the new format, move per-phase `#### Sudocode (...)` content into the matching numbered `Ordered call path` entries. If no format migration was requested, preserving legacy separate sudocode subsections is acceptable.
-12. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
-13. Convert any repo-internal absolute local markdown links to repo-relative targets before finalizing.
-14. Run validator from this skill root:
+12. Ensure `## Sequence diagram` appears before `## Call path`; move the existing diagram section if needed without changing its content unless it is stale.
+13. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
+14. Convert any repo-internal absolute local markdown links to repo-relative targets before finalizing.
+15. Run validator from this skill root:
     - `python3 scripts/validate_flow_doc.py --kind normal --doc "<path-to-flow-doc>"`
-15. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
+16. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
 
 ## Pre-Handoff Checklist (Required)
 
+- [ ] `## Sequence diagram` appears before `## Call path`.
 - [ ] `## Call path` exists and is phase-based.
 - [ ] `## Call path` starts with a linear `### Overview` subsection.
 - [ ] Each call-path phase includes numbered `Ordered call path` steps with embedded fenced sudocode blocks, or intentionally preserved legacy `#### Sudocode (...)` subsections when migration was not requested.
 - [ ] Ordered-call-path sudocode includes source annotations with line numbers and reflects runtime branch ordering.
-- [ ] `## State` and `## Sequence diagram` are present.
+- [ ] `## State` is present.
 - [ ] Repo-internal markdown links use repo-relative targets rather than absolute local filesystem paths.
 - [ ] `validate_flow_doc.py` passes with no errors.
 

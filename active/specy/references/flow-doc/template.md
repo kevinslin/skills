@@ -11,6 +11,26 @@ Last updated: YYYY-MM-DD
 - `path/to/file.ts`: [route/handler/hook/builder/component entrypoint]
 - `path/to/other_file.ts`: [supporting entrypoint used in the same flow]
 
+## Sequence diagram
+
+Draft with `$dev.diagram`. Prefer an ASCII box diagram unless preserving an existing format or the user explicitly asks for Mermaid.
+
+```
++----------------------+
+| [entry / trigger]    |
++----------------------+
+          |
+          v
++----------------------+
+| [phase / decision]   |
++----------------------+
+   | yes         | no
+   v             v
++-----------+ +-----------+
+| [path A]  | | [path B]  |
++-----------+ +-----------+
+```
+
 ## Call path
 
 [Start with `### Overview` using `@references/flow-overview/template.md`. Keep the overview linear and move branch detail into the phase sections below.]
@@ -125,26 +145,6 @@ External boundaries:
 
 - `[gate/check name]`: [what it gates and where]
 - `[route/type check]`: [how it changes the flow]
-
-## Sequence diagram
-
-Draft with `$dev.diagram`. Prefer an ASCII box diagram unless preserving an existing format or the user explicitly asks for Mermaid.
-
-```
-+----------------------+
-| [entry / trigger]    |
-+----------------------+
-          |
-          v
-+----------------------+
-| [phase / decision]   |
-+----------------------+
-   | yes         | no
-   v             v
-+-----------+ +-----------+
-| [path A]  | | [path B]  |
-+-----------+ +-----------+
-```
 
 ## Observability
 
