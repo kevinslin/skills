@@ -83,6 +83,9 @@ Construct diagrams that stay readable in their final destination. Support only t
 10. Keep styling minimal unless the user explicitly asks for styling or visual emphasis.
 11. Avoid dense cross-links that make the graph unreadable; split the diagram instead.
 12. Treat Mermaid like a grammar parser, not Markdown; never rely on it to infer intent from punctuation.
+13. For `sequenceDiagram`, keep participant ids syntax-safe and alphanumeric, such as `CreateHelper`, `ArchiveParser`, or `SkillClient`; avoid keyword-like ids such as `Create`, `Update`, or `Destroy`.
+14. For `sequenceDiagram`, use readable aliases with `participant CreateHelper as Create helper`, then reference only the safe id in arrows.
+15. Do not quote sequence message text just to protect punctuation. Prefer plain message text and simplify nested quotes, for example `version_no=1` instead of `version_no="1"`.
 
 ### Mermaid Pattern
 
@@ -92,6 +95,26 @@ flowchart TD
     B -->|yes| C["Path A"]
     B -->|no| D["Pass through"]
 ```
+
+### Mermaid Sequence Pattern
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant CreateHelper as Create helper
+    participant SkillClient as Skills client
+
+    Caller->>CreateHelper: create_skills_from_archive_bytes(...)
+    CreateHelper->>SkillClient: create_skill(..., enable_skill_version=true)
+    SkillClient-->>Caller: created_skills
+```
+
+### Mermaid Validation
+
+1. When editing Mermaid syntax, extract the fenced block to a real temporary file, for example `/tmp/diagram.mmd`.
+2. Validate with `npx -y @mermaid-js/mermaid-cli -i /tmp/diagram.mmd -o /tmp/diagram.svg`.
+3. Avoid process substitution as `mermaid-cli` input; it can fail on `/dev/fd/...` paths.
+4. Treat a local preview server starting as a preview check, not a parser check. Use parser-backed validation before considering syntax fixed.
 
 ## Convert Between Formats
 
