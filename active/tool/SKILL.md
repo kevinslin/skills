@@ -3,13 +3,14 @@ name: tool
 description: Install and/or document local tools end to end. 
 dependencies:
 - dendron
+- schemas
 ---
 
 # Tool
 
 ## Overview
 
-Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then create or update the schema-defined Dendron note set rooted at `[[<prefix>.<name>]]` with concise install and usage guidance.
+Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then use the `schemas` skill to initialize and update the schema-defined Dendron note set rooted at `[[<prefix>.<name>]]` with concise install and usage guidance.
 
 Require the user to choose the root prefix explicitly. The only valid prefixes are `vpkg` and `pkg`. If the request does not specify one, ask which prefix to use before creating or updating notes.
 
@@ -53,18 +54,19 @@ Also use this workflow for equivalent requests such as:
 
 ## Dendron Note Rules
 
-- Use the schema in [references/tool.schema.yaml](references/tool.schema.yaml) to determine which notes to create or update.
+- Use the `schemas` skill and its `tool` schema at `/Users/kevinlin/code/skills-public/active/schemas/references/tool/schema.yaml` to determine which notes to create or update.
+- Use `/Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py materialize tool` to initialize missing required notes from the schema. Pass `--skip-existing` when writing into an existing notes directory so hand-edited notes are not overwritten.
 - Use dot-delimited Dendron naming exactly, with `<prefix>.<name>` as the root note for the tool.
 - `<prefix>` must come from the user and must be either `vpkg` or `pkg`. Do not guess or silently default.
 - Create or update every required note declared in the schema for the resolved prefix and tool name. The default required note set includes `<prefix>.<name>`, `<prefix>.<name>.concepts`, `<prefix>.<name>.cli`, and `<prefix>.<name>.dev`.
-- Fill `<prefix>.<name>.cli` from the CLI-facing guidance that users will reach for while working in the terminal. Use [references/cli.md.template](references/cli.md.template).
+- Fill `<prefix>.<name>.cli` from the CLI-facing guidance that users will reach for while working in the terminal. Use the `cli` template from the `schemas` skill's `tool` schema.
 - Keep `<prefix>.<name>.cli` narrowly focused on command usage: `Cheatsheet`, `Gotchas`, `Tips`, and `Resources`.
 - Fill `<prefix>.<name>.dev` with contributor-facing development guidance: source build or dependency setup, development server and watch-mode commands, tests, helpful debugging tips, and development-focused resources.
 - Treat `t` as a namespace for topic notes.
 - Add `<prefix>.<name>.t.<topic>` notes only as needed when the user is actively asking about or working through a domain-specific area of the package.
 - Treat `topic` as a large domain-specific area of package functionality, for example an AWS package might have topics like `ec2`, `networking`, or `iam`.
 - Allow topic notes to grow arbitrary named child notes when deeper structure helps, for example `<prefix>.<name>.t.<topic>.<child>`.
-- Use [references/topic.md.template](references/topic.md.template) to start a topic branch, then trim or adapt deeper topic-child notes to only the sections that help the narrower subtopic.
+- Use the `topic` template from the `schemas` skill's `tool` schema to start a topic branch, then trim or adapt deeper topic-child notes to only the sections that help the narrower subtopic.
 - Add `<prefix>.<name>.ref.<reference>` notes only as needed when the user is actively asking about a self-contained piece of package functionality.
 - Treat `ref` as "reference". A reference is a pointer to self-contained functionality of a package, such as a command, provider, API surface, subtool, or workflow that can stand on its own.
 - Add `<prefix>.<name>.api.<api>` notes only as needed when the user is actively asking about a module's public interfaces or when the current task benefits from a dedicated API note.
@@ -87,7 +89,7 @@ Also use this workflow for equivalent requests such as:
 - When expanding an existing tool note or adding topic/topic-child/reference/api notes, check the current note's links first when they exist, then fall back to the root note `Resources` for shared package-wide links.
 - For `api` notes, treat the official GitHub repo and source code as authoritative. Official docs may help, but public interfaces are defined by the source.
 - If the docs do not fully answer an API question, clone the upstream repo into `~/code/vendor` and inspect the source to document the public interfaces accurately.
-- Base each templated note on the exact template mapped by the schema. For children without a template, derive only the fields and headings that help with the functionality being documented.
+- Base each templated note on the exact template mapped by the `schemas` skill's `tool` schema. For children without a template, use the schema materializer's `default` template and then derive only the fields and headings that help with the functionality being documented.
 - Keep `ref` notes freeform after the required frontmatter. Add fields on an as-needed basis as the user is talking about them, for example `Purpose`, `Inputs`, `Outputs`, `Commands`, `Configuration`, `Examples`, `Gotchas`, `Resources`, or `Related`.
 - Keep `api` notes freeform after the required frontmatter. Cover all public defined interfaces for the module and choose the fields and headings that fit the exported surface.
 - If a note already exists, update the relevant sections in place instead of rewriting unrelated content.

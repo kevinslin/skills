@@ -34,16 +34,17 @@ Use this path when the user wants the note and guidance but does not want a loca
 ### 3. Create or update the Dendron note set
 
 - Use the `dendron` skill for vault discovery, note placement, and note editing.
-- Use the schema in [tool.schema.yaml](tool.schema.yaml).
+- Use the `schemas` skill's `tool` schema at `/Users/kevinlin/code/skills-public/active/schemas/references/tool/schema.yaml`.
 - Resolve the schema placeholders with the chosen prefix and tool name.
+- Initialize missing files with `/Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py materialize tool --out <notes-root> --var prefix=<prefix> --var name=<name> --var last_refreshed_by=<agent/session> --skip-existing`.
 - Reuse existing notes if present. Do not create duplicates.
 - Create or update every required note declared by the schema. The default required note set is:
-  - `<prefix>.<name>` from [root.md.template](root.md.template)
-  - `<prefix>.<name>.concepts` from [concepts.md.template](concepts.md.template)
-  - `<prefix>.<name>.dev` from [dev.md.template](dev.md.template)
-  - `<prefix>.<name>.cli` from [cli.md.template](/Users/kevinlin/code/skills/active/tool/references/cli.md.template)
+  - `<prefix>.<name>` from the `root` template
+  - `<prefix>.<name>.concepts` from the `concepts` template
+  - `<prefix>.<name>.dev` from the `dev` template
+  - `<prefix>.<name>.cli` from the `cli` template
 - Treat `t` as a namespace for topic notes.
-- Create `<prefix>.<name>.t.<topic>` only as needed from [topic.md.template](topic.md.template).
+- Create `<prefix>.<name>.t.<topic>` only as needed from the `topic` template in the `schemas` skill's `tool` schema.
 - Topics represent large domain-specific areas of package functionality.
 - Allow topic notes to grow arbitrary named child notes when deeper structure helps, for example `<prefix>.<name>.t.<topic>.<child>`.
 - Only add topic notes when the user is talking about that domain or when the current task would clearly benefit from splitting it out.
