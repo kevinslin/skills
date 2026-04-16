@@ -1,0 +1,52 @@
+version: 1.0
+output:
+  path_style: dotted
+  file_extension: md
+variables:
+  prefix: [pkg, vpkg]
+  name: ["*"]
+schema:
+  "{{prefix}}":
+    materialize: false
+    children:
+      "{{name}}":
+        description: general description
+        template: root
+        children:
+          concepts:
+            description: main concepts
+            template: concepts
+          cli:
+            description: command-line usage guidance
+            template: cli
+          dev:
+            description: development setup, tests, and debugging
+            template: dev
+            children:
+              qa:
+                description: how to test changes
+          t:
+            description: domain-specific topic namespace
+            required: false
+            materialize: false
+            children:
+              "{{topic}}":
+                description: domain-specific topic note
+                template: topic
+                dynamic_child: true
+          ref:
+            description: self-contained functionality references
+            required: false
+            materialize: false
+            children:
+              "{{reference}}":
+                description: self-contained functionality reference
+                dynamic_child: true
+          api:
+            description: public module API namespace
+            required: false
+            materialize: false
+            children:
+              "{{api}}":
+                description: public interfaces for a module
+                dynamic_child: true

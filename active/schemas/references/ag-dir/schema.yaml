@@ -1,0 +1,76 @@
+version: 1.0
+output:
+  path_style: directory
+  file_extension: md
+variables:
+  project_title:
+    values: ["*"]
+    default: Project
+    description: Human-readable project title used in generated headings.
+  spec_num:
+    values: ["*"]
+    default: "01"
+    description: Initial active spec number.
+  spec_name:
+    values: ["*"]
+    default: bootstrap
+    description: Initial active spec slug.
+  archived_spec_num:
+    values: ["*"]
+    description: Archived spec number for optional docs/.archive materialization.
+  archived_spec_name:
+    values: ["*"]
+    description: Archived spec slug for optional docs/.archive materialization.
+schema:
+  AGENTS:
+    description: Project-local instructions for agents working in this directory.
+    template: agents
+  design:
+    description: Project-level design document.
+    template: design
+  memory:
+    description: Durable project facts, decisions, and constraints.
+    template: memory
+  config:
+    description: Non-secret config schema, defaults, and environment variables.
+    template: config
+  progress:
+    description: Global status board with milestones, blockers, and next actions.
+    template: progress
+  docs:
+    description: Active feature specs grouped by spec number.
+    materialize: false
+    children:
+      "spec-{{spec_num}}-{{spec_name}}":
+        description: Initial active feature spec.
+        template: spec
+      ".archive":
+        description: Archived specs kept for reference after landing.
+        required: false
+        materialize: false
+        children:
+          "spec-{{archived_spec_num}}-{{archived_spec_name}}":
+            description: Archived feature spec.
+            required: false
+            template: spec-archive
+  ".agents":
+    description: Runtime and local-only artifacts for this project.
+    materialize: false
+    children:
+      runs:
+        description: Per-spec working notes and execution artifacts.
+        materialize: false
+        children:
+          "spec-{{spec_num}}":
+            description: Per-spec run directory.
+            materialize: false
+            children:
+              progress:
+                description: Per-spec progress log.
+                template: run-progress
+              learnings:
+                description: Per-spec learnings and retrospective notes.
+                template: run-learnings
+              handoff:
+                description: Handoff note for the next agent/session.
+                template: run-handoff
