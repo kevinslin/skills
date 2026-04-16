@@ -1,0 +1,4 @@
+interface:
+  display_name: "1Password CLI"
+  short_description: "Use 1Password CLI without leaking secrets"
+  default_prompt: "Use $op to run a command with credentials from 1Password CLI while keeping secrets out of the transcript."
