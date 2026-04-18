@@ -28,7 +28,21 @@ bases:
     schemas: [{{schema_name}}, ...]
 ```
 
-Parse `.mem.yaml` as YAML only. Require the top-level object to contain `version: 1` and a non-empty `bases` list. Require each base to include non-empty `name`, `root`, and `schemas` fields. `schemas` must be a non-empty list of schema names. `skill` is optional; when present, it must be non-empty. Expand `~` and shell environment variables in `root`; resolve relative roots relative to the config file directory.
+Load and validate `.mem.yaml` with the bundled parser script instead of hand-parsing:
+
+```bash
+python3 ./scripts/load_config.py --pretty
+```
+
+Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script searches `$PWD/.mem.yaml` first, then `$HOME/.mem.yaml`, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to the config file directory, requires roots to exist, and prints normalized JSON.
+
+The parser enforces:
+
+- `version` must be `1`.
+- `bases` must be a non-empty list.
+- Each base must include non-empty `name`, `root`, and `schemas` fields.
+- `schemas` must be a non-empty list of schema names.
+- `skill` is optional; when present, it must be non-empty.
 
 Each base has:
 
@@ -43,7 +57,7 @@ Each base has:
    - `add this finding to $mem {{knowledge_base}}`: add or update knowledge.
    - `look in $mem {{knowledge_base}}`: search/read knowledge.
    - `delete from $mem {{knowledge_base}}`: delete only when the user is explicit about what to remove.
-2. Load `.mem.yaml` using the resolution order above.
+2. Load `.mem.yaml` by running `scripts/load_config.py`; use the normalized JSON output for base selection and root paths.
 3. Select a base:
    - If the knowledge-base target starts with `{{base.name}}/`, select that base and treat the remainder as the knowledge-base path or query.
    - If the knowledge-base target exactly matches a base name, select that base and operate at the base root.
@@ -60,8 +74,14 @@ Each base has:
    - Use the resolved `$schema` definitions to determine knowledge base structure, required fields, naming, placement, and update style.
    - If resolved schemas conflict with each other, ask the user which schema should govern the write before making changes.
    - If the schemas conflict with the optional base skill's file-operation rules, follow the base skill for how to touch files and the schemas for what knowledge base content should look like.
-7. Use the optional base skill's rules for all monorepo navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`.
-8. Keep the final response concise: name the base, the knowledge base, what changed or what was found, and cite touched files when local-file citations are required.
+7. Choose the schema node before writing:
+   - If the knowledge-base target maps to a file path, match that path to the nearest resolved schema node first.
+   - Otherwise, use resolved schema node descriptions to choose candidate nodes.
+   - Use `insertion_policy` only as a tie-breaker or guardrail when descriptions leave ambiguity.
+   - Read the target file's existing headings before inserting; use its headings and the resolved template shape for section placement.
+   - If candidate nodes still conflict, ask the user before writing.
+8. Use the optional base skill's rules for all monorepo navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`.
+9. Keep the final response concise: name the base, the knowledge base, what changed or what was found, and cite touched files when local-file citations are required.
 
 ## Finding Knowledge Bases
 
@@ -77,7 +97,7 @@ Treat the knowledge-base argument as either a file-like target or a search query
 When adding a finding:
 
 - Preserve the knowledge base's existing format and organization.
-- Shape new or updated content according to the resolved `$schema` definitions.
+- Choose the schema node before writing, then shape new or updated content according to the resolved `$schema` definitions.
 - Add the smallest durable note that will be useful later.
 - Include source context when available: originating file, command, log, PR, conversation, date, or rationale.
 - Avoid duplicating existing knowledge; merge with or refine the existing entry when the same point is already present.
@@ -100,7 +120,7 @@ Delete knowledge only when the user explicitly asks to delete or remove it. Pref
 ## Failure Modes
 
 - Missing config: ask where to create or find `.mem.yaml`.
-- Invalid config: report the parse or schemas problem and stop before making changes.
+- Invalid config: report the `scripts/load_config.py` error and stop before making changes.
 - Missing base root: report the configured path and stop before making changes.
 - Missing configured skill: report the missing skill name and stop before any read or write under that base. If no skill is configured, continue using normal file/search tools constrained to `root`.
 - Missing or unresolvable configured schemas: report the schema names and stop before any read or write under that base.
