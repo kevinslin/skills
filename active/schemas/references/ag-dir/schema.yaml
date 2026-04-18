@@ -36,6 +36,11 @@ schema:
     template: config
   progress:
     description: Global status board with milestones, blockers, and next actions.
+    insertion_policy:
+      use_when:
+        - The update changes project-wide status, milestones, blockers, or next actions across specs.
+      avoid_when:
+        - The update is only a per-spec execution log or run-local status note.
     template: progress
   docs:
     description: Active feature specs grouped by spec number.
@@ -67,10 +72,25 @@ schema:
             children:
               progress:
                 description: Per-spec progress log.
+                insertion_policy:
+                  use_when:
+                    - The update records current state, next steps, or blockers for this specific spec run.
+                  avoid_when:
+                    - The update belongs on the project-wide status board or changes cross-spec status.
                 template: run-progress
               learnings:
                 description: Per-spec learnings and retrospective notes.
+                insertion_policy:
+                  use_when:
+                    - The update captures reusable lessons, retrospective observations, or follow-up improvements from this spec.
+                  avoid_when:
+                    - The update is just current status or resume instructions for the next session.
                 template: run-learnings
               handoff:
                 description: Handoff note for the next agent/session.
+                insertion_policy:
+                  use_when:
+                    - The update gives the next agent immediate resume context, open steps, or local run state.
+                  avoid_when:
+                    - The update is a durable lesson, retrospective note, or project-wide memory.
                 template: run-handoff
