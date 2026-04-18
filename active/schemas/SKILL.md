@@ -71,12 +71,12 @@ schema:
 
 ## Commands
 
-Put `/Users/kevinlin/code/skills-public/active/schemas/scripts` on `PATH` to use the short `schema ...` form. Otherwise, call the helper by absolute path.
+Run commands from the directory containing this `SKILL.md`, or put `./scripts` on `PATH` to use the short `schema ...` form.
 
 List bundled schemas:
 
 ```bash
-/Users/kevinlin/code/skills-public/active/schemas/scripts/schema list
+./scripts/schema list
 ```
 
 Show a schema tree before generating files:
@@ -88,7 +88,7 @@ schema show tool
 Materialize a schema:
 
 ```bash
-/Users/kevinlin/code/skills-public/active/schemas/scripts/schema materialize tool \
+./scripts/schema materialize tool \
   --out /tmp/schema-output \
   --var prefix=pkg \
   --var name=test \
@@ -98,7 +98,7 @@ Materialize a schema:
 Materialize an optional branch by including the full rendered path:
 
 ```bash
-/Users/kevinlin/code/skills-public/active/schemas/scripts/schema materialize tool \
+./scripts/schema materialize tool \
   --out /tmp/schema-output \
   --var prefix=pkg \
   --var name=test \
@@ -110,7 +110,7 @@ Materialize an optional branch by including the full rendered path:
 For directory-style schemas, pass `--include` using slash-separated rendered paths so literal-dot directory names still work:
 
 ```bash
-/Users/kevinlin/code/skills-public/active/schemas/scripts/schema materialize ag-dir \
+./scripts/schema materialize ag-dir \
   --out /tmp/ag-dir-output \
   --var project_title="Example Project" \
   --var archived_spec_num=00 \
