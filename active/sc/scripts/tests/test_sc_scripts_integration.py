@@ -324,7 +324,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         _write_skill(
             skill_dir,
             name="pkg-skill",
-            body="Use /Users/kevinlin/code/skills/active/specy/SKILL.md.",
+            body="Use ../specy/SKILL.md.",
         )
         output_dir = self.root / "dist"
 

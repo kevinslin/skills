@@ -54,6 +54,7 @@ Before editing, run a deterministic source preflight:
 1. Resolve the real editable root under `~/code/skills/active`, `~/code/skills-private`, or `./.agents/skills`.
 2. Confirm the skill lives in the editable source tree, not a runtime mirror or generated install location.
 3. Lock the canonical edit path once and reuse it for the rest of the task so you do not re-discover mirror-vs-source rules later.
+4. Inspect whether the requested change affects this skill's dependencies or any skills that depend on it; update dependency metadata, explicit skill references, and related dependency docs/scripts when needed.
 
 ### AGENTS.md Install Guardrail
 
@@ -79,7 +80,7 @@ Do not overload `DOCS_ROOT` to mean both "where docs are written" and "all possi
 When a skill references a bundled file, write the path relative to the directory containing `SKILL.md`.
 
 - Use `./scripts/...`, `./references/...`, and `./assets/...` for bundled resources.
-- Use `../other-skill/SKILL.md` for explicit sibling-skill references when dependency sync needs to detect another skill.
+- Use `../<skill-name>/SKILL.md` for explicit sibling-skill references when dependency sync needs to detect another skill.
 - Do not use absolute filesystem paths or repo-root-anchored skill paths for packaged skill content.
 
 ## Core Principles
@@ -372,6 +373,15 @@ Any example files and directories not needed for the skill should be deleted. Th
 #### Editing SKILL.md
 
 **Writing Guidelines:** Always use imperative/infinitive form.
+
+##### Dependency Impact Check
+
+Before editing, inspect dependency impact:
+
+- If the change adds or removes explicit skill usage, update body references and frontmatter `dependencies`.
+- If the change alters a contract used by dependent skills, search for affected skill references and update those dependent skills when they live in an allowed editable root.
+- If dependency-related scripts, references, or packaging behavior are affected, inspect and update those bundled resources in the same change.
+- After edits that affect dependencies, run `./scripts/sync_dependencies.py <path/to/skill-folder>` and report any dependency/body-reference files that changed.
 
 ##### Frontmatter
 
