@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dependency_tools import (
     FRONTMATTER_RE,
+    find_nonrelative_skill_file_references,
     is_valid_skill_name,
     normalize_dependencies,
 )
@@ -111,6 +112,18 @@ def validate_skill(skill_path):
         normalize_dependencies(frontmatter, body, ensure_field=False)
     except ValueError as exc:
         return False, str(exc)
+
+    # Ensure markdown docs use skill-local file references rooted at the SKILL.md directory.
+    for md_path in sorted(skill_path.rglob("*.md")):
+        text = md_path.read_text(encoding="utf-8")
+        bad_refs = find_nonrelative_skill_file_references(text)
+        if bad_refs:
+            rel_path = md_path.relative_to(skill_path)
+            sample = ", ".join(bad_refs[:3])
+            return False, (
+                f"{rel_path} contains non-relative skill file references: {sample}. "
+                "Use paths rooted at the SKILL.md directory, for example ./scripts/foo.py."
+            )
 
     # Extract and validate description
     description = frontmatter.get('description', '')

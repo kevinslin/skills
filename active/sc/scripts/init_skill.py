@@ -20,7 +20,7 @@ from pathlib import Path
 
 SKILL_TEMPLATE = """---
 name: {skill_name}
-description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+description: "TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it."
 dependencies: []
 ---
 
@@ -64,7 +64,14 @@ Delete this entire "Structuring This Skill" section when done - it's just guidan
 - Code samples for technical skills
 - Decision trees for complex workflows
 - Concrete examples with realistic user requests
-- References to scripts/templates/references as needed]
+- References to bundled resources as needed]
+
+## Path References
+
+When referencing bundled files from this skill, always use paths relative to the directory containing `SKILL.md`.
+
+- Use `./scripts/...`, `./references/...`, and `./assets/...`.
+- Do not use absolute filesystem paths for bundled skill content.
 
 ## Resources
 
@@ -74,8 +81,8 @@ This skill includes example resource directories that demonstrate how to organiz
 Executable code (Python/Bash/etc.) that can be run directly to perform specific operations.
 
 **Examples from other skills:**
-- PDF skill: `fill_fillable_fields.py`, `extract_form_field_info.py` - utilities for PDF manipulation
-- DOCX skill: `document.py`, `utilities.py` - Python modules for document processing
+- PDF skill: `./scripts/fill_fillable_fields.py`, `./scripts/extract_form_field_info.py` - utilities for PDF manipulation
+- DOCX skill: `./scripts/document.py`, `./scripts/utilities.py` - Python modules for document processing
 
 **Appropriate for:** Python scripts, shell scripts, or any executable code that performs automation, data processing, or specific operations.
 
@@ -85,7 +92,7 @@ Executable code (Python/Bash/etc.) that can be run directly to perform specific 
 Documentation and reference material intended to be loaded into context to inform the agent's process and reasoning.
 
 **Examples from other skills:**
-- Product management: `communication.md`, `context_building.md` - detailed workflow guides
+- Product management: `./references/communication.md`, `./references/context_building.md` - detailed workflow guides
 - BigQuery: API reference documentation and query examples
 - Finance: Schema documentation, company policies
 
@@ -108,7 +115,7 @@ Files not intended to be loaded into context, but rather used within the output 
 
 SUBCOMMANDS_SKILL_TEMPLATE = """---
 name: {skill_name}
-description: [TODO: Describe what this skill does and when to use it. Mention that the skill routes requests to specific subcommands documented under ./references/*.md.]
+description: "TODO: Describe what this skill does and when to use it. Mention that the skill routes requests to specific subcommands documented under ./references/*.md."
 dependencies: []
 ---
 
@@ -127,12 +134,13 @@ When the user clearly asks for one of these flows, lead with that subcommand and
 
 - Put the full workflow, guardrails, examples, and output requirements for each subcommand in `./references/{{command}}.md`.
 - Add one reference file per subcommand and keep filenames identical to the subcommand name.
+- Keep bundled-file references relative to this folder, for example `./scripts/tool.py` or `./assets/template.txt`.
 - Do not duplicate detailed command behavior in this file. Keep only routing guidance here.
 """
 
 TEMPLATES_SKILL_TEMPLATE = """---
 name: {skill_name}
-description: [TODO: Describe what this skill does and when to use it. Mention that the skill routes named template invocations to references under ./references/*.md.]
+description: "TODO: Describe what this skill does and when to use it. Mention that the skill routes named template invocations to references under ./references/*.md."
 dependencies: []
 ---
 
@@ -151,6 +159,7 @@ When the user invokes this skill with one of these template names as the positio
 
 - Put the full workflow, guardrails, examples, and output requirements for each template in `./references/{{template}}.md`.
 - Add one reference file per template and keep filenames identical to the template name.
+- Keep bundled-file references relative to this folder, for example `./scripts/tool.py` or `./assets/template.txt`.
 - Do not duplicate detailed template behavior in this file. Keep only routing guidance here.
 """
 
@@ -162,8 +171,8 @@ This is a placeholder script that can be executed directly.
 Replace with actual implementation or delete if not needed.
 
 Example real scripts from other skills:
-- pdf/scripts/fill_fillable_fields.py - Fills PDF form fields
-- pdf/scripts/convert_pdf_to_images.py - Converts PDF pages to images
+- ./scripts/fill_fillable_fields.py - Fills PDF form fields
+- ./scripts/convert_pdf_to_images.py - Converts PDF pages to images
 """
 
 def main():
@@ -181,9 +190,9 @@ This is a placeholder for detailed reference documentation.
 Replace with actual reference content or delete if not needed.
 
 Example real reference docs from other skills:
-- product-management/references/communication.md - Comprehensive guide for status updates
-- product-management/references/context_building.md - Deep-dive on gathering context
-- bigquery/references/ - API references and query examples
+- ./references/communication.md - Comprehensive guide for status updates
+- ./references/context_building.md - Deep-dive on gathering context
+- ./references/api_reference.md - API references and query examples
 
 ## When Reference Docs Are Useful
 
@@ -410,15 +419,15 @@ def init_skill(skill_name, path, template=DEFAULT_TEMPLATE_NAME):
     print("1. Edit SKILL.md to complete the TODO items and update the description")
     if template == SUBCOMMANDS_TEMPLATE_NAME:
         print("2. Replace the placeholder subcommand names with real command names and keep each command in references/<command>.md")
-        print("3. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("3. Add dependency references in the body, then run ./scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
         print("4. Run the validator when ready to check the skill structure")
     elif template == TEMPLATES_TEMPLATE_NAME:
         print("2. Replace the placeholder template names with real template names and keep each template in references/<template>.md")
         print("3. Teach the main SKILL.md to route positional template invocations to the matching reference")
-        print("4. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("4. Add dependency references in the body, then run ./scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
         print("5. Run the validator when ready to check the skill structure")
     else:
-        print("2. Add dependency references in the body, then run scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("2. Add dependency references in the body, then run ./scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
         print("3. Customize or delete the example files in scripts/, references/, and assets/")
         print("4. Run the validator when ready to check the skill structure")
 

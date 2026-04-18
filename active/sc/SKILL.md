@@ -42,7 +42,7 @@ When the user asks for a predefined skill shape, use template-based creation. Pr
 
 - `$sc create {{name}} skill using {{template}} template`
 
-When the user uses that phrasing, run `scripts/init_skill.py <skill-name> --path <output-directory> --template <template>`.
+When the user uses that phrasing, run `./scripts/init_skill.py <skill-name> --path <output-directory> --template <template>`.
 
 Supported templates:
 
@@ -73,6 +73,14 @@ When documenting path conventions in skills or `AGENTS.md`, prefer explicit sema
 - `DOCS_ROOT`: Base path for documentation outputs (for example specs, design docs, flow docs, and research docs).
 
 Do not overload `DOCS_ROOT` to mean both "where docs are written" and "all possible fallback lookup roots". If a skill needs fallback read locations, document them separately with explicit names.
+
+## Path References
+
+When a skill references a bundled file, write the path relative to the directory containing `SKILL.md`.
+
+- Use `./scripts/...`, `./references/...`, and `./assets/...` for bundled resources.
+- Use `../other-skill/SKILL.md` for explicit sibling-skill references when dependency sync needs to detect another skill.
+- Do not use absolute filesystem paths or repo-root-anchored skill paths for packaged skill content.
 
 ## Core Principles
 
@@ -128,7 +136,7 @@ Every SKILL.md consists of:
 Executable code (Python/Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.
 
 - **When to include**: When the same code is being rewritten repeatedly or deterministic reliability is needed
-- **Example**: `scripts/rotate_pdf.py` for PDF rotation tasks
+- **Example**: `./scripts/rotate_pdf.py` for PDF rotation tasks
 - **Benefits**: Token efficient, deterministic, may be executed without loading into context
 - **Note**: Scripts may still need to be read by the agent for patching or environment-specific adjustments
 
@@ -137,7 +145,7 @@ Executable code (Python/Bash/etc.) for tasks that require deterministic reliabil
 Documentation and reference material intended to be loaded as needed into context to inform the agent's process and reasoning.
 
 - **When to include**: For documentation that the agent should reference while working
-- **Examples**: `references/finance.md` for financial schemas, `references/mnda.md` for company NDA template, `references/policies.md` for company policies, `references/api_docs.md` for API specifications
+- **Examples**: `./references/finance.md` for financial schemas, `./references/mnda.md` for company NDA template, `./references/policies.md` for company policies, `./references/api_docs.md` for API specifications
 - **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
 - **Benefits**: Keeps SKILL.md lean, loaded only when the agent determines it's needed
 - **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
@@ -148,7 +156,7 @@ Documentation and reference material intended to be loaded as needed into contex
 Files not intended to be loaded into context, but rather used within the output the agent produces.
 
 - **When to include**: When the skill needs files that will be used in the final output
-- **Examples**: `assets/logo.png` for brand assets, `assets/slides.pptx` for PowerPoint templates, `assets/frontend-template/` for HTML/React boilerplate, `assets/font.ttf` for typography
+- **Examples**: `./assets/logo.png` for brand assets, `./assets/slides.pptx` for PowerPoint templates, `./assets/frontend-template/` for HTML/React boilerplate, `./assets/font.ttf` for typography
 - **Use cases**: Templates, images, icons, boilerplate code, fonts, sample documents that get copied or modified
 - **Benefits**: Separates output resources from documentation, enables the agent to use files without loading them into context
 
@@ -292,17 +300,17 @@ To turn concrete examples into an effective skill, analyze each example by:
 Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
 
 1. Rotating a PDF requires re-writing the same code each time
-2. A `scripts/rotate_pdf.py` script would be helpful to store in the skill
+2. A `./scripts/rotate_pdf.py` script would be helpful to store in the skill
 
 Example: When designing a `frontend-webapp-builder` skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:
 
 1. Writing a frontend webapp requires the same boilerplate HTML/React each time
-2. An `assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
+2. An `./assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
 
 Example: When building a `big-query` skill to handle queries like "How many users have logged in today?" the analysis shows:
 
 1. Querying BigQuery requires re-discovering the table schemas and relationships each time
-2. A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
+2. A `./references/schema.md` file documenting the table schemas would be helpful to store in the skill
 
 To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
 
@@ -317,13 +325,13 @@ When creating a new skill from scratch, always run the `init_skill.py` script. T
 Usage:
 
 ```bash
-scripts/init_skill.py <skill-name> --path <output-directory>
+./scripts/init_skill.py <skill-name> --path <output-directory>
 ```
 
 Template-based usage:
 
 ```bash
-scripts/init_skill.py <skill-name> --path <output-directory> --template <template>
+./scripts/init_skill.py <skill-name> --path <output-directory> --template <template>
 ```
 
 The script:
@@ -348,8 +356,8 @@ When editing the (newly-generated or existing) skill, remember that the skill is
 
 Consult these helpful guides based on your skill's needs:
 
-- **Multi-step processes**: See references/workflows.md for sequential workflows and conditional logic
-- **Specific output formats or quality standards**: See references/output-patterns.md for template and example patterns
+- **Multi-step processes**: See `./references/workflows.md` for sequential workflows and conditional logic
+- **Specific output formats or quality standards**: See `./references/output-patterns.md` for template and example patterns
 
 These files contain established best practices for effective skill design.
 
@@ -377,8 +385,8 @@ Write the YAML frontmatter with `name`, `description`, and `dependencies`:
   - Good: `Manage user-defined knowledge kernels. Use when directly invoked via $mem.`
 - `dependencies`: YAML list of skill names this skill depends on (example: `dependencies: [specy, dev.llm-session]`).
   - Use `dependencies: []` when there are no dependencies.
-  - When skill body references other skills through explicit skill-path links (for example `/active/<skill-name>/SKILL.md`), automatically sync dependencies with:
-    - `scripts/sync_dependencies.py <path/to/skill-folder>`
+- When skill body references other skills through explicit relative skill-path links (for example `../<skill-name>/SKILL.md`), automatically sync dependencies with:
+    - `./scripts/sync_dependencies.py <path/to/skill-folder>`
 
 Do not include unapproved fields in YAML frontmatter (approved: `name`, `description`, `dependencies`, and repository-specific optional fields such as `version`, `license`, `allowed-tools`, `metadata`).
 
@@ -391,13 +399,13 @@ Write instructions for using the skill and its bundled resources.
 Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
 
 ```bash
-scripts/package_skill.py <path/to/skill-folder>
+./scripts/package_skill.py <path/to/skill-folder>
 ```
 
 Optional output directory specification:
 
 ```bash
-scripts/package_skill.py <path/to/skill-folder> ./dist
+./scripts/package_skill.py <path/to/skill-folder> ./dist
 ```
 
 The packaging script will:
@@ -440,7 +448,7 @@ When a user asks "update this skill to do X":
 When changing a skill name:
 
 - Run:
-  - `scripts/rename_skill.py <workspace-root> <old-skill-name> <new-skill-name>`
+  - `./scripts/rename_skill.py <workspace-root> <old-skill-name> <new-skill-name>`
 - This updates:
   - skill directory name (when present),
   - frontmatter `name`,

@@ -18,6 +18,20 @@ DEPENDENCY_PATTERNS = [
     re.compile(r"/active/([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
     re.compile(r"/draft/([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
     re.compile(r"/drafts/([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
+    re.compile(r"\.\./([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
+    re.compile(r"\.\./([a-z0-9][a-z0-9.-]*)/skill\.md"),
+]
+
+NONRELATIVE_BUNDLED_FILE_PATTERNS = [
+    re.compile(r"(?<![A-Za-z0-9._/-])scripts/[A-Za-z0-9][A-Za-z0-9._/-]*"),
+    re.compile(r"(?<![A-Za-z0-9._/-])references/[A-Za-z0-9][A-Za-z0-9._/-]*"),
+    re.compile(r"(?<![A-Za-z0-9._/-])assets/[A-Za-z0-9][A-Za-z0-9._/-]*"),
+]
+
+ABSOLUTE_SKILL_LINK_PATTERNS = [
+    re.compile(r"/active/[a-z0-9][a-z0-9.-]*/SKILL\.md"),
+    re.compile(r"/draft/[a-z0-9][a-z0-9.-]*/SKILL\.md"),
+    re.compile(r"/drafts/[a-z0-9][a-z0-9.-]*/SKILL\.md"),
 ]
 
 
@@ -75,6 +89,16 @@ def extract_skill_dependencies_from_body(body: str) -> set[str]:
             else:
                 deps.add(match)
     return deps
+
+
+def find_nonrelative_skill_file_references(text: str) -> list[str]:
+    """Return bundled-file references that are not rooted at the SKILL.md directory."""
+    refs: set[str] = set()
+    for pattern in NONRELATIVE_BUNDLED_FILE_PATTERNS:
+        refs.update(match.group(0) for match in pattern.finditer(text))
+    for pattern in ABSOLUTE_SKILL_LINK_PATTERNS:
+        refs.update(match.group(0) for match in pattern.finditer(text))
+    return sorted(refs)
 
 
 def _dedupe_preserve_order(items: list[str]) -> list[str]:
