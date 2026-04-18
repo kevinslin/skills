@@ -12,6 +12,7 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 
 - `tool`: Dendron note hierarchy for `pkg.<name>` and `vpkg.<name>` tool documentation. See `./references/tool/schema.yaml`.
 - `ag-dir`: Agent Project Directory scaffold with durable root docs, active specs under `docs/`, and per-spec runtime artifacts under `.agents/runs/spec-{num}/`. See `./references/ag-dir/schema.yaml`.
+- `code`: Specy-style code documentation tree under `$DOCS_ROOT`, including architecture, research, design, specs, flows, state, recipes, FAQ, and vendor docs. See `./references/code/schema.yaml`.
 
 ## Schema Layout
 
@@ -70,22 +71,24 @@ schema:
 
 ## Commands
 
+Put `/Users/kevinlin/code/skills-public/active/schemas/scripts` on `PATH` to use the short `schema ...` form. Otherwise, call the helper by absolute path.
+
 List bundled schemas:
 
 ```bash
-uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py list
+/Users/kevinlin/code/skills-public/active/schemas/scripts/schema list
 ```
 
 Show a schema tree before generating files:
 
 ```bash
-uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py show tool
+schema show tool
 ```
 
 Materialize a schema:
 
 ```bash
-uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py materialize tool \
+/Users/kevinlin/code/skills-public/active/schemas/scripts/schema materialize tool \
   --out /tmp/schema-output \
   --var prefix=pkg \
   --var name=test \
@@ -95,7 +98,7 @@ uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py 
 Materialize an optional branch by including the full rendered path:
 
 ```bash
-uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py materialize tool \
+/Users/kevinlin/code/skills-public/active/schemas/scripts/schema materialize tool \
   --out /tmp/schema-output \
   --var prefix=pkg \
   --var name=test \
@@ -107,7 +110,7 @@ uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py 
 For directory-style schemas, pass `--include` using slash-separated rendered paths so literal-dot directory names still work:
 
 ```bash
-uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py materialize ag-dir \
+/Users/kevinlin/code/skills-public/active/schemas/scripts/schema materialize ag-dir \
   --out /tmp/ag-dir-output \
   --var project_title="Example Project" \
   --var archived_spec_num=00 \
@@ -116,7 +119,7 @@ uv run /Users/kevinlin/code/skills-public/active/schemas/scripts/materialize.py 
   --skip-existing
 ```
 
-The materializer validates `schema.yaml` with Pydantic, renders path placeholders with the provided variables, renders each selected Jinja template, and uses Copier to initialize the output files.
+The `schema materialize` subcommand validates `schema.yaml` with Pydantic, renders path placeholders with the provided variables, renders each selected Jinja template, and uses Copier to initialize the output files.
 
 ## Navigation Rules
 
