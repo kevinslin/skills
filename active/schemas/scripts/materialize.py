@@ -54,10 +54,18 @@ class OutputConfig(BaseModel):
     file_extension: str | None = None
 
 
+class InsertionPolicy(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    use_when: list[str] = Field(default_factory=list)
+    avoid_when: list[str] = Field(default_factory=list)
+
+
 class SchemaNode(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     description: str | None = None
+    insertion_policy: InsertionPolicy | None = None
     template: str | None = None
     children: dict[str, "SchemaNode"] = Field(default_factory=dict)
     required: bool = True
@@ -373,6 +381,8 @@ def print_tree(nodes: dict[str, SchemaNode], *, indent: int = 0) -> None:
             flags.append("optional")
         if node.dynamic_child:
             flags.append("dynamic")
+        if node.insertion_policy:
+            flags.append("insertion-policy")
         if not node.materialize:
             flags.append("path-only")
         flag_text = f" [{' '.join(flags)}]" if flags else ""

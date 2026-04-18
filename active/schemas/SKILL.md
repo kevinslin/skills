@@ -48,6 +48,9 @@ schema:
       children:
         cli:
           description: command usage
+          insertion_policy:
+            avoid_when:
+              - the information is general project context rather than CLI-specific usage
           template: cli
 ```
 
@@ -55,7 +58,10 @@ schema:
 - `output.path_style`: Use `dotted` for Dendron-style files such as `pkg.test.cli.md`; use `directory` for directory paths such as `pkg/test/cli.md`.
 - `output.file_extension`: Append this extension to generated paths unless the caller overrides output behavior.
 - `schema`: A tree of path segments. Segments can be literal strings or `{{variable}}` placeholders.
-- `description`: Human-readable navigation help for a node.
+- `description`: Human-readable navigation help for a node. Prefer improving this before adding insertion policy.
+- `insertion_policy`: Optional routing hints for deciding whether new information belongs in this node. Use it only when `description` is not enough, such as when two nodes are easy to confuse or a common wrong insertion should be avoided. Supported keys:
+  - `use_when`: Short phrases describing evidence that belongs in this node.
+  - `avoid_when`: Short phrases describing evidence that should go somewhere else.
 - `template`: Template basename in the schema directory. Omit it to use `default`.
 - `children`: Child nodes below the current path segment.
 - `required`: Set to `false` for optional namespaces that should not materialize by default.
@@ -115,6 +121,8 @@ The materializer validates `schema.yaml` with Pydantic, renders path placeholder
 ## Navigation Rules
 
 - Read `schema.yaml` first when deciding which files are required.
+- Use `description` as the primary guide for choosing where new information belongs.
+- Use `insertion_policy` only as a tie-breaker or guardrail when the description alone is ambiguous. Do not duplicate section headings or restate the description; templates already define document sections.
 - Materialize required nodes by default.
 - Use `--skip-existing` when initializing into a directory that may already contain hand-edited files.
 - Skip `required: false` nodes unless a task explicitly asks for that optional namespace; pass `--include <full.rendered.path>` for those branches.
