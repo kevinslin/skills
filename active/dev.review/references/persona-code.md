@@ -19,7 +19,7 @@ Organize your feedback into the following sections:
    - Sketch a simpler, safer alternative approach
    - Prefer clarity and robustness over flexibility
 6. Flow doc
-   - Create or update a flow doc for the reviewed PR under `ROOT_DIR/prs/` using $specy skill
+   - Create or update a flow doc for the reviewed PR under `$ROOT_DIR/prs/` using $specy skill
    - Capture PR context, key files touched, execution/data flow, major risks, and open questions
    - Use a stable PR-based filename when possible (for example `<pr-number>-<slug>.md`)
 

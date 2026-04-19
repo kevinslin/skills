@@ -1,9 +1,7 @@
 ---
 name: dev.review
-description: Multi-type review skill for code, design docs/specs, architecture, UX,
-  and other reviews. Use when the user asks for a review or critique (code review,
-  design doc review, spec review, PR review). Select the appropriate review persona
-  from references/persona-[review-type].md.
+description: Review code, specs, architecture, UX, and design docs. Use when the user asks for a review or critique.
+dependencies: [specy]
 ---
 
 # dev.review
@@ -13,9 +11,10 @@ description: Multi-type review skill for code, design docs/specs, architecture, 
 1. Identify the review type from the user's request and artifact.
    - Examples: code, design-doc, spec, architecture, ux, integrator.
    - If ambiguous, ask one clarifying question before reviewing.
-2. Load the matching persona from `references/persona-[review-type].md`.
+2. Load the matching persona from `./references/persona-[review-type].md`.
    - If the persona file does not exist, ask the user for the prompt to add and pause the review.
    - For `integrator`, default input artifacts are outputs from `ag-learn` and adjacent retrospectives.
+   - For code reviews that require flow docs, use the sibling dependency at `../specy/SKILL.md`.
 3. Apply the persona to the material and produce the review.
 
 ## Output
@@ -28,6 +27,9 @@ description: Multi-type review skill for code, design docs/specs, architecture, 
 
 ## Personas
 
-- `references/persona-design-doc.md` for design doc review.
-- `references/persona-code.md` for code review.
-- `references/persona-integrator.md` for integrating learnings into skill/code/project changes.
+- `./references/persona-code.md` for code review.
+- `./references/persona-design-doc.md` for design doc review.
+- `./references/persona-spec.md` for product, implementation, or test spec review.
+- `./references/persona-architecture.md` for architecture and system-boundary review.
+- `./references/persona-ux.md` for UX review.
+- `./references/persona-integrator.md` for integrating learnings into skill/code/project changes.
