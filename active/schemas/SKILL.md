@@ -12,7 +12,7 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 
 - `tool`: Dendron note hierarchy for `pkg.<name>` and `vpkg.<name>` tool documentation. See `./references/tool/schema.yaml`.
 - `ag-dir`: Agent Project Directory scaffold with durable root docs, active specs under `docs/`, and per-spec runtime artifacts under `.agents/runs/spec-{num}/`. See `./references/ag-dir/schema.yaml`.
-- `code`: Specy-style code documentation tree under `$DOCS_ROOT`, including architecture, research, design, specs, flows, state, recipes, FAQ, and vendor docs. See `./references/code/schema.yaml`.
+- `code`: Specy-style code documentation tree under `$DOCS_ROOT/{{module}}`, including architecture, research, design, specs, flows, state, recipes, FAQ, and vendor docs. See `./references/code/schema.yaml`.
 
 ## Schema Layout
 
@@ -72,6 +72,7 @@ schema:
 ## Commands
 
 Run commands from the directory containing this `SKILL.md`, or put `./scripts` on `PATH` to use the short `schema ...` form.
+When another sibling skill depends on `schemas`, read this skill first and invoke the CLI relative to that sibling skill directory, for example `../schemas/scripts/schema show tool`.
 
 List bundled schemas:
 

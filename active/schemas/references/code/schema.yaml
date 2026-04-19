@@ -3,6 +3,10 @@ output:
   path_style: directory
   file_extension: md
 variables:
+  module:
+    values: ["*"]
+    default: module
+    description: Root module, service, package, or docs area slug.
   date:
     values: ["*"]
     default: YYYY-MM-DD
@@ -80,161 +84,165 @@ variables:
     default: topic
     description: Optional vendor topic doc slug.
 schema:
-  ARCHITECTURE:
-    description: Project-wide architecture doc for the whole system, matching the specy architecture workflow default.
-    insertion_policy:
-      use_when:
-        - The content describes whole-system boundaries, components, layering rules, invariants, or project-wide code maps.
-      avoid_when:
-        - The content is a dated architecture note for one subsystem or service area.
-    template: architecture
-  architecture:
-    description: Dated architecture docs for subsystem or service-level architecture.
+  "{{module}}":
+    description: Root module, service, package, or docs area containing code documentation.
     materialize: false
     children:
-      "{{date}}-architecture-{{system}}":
-        description: System or subsystem architecture doc.
+      ARCHITECTURE:
+        description: Project-wide architecture doc for the whole system, matching the specy architecture workflow default.
         insertion_policy:
           use_when:
-            - The content describes one named system, subsystem, workflow, or service boundary.
+            - The content describes whole-system boundaries, components, layering rules, invariants, or project-wide code maps.
           avoid_when:
-            - The content is a feature rollout plan or execution spec.
+            - The content is a dated architecture note for one subsystem or service area.
         template: architecture
-  research:
-    description: Research briefs comparing technologies, approaches, or implementation options.
-    materialize: false
-    children:
-      "{{date}}-research-{{research_topic}}":
-        description: Dated research brief for a specific topic.
-        template: research-brief
-  design:
-    description: Service design docs for staff-level service or system proposals.
-    materialize: false
-    children:
-      "{{date}}-design-{{service_design_topic}}":
-        description: Service design doc.
-        insertion_policy:
-          use_when:
-            - The content proposes a new service or major system change.
-          avoid_when:
-            - The content is an implementation-ready feature design that belongs under specs/.
-        template: service-design-doc
-  specs:
-    description: Active feature specs, feature designs, investigation specs, and validation specs.
-    materialize: false
-    children:
-      "{{spec_num}}-{{spec_topic}}":
-        description: Active feature spec with a monotonic two-digit prefix.
-        insertion_policy:
-          use_when:
-            - The content is a milestone-based implementation plan with acceptance criteria and validation.
-          avoid_when:
-            - The content is a completed spec that should be moved unchanged into specs/.archive/.
-        template: feature-spec
-      "{{date}}-{{design_topic}}":
-        description: Optional dated feature design spec.
-        required: false
-        insertion_policy:
-          use_when:
-            - The content maps feature requirements to implementation design, file plans, rollout, and rollback.
-          avoid_when:
-            - The content is a staff-level service design that belongs under design/.
-        template: design-spec
-      "{{date}}-{{investigation_topic}}":
-        description: Optional dated investigation spec.
-        required: false
-        insertion_policy:
-          use_when:
-            - The content captures debugging hypotheses, evidence, state timelines, or root-cause analysis.
-          avoid_when:
-            - The content is a validation coverage checklist.
-        template: investigation-spec
-      "{{date}}-{{validation_topic}}":
-        description: Optional dated validation spec.
-        required: false
-        insertion_policy:
-          use_when:
-            - The content validates a plan or implementation with automated and manual coverage.
-          avoid_when:
-            - The content is the implementation plan itself.
-        template: validation-spec
-      ".archive":
-        description: Completed specs moved here without renaming.
-        required: false
+      architecture:
+        description: Dated architecture docs for subsystem or service-level architecture.
         materialize: false
         children:
-          "{{archived_spec_num}}-{{archived_spec_topic}}":
-            description: Archived completed spec.
+          "{{date}}-architecture-{{system}}":
+            description: System or subsystem architecture doc.
+            insertion_policy:
+              use_when:
+                - The content describes one named system, subsystem, workflow, or service boundary.
+              avoid_when:
+                - The content is a feature rollout plan or execution spec.
+            template: architecture
+      research:
+        description: Research briefs comparing technologies, approaches, or implementation options.
+        materialize: false
+        children:
+          "{{date}}-research-{{research_topic}}":
+            description: Dated research brief for a specific topic.
+            template: research-brief
+      design:
+        description: Service design docs for staff-level service or system proposals.
+        materialize: false
+        children:
+          "{{date}}-design-{{service_design_topic}}":
+            description: Service design doc.
+            insertion_policy:
+              use_when:
+                - The content proposes a new service or major system change.
+              avoid_when:
+                - The content is an implementation-ready feature design that belongs under specs/.
+            template: service-design-doc
+      specs:
+        description: Active feature specs, feature designs, investigation specs, and validation specs.
+        materialize: false
+        children:
+          "{{spec_num}}-{{spec_topic}}":
+            description: Active feature spec with a monotonic two-digit prefix.
+            insertion_policy:
+              use_when:
+                - The content is a milestone-based implementation plan with acceptance criteria and validation.
+              avoid_when:
+                - The content is a completed spec that should be moved unchanged into specs/.archive/.
+            template: feature-spec
+          "{{date}}-{{design_topic}}":
+            description: Optional dated feature design spec.
             required: false
-            template: archived-spec
-  flows:
-    description: Execution-flow documentation for lifecycle, topic, and reference flows.
-    materialize: false
-    children:
-      core.init:
-        description: Core initialization flow.
-        template: flow-doc
-      core.exit:
-        description: Core cleanup or shutdown flow.
-        template: flow-doc
-      "topic.{{flow_topic}}":
-        description: Optional topic flow for major functionality in a domain.
-        required: false
-        template: flow-doc
-      "ref.{{flow_ref}}":
-        description: Optional reference flow for supporting behavior outside core/topic.
-        required: false
-        template: flow-doc
-  state:
-    description: Terminal-output and state-derivation docs.
-    materialize: false
-    children:
-      "{{state_name}}":
-        description: State doc for a target symbol or output surface.
-        template: state-doc
-  recipes:
-    description: Reproducible change recipes derived from a conversation or PR.
-    materialize: false
-    children:
-      "{{recipe_name}}":
-        description: Step-by-step change recipe.
-        template: recipe
-  faq:
-    description: Standalone FAQ docs; FAQ specs update target research docs in place and do not create files here.
-    materialize: false
-    children:
-      "{{date}}-{{faq_topic}}":
-        description: Standalone FAQ doc.
-        template: faq-doc
-  vendor:
-    description: Project-focused third-party library documentation.
-    materialize: false
-    children:
-      "{{library}}":
-        description: Vendor documentation root for one library.
-        materialize: false
-        dynamic_child: true
-        children:
-          README:
-            description: Vendor overview doc.
-            template: vendor-doc
-          reference:
-            description: Optional API reference docs for vendor APIs used by the project.
+            insertion_policy:
+              use_when:
+                - The content maps feature requirements to implementation design, file plans, rollout, and rollback.
+              avoid_when:
+                - The content is a staff-level service design that belongs under design/.
+            template: design-spec
+          "{{date}}-{{investigation_topic}}":
+            description: Optional dated investigation spec.
+            required: false
+            insertion_policy:
+              use_when:
+                - The content captures debugging hypotheses, evidence, state timelines, or root-cause analysis.
+              avoid_when:
+                - The content is a validation coverage checklist.
+            template: investigation-spec
+          "{{date}}-{{validation_topic}}":
+            description: Optional dated validation spec.
+            required: false
+            insertion_policy:
+              use_when:
+                - The content validates a plan or implementation with automated and manual coverage.
+              avoid_when:
+                - The content is the implementation plan itself.
+            template: validation-spec
+          ".archive":
+            description: Completed specs moved here without renaming.
             required: false
             materialize: false
             children:
-              "{{vendor_reference}}":
-                description: Vendor API reference doc.
+              "{{archived_spec_num}}-{{archived_spec_topic}}":
+                description: Archived completed spec.
                 required: false
-                dynamic_child: true
-                template: vendor-reference
-          topics:
-            description: Optional vendor topic deep-dives.
+                template: archived-spec
+      flows:
+        description: Execution-flow documentation for lifecycle, topic, and reference flows.
+        materialize: false
+        children:
+          core.init:
+            description: Core initialization flow.
+            template: flow-doc
+          core.exit:
+            description: Core cleanup or shutdown flow.
+            template: flow-doc
+          "topic.{{flow_topic}}":
+            description: Optional topic flow for major functionality in a domain.
             required: false
+            template: flow-doc
+          "ref.{{flow_ref}}":
+            description: Optional reference flow for supporting behavior outside core/topic.
+            required: false
+            template: flow-doc
+      state:
+        description: Terminal-output and state-derivation docs.
+        materialize: false
+        children:
+          "{{state_name}}":
+            description: State doc for a target symbol or output surface.
+            template: state-doc
+      recipes:
+        description: Reproducible change recipes derived from a conversation or PR.
+        materialize: false
+        children:
+          "{{recipe_name}}":
+            description: Step-by-step change recipe.
+            template: recipe
+      faq:
+        description: Standalone FAQ docs; FAQ specs update target research docs in place and do not create files here.
+        materialize: false
+        children:
+          "{{date}}-{{faq_topic}}":
+            description: Standalone FAQ doc.
+            template: faq-doc
+      vendor:
+        description: Project-focused third-party library documentation.
+        materialize: false
+        children:
+          "{{library}}":
+            description: Vendor documentation root for one library.
             materialize: false
+            dynamic_child: true
             children:
-              "{{vendor_topic}}":
-                description: Vendor topic doc.
+              README:
+                description: Vendor overview doc.
+                template: vendor-doc
+              reference:
+                description: Optional API reference docs for vendor APIs used by the project.
                 required: false
-                dynamic_child: true
-                template: vendor-topic
+                materialize: false
+                children:
+                  "{{vendor_reference}}":
+                    description: Vendor API reference doc.
+                    required: false
+                    dynamic_child: true
+                    template: vendor-reference
+              topics:
+                description: Optional vendor topic deep-dives.
+                required: false
+                materialize: false
+                children:
+                  "{{vendor_topic}}":
+                    description: Vendor topic doc.
+                    required: false
+                    dynamic_child: true
+                    template: vendor-topic
