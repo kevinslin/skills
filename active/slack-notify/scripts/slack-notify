@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  slack-notify "message"
+  printf 'message\n' | slack-notify
+
+Environment:
+  Loads ~/.secrets/.env.slack through the sibling secrets skill.
+  Requires SLACK_CHANNEL and SLACK_BOT_TOKEN or SLACK_TOKEN after loading secrets.
+USAGE
+}
+
+die() {
+  printf 'slack-notify: %s\n' "$*" >&2
+  exit 1
+}
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+default_secrets_cmd="$script_dir/../../secrets/scripts/secrets"
+secrets_cmd="${SECRETS_CMD:-$default_secrets_cmd}"
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ ! -x "$secrets_cmd" ]]; then
+  if command -v secrets >/dev/null 2>&1; then
+    secrets_cmd="$(command -v secrets)"
+  else
+    die "cannot find secrets helper; set SECRETS_CMD or install the secrets skill"
+  fi
+fi
+
+command -v slack-post >/dev/null 2>&1 || die "slack-post is required on PATH"
+
+if [[ "$#" -gt 0 ]]; then
+  exec "$secrets_cmd" slack -- sh -c '
+    set -eu
+    : "${SLACK_CHANNEL:?SLACK_CHANNEL is required in slack secrets}"
+    exec slack-post --channel "$SLACK_CHANNEL" "$@"
+  ' slack-notify "$@"
+fi
+
+if [[ -t 0 ]]; then
+  die "provide a message argument or pipe message text on stdin"
+fi
+
+exec "$secrets_cmd" slack -- sh -c '
+  set -eu
+  : "${SLACK_CHANNEL:?SLACK_CHANNEL is required in slack secrets}"
+  exec slack-post --channel "$SLACK_CHANNEL"
+' slack-notify
