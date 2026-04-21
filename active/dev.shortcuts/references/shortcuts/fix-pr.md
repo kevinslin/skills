@@ -26,7 +26,7 @@ Create a to-do list with the following items then perform all of them:
 7. trigger:commit-code -> trigger:push-code
 
 8. Resolve addressed review threads (via `resolveReviewThread` GraphQL mutation or reply)
-   and leave comments for any outstanding work.
+   and leave comments for any outstanding work. DO NOT SKIP THIS STEP
 
 9. trigger:check-ci
 
