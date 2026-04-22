@@ -98,6 +98,13 @@ schema:
             children:
               qa:
                 description: how to test changes
+          ref:
+            description: Catchall reference notes for module information that does not fit another code documentation area.
+            insertion_policy:
+              use_when:
+                - The content is useful module reference material but is not development setup, architecture, research, design, specs, flows, state, recipes, FAQ, or vendor documentation.
+              avoid_when:
+                - The content has a clear home in another code documentation area.
           ARCHITECTURE:
             description: Project-wide architecture doc for the whole system, matching the specy architecture workflow default.
             insertion_policy:
