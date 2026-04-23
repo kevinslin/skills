@@ -10,7 +10,7 @@ Shortcuts are a small self-contained workflow that can be triggered via `trigger
 ## Shortcut Location
 Shortcuts can be in the following locations:
 
-1. Under the skill-bundled `references/shortcuts/` directory next to this `SKILL.md` (runtime mirror is typically `~/.codex/skills/dev.shortcuts/references/shortcuts/`).
+1. Under the skill-bundled `./references/shortcuts/` directory next to this `SKILL.md` (runtime mirror is typically `~/.codex/skills/dev.shortcuts/references/shortcuts/`).
 2. Inlined in agent instructions under `## Shortcuts`. Shortcut is header text. Can be followed by a space with argument hints enclosed in `[arg_name]`
 Examples
 ```
@@ -40,6 +40,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `promote-shortcut-to-skill` | Convert a shortcut into a standalone skill and replace old shortcut references. |
 | `push-code` | Commit if needed, then push the current branch. |
 | `push-pr` | Commit if needed, push the branch, create a PR, then watch and fix CI as needed. |
+| `rebase-and-fix` | Rebase the current branch onto a provided branch, fix PR conflicts, push, and check CI. |
 | `sync-branch-push` | Rebase the current branch onto the remote default branch from `git remote show`, then force-push upstream with lease. |
 | `sync-branch` | Rebase the current branch onto the remote default branch from `git remote show` and resolve conflicts if needed. |
 
