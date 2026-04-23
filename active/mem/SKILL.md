@@ -48,8 +48,10 @@ Each base has:
 
 - `name`: short base identifier users can mention.
 - `root`: filesystem root for that knowledge base.
-- `skill`: optional skill name to load before creating, reading, updating, deleting, or searching files under `root`.
+- `skill`: optional skill name to load for base-specific navigation and file operations under `root`.
 - `schemas`: ordered schema names to resolve into `$schema` definitions; use them to understand the expected structure, placement, naming, frontmatter, and section format of knowledge bases in this base.
+
+The selected base `root` is the authoritative filesystem root for that operation. Optional base skills must consume this selected root and the resolved schemas as context; they should not reinterpret their own independent root variables when `mem` has already selected a base.
 
 ## Workflow
 
@@ -57,7 +59,7 @@ Each base has:
    - `add this finding to $mem {{knowledge_base}}`: add or update knowledge.
    - `look in $mem {{knowledge_base}}`: search/read knowledge.
    - `delete from $mem {{knowledge_base}}`: delete only when the user is explicit about what to remove.
-2. Load `.mem.yaml` by running `scripts/load_config.py`; use the normalized JSON output for base selection and root paths.
+2. Load `.mem.yaml` by running `./scripts/load_config.py`; use the normalized JSON output for base selection and root paths.
 3. Select a base:
    - If the knowledge-base target starts with `{{base.name}}/`, select that base and treat the remainder as the knowledge-base path or query.
    - If the knowledge-base target exactly matches a base name, select that base and operate at the base root.
@@ -68,19 +70,19 @@ Each base has:
    - Resolve the final candidate path after `..`, symlinks, and relative segments.
    - Reject the operation if the resolved candidate is outside the selected base `root`.
    - Do not follow user-provided absolute paths unless the resolved path is inside the selected base `root`.
-5. If the selected base has `skill`, load that skill before touching files under `root`. If `skill` is absent, use normal file/search tools constrained to `root`.
-6. Resolve every schema named in the selected base's `schemas` list to `$schema` definitions before creating, reading, updating, deleting, or summarizing knowledge bases.
+5. Resolve every schema named in the selected base's `schemas` list to `$schema` definitions before creating, reading, updating, deleting, or summarizing knowledge bases.
    - Treat each `schemas` entry as a schema identifier, not a filesystem path.
    - Use the resolved `$schema` definitions to determine knowledge base structure, required fields, naming, placement, and update style.
    - If resolved schemas conflict with each other, ask the user which schema should govern the write before making changes.
    - If the schemas conflict with the optional base skill's file-operation rules, follow the base skill for how to touch files and the schemas for what knowledge base content should look like.
+6. If the selected base has `skill`, load that skill with the selected base name, selected base `root`, knowledge-base target, and resolved `$schema` definitions as the operating context. If `skill` is absent, use normal file/search tools constrained to `root`.
 7. Choose the schema node before writing:
    - If the knowledge-base target maps to a file path, match that path to the nearest resolved schema node first.
    - Otherwise, use resolved schema node descriptions to choose candidate nodes.
    - Use `insertion_policy` only as a tie-breaker or guardrail when descriptions leave ambiguity.
    - Read the target file's existing headings before inserting; use its headings and the resolved template shape for section placement.
    - If candidate nodes still conflict, ask the user before writing.
-8. Use the optional base skill's rules for all monorepo navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`.
+8. Use the optional base skill's rules for all domain-specific navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`. The selected base `root` and resolved schemas remain the source of truth for paths and structure.
 9. Keep the final response concise: name the base, the knowledge base, what changed or what was found, and cite touched files when local-file citations are required.
 
 ## Finding Knowledge Bases
@@ -120,7 +122,7 @@ Delete knowledge only when the user explicitly asks to delete or remove it. Pref
 ## Failure Modes
 
 - Missing config: ask where to create or find `.mem.yaml`.
-- Invalid config: report the `scripts/load_config.py` error and stop before making changes.
+- Invalid config: report the `./scripts/load_config.py` error and stop before making changes.
 - Missing base root: report the configured path and stop before making changes.
 - Missing configured skill: report the missing skill name and stop before any read or write under that base. If no skill is configured, continue using normal file/search tools constrained to `root`.
 - Missing or unresolvable configured schemas: report the schema names and stop before any read or write under that base.
