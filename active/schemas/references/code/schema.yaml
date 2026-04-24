@@ -92,6 +92,14 @@ schema:
         description: Root module, service, package, or docs area containing code documentation.
         materialize: false
         children:
+          navfile:
+            description: Navigation map for the module, including purpose, aliases, key file paths, entrypoints, rg anchors, and related module navfiles.
+            insertion_policy:
+              use_when:
+                - The content helps locate code, owners, runtime entrypoints, search anchors, or related service docs for this module.
+              avoid_when:
+                - The content is detailed behavior documentation that belongs in flows/, specs/, architecture/, or another focused code documentation area.
+            template: navfile
           dev:
             description: development setup, tests, and debugging
             template: dev
