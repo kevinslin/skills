@@ -80,6 +80,9 @@ The selected base `root` is the authoritative filesystem root for that operation
    - If the knowledge-base target maps to a file path, match that path to the nearest resolved schema node first.
    - Otherwise, use resolved schema node descriptions to choose candidate nodes.
    - Use `insertion_policy` only as a tie-breaker or guardrail when descriptions leave ambiguity.
+   - Before writing, render or derive the expected file path for the chosen schema node under the selected base `root`, including required slug, name, and template conventions.
+   - Compare the expected path with any existing candidate file and schema-owned route or index metadata. If they disagree, treat the candidate as schema drift, not path authority.
+   - Do not silently write to a drifted file just because it already exists. If the user's intent is clear and the drift is mechanical, repair the path, slug, and metadata first; otherwise ask.
    - Read the target file's existing headings before inserting; use its headings and the resolved template shape for section placement.
    - If candidate nodes still conflict, ask the user before writing.
 8. Use the optional base skill's rules for all domain-specific navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`. The selected base `root` and resolved schemas remain the source of truth for paths and structure.
@@ -100,6 +103,7 @@ When adding a finding:
 
 - Preserve the knowledge base's existing format and organization.
 - Choose the schema node before writing, then shape new or updated content according to the resolved `$schema` definitions.
+- After writing, verify the schema-path invariants: the expected file exists, any wrong-path sibling is absent or intentionally left alone, and route or index metadata points at the expected slug or path.
 - Add the smallest durable note that will be useful later.
 - Include source context when available: originating file, command, log, PR, conversation, date, or rationale.
 - Avoid duplicating existing knowledge; merge with or refine the existing entry when the same point is already present.
