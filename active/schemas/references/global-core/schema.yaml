@@ -1,0 +1,30 @@
+version: 1.0
+output:
+  path_style: directory
+  file_extension: md
+variables:
+  reference:
+    values: ["*"]
+    default: reference
+    description: Reference fact slug.
+  topic:
+    values: ["*"]
+    default: topic
+    description: Domain entity topic slug.
+schema:
+  ref:
+    description: References for facts that might not fit within a topic or might fit across multiple topics.
+    materialize: false
+    children:
+      "{{reference}}":
+        description: Reference for a fact that might not fit within a topic or might fit across multiple topics.
+        template: ref
+        dynamic_child: true
+  t:
+    description: Topics for domain entities in the domain entity model for a given subject.
+    materialize: false
+    children:
+      "{{topic}}":
+        description: Topic for a domain entity in the domain entity model for a given subject.
+        template: topic
+        dynamic_child: true

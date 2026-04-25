@@ -5,6 +5,14 @@ output:
 variables:
   prefix: [pkg, vpkg]
   name: ["*"]
+  api_name:
+    values: ["*"]
+    default: api
+    description: API reference page slug for mounted code-core docs.
+  flow:
+    values: ["*"]
+    default: flow
+    description: Flow doc slug for mounted code-core docs.
 schema:
   "{{prefix}}":
     materialize: false
@@ -12,6 +20,11 @@ schema:
       "{{name}}":
         description: general description
         template: root
+        children_from:
+          - schema: code-core
+            vars:
+              api_name: "{{api_name}}"
+              flow: "{{flow}}"
         children:
           concepts:
             description: main concepts

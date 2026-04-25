@@ -91,6 +91,8 @@ schema:
       "{{module}}":
         description: Root module, service, package, or docs area containing code documentation.
         materialize: false
+        children_from:
+          - schema: code-core
         children:
           navfile:
             description: Navigation map for the module, including purpose, aliases, key file paths, entrypoints, rg anchors, and related module navfiles.

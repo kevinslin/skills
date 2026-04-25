@@ -328,6 +328,56 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             "\n".join(["## Setup", "", "## Unit Tests", "", "## Integration Tests"]),
         )
 
+    def test_tool_schema_expands_code_core_children(self) -> None:
+        self.install_prod_schema("code-core")
+        self.install_prod_schema("tool")
+
+        result = self.run_schema("show", "tool")
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("{{name}} [template=root children_from=1] - general description", result.stdout)
+        self.assertIn("dev [template=dev] - development setup, tests, and debugging", result.stdout)
+        self.assertIn("qa [template=default] - how to test changes", result.stdout)
+        self.assertIn("obs [template=obs] - observability", result.stdout)
+        self.assertIn("api [path-only optional] - public module API namespace", result.stdout)
+        self.assertIn("{{api}} [template=default dynamic] - public interfaces for a module", result.stdout)
+        self.assertIn("{{api_name}} [template=api] - api reference", result.stdout)
+        self.assertIn("flow [path-only optional] - execution-flow documentation", result.stdout)
+        self.assertIn("{{flow}} [template=flow-doc optional dynamic] - flow doc for a specific execution path", result.stdout)
+
+    def test_global_core_schema_shows_and_materializes_reference_and_topic(self) -> None:
+        self.install_prod_schema("global-core")
+
+        show_result = self.run_schema("show", "global-core")
+
+        self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
+        self.assertIn("ref [path-only] - References for facts", show_result.stdout)
+        self.assertIn("{{reference}} [template=ref dynamic] - Reference for a fact", show_result.stdout)
+        self.assertIn("t [path-only] - Topics for domain entities", show_result.stdout)
+        self.assertIn("{{topic}} [template=topic dynamic] - Topic for a domain entity", show_result.stdout)
+
+        out = self.root / "out"
+        materialize_result = self.run_schema(
+            "materialize",
+            "global-core",
+            "--out",
+            str(out),
+            "--var",
+            "reference=shared-fact",
+            "--var",
+            "topic=account",
+        )
+
+        self.assertEqual(materialize_result.returncode, 0, msg=materialize_result.stderr)
+        self.assertIn(
+            "Reference for a fact",
+            (out / "ref" / "shared-fact.md").read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            "Topic for a domain entity",
+            (out / "t" / "account.md").read_text(encoding="utf-8"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

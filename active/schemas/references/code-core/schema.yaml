@@ -7,6 +7,10 @@ variables:
     values: ["*"]
     default: api
     description: API reference page slug.
+  flow:
+    values: ["*"]
+    default: flow
+    description: Execution-flow doc slug.
 schema:
   dev:
     description: how to setup for development
@@ -18,6 +22,16 @@ schema:
       obs:
         description: observability
         template: obs
+  flow:
+    description: execution-flow documentation
+    materialize: false
+    required: false
+    children:
+      "{{flow}}":
+        description: flow doc for a specific execution path
+        template: flow-doc
+        required: false
+        dynamic_child: true
   api:
     description: api reference
     materialize: false
