@@ -1,0 +1,27 @@
+version: 1.0
+output:
+  path_style: directory
+  file_extension: md
+variables:
+  api_name:
+    values: ["*"]
+    default: api
+    description: API reference page slug.
+schema:
+  dev:
+    description: how to setup for development
+    template: dev
+    children:
+      qa:
+        description: testing
+        template: qa
+      obs:
+        description: observability
+        template: obs
+  api:
+    description: api reference
+    materialize: false
+    children:
+      "{{api_name}}":
+        description: api reference
+        template: api

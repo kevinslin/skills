@@ -1,0 +1,15 @@
+version: 1.0
+output:
+  path_style: directory
+  file_extension: md
+variables:
+  name: ["*"]
+schema:
+  pkg:
+    materialize: false
+    children:
+      "{{name}}":
+        materialize: false
+        children:
+          dev: "this is the foo test"
+        children_from: code-core

@@ -13,6 +13,7 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 - `tool`: Dendron note hierarchy for `pkg.<name>` and `vpkg.<name>` tool documentation. See `./references/tool/schema.yaml`.
 - `ag-dir`: Agent Project Directory scaffold with durable root docs, active specs under `docs/`, and per-spec runtime artifacts under `.agents/runs/spec-{num}/`. See `./references/ag-dir/schema.yaml`.
 - `code`: Specy-style code documentation tree under the selected output root, usually a `$mem` base root, at `packages/{{module}}`, including navfiles, dev/QA, reference catchalls, architecture, research, design, specs, flows, state, recipes, FAQ, and vendor docs. See `./references/code/schema.yaml`.
+- `code-core`: Reusable code documentation subtree with `dev/qa`, `dev/obs`, and API reference nodes. See `./references/code-core/schema.yaml`.
 
 ## Schema Layout
 
@@ -53,6 +54,13 @@ schema:
             avoid_when:
               - the information is general project context rather than CLI-specific usage
           template: cli
+        docs:
+          description: mounted documentation subtree
+          materialize: false
+          children_from:
+            - schema: code-core
+              vars:
+                module: "{{name}}"
 ```
 
 - `variables`: Values accepted by path segments such as `{{name}}`. Use `["*"]` to allow any value.
@@ -60,11 +68,13 @@ schema:
 - `output.file_extension`: Append this extension to generated paths unless the caller overrides output behavior.
 - `schema`: A tree of path segments. Segments can be literal strings or `{{variable}}` placeholders.
 - `description`: Human-readable navigation help for a node. Prefer improving this before adding insertion policy.
+- String node values are shorthand for `description`; for example `dev: how to setup for development`.
 - `insertion_policy`: Optional routing hints for deciding whether new information belongs in this node. Use it only when `description` is not enough, such as when two nodes are easy to confuse or a common wrong insertion should be avoided. Supported keys:
   - `use_when`: Short phrases describing evidence that belongs in this node.
   - `avoid_when`: Short phrases describing evidence that should go somewhere else.
 - `template`: Template basename in the schema directory. Omit it to use `default`.
 - `children`: Child nodes below the current path segment.
+- `children_from`: Optional mounted child schemas to add below this node. Use a scalar such as `children_from: code-core` for a bundled schema with no variable mapping, or a list of entries that each set exactly one of `schema` (a bundled `./references/<schema>/schema.yaml`) or `path` (a schema file or directory relative to the parent schema directory). Parent variables are not inherited by default; use `vars` to explicitly pass rendered values into the child schema. Child variables and defaults apply only while traversing the child tree. If a mounted child root conflicts with an explicit parent `children` entry, the parent entry wins for its own fields while non-conflicting child descendants remain available.
 - `required`: Set to `false` for optional namespaces that should not materialize by default.
 - `materialize`: Set to `false` for path-only namespace nodes that should not create a file.
 - `dynamic_child`: Set to `true` when the node represents a namespace that can grow arbitrary named children.
@@ -131,4 +141,5 @@ The `schema materialize` subcommand validates `schema.yaml` with Pydantic, rende
 - Use `--skip-existing` when initializing into a directory that may already contain hand-edited files.
 - Skip `required: false` nodes unless a task explicitly asks for that optional namespace; pass `--include <full.rendered.path>` for those branches.
 - Treat `dynamic_child: true` as an instruction that more children may be added later; do not invent dynamic children without user intent.
+- Treat `children_from` as schema composition, not inheritance. Plumb parent values into a mounted child only through that mount's `vars` mapping.
 - Keep template names stable and update the schema before adding new template files.

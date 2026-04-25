@@ -61,6 +61,27 @@ class InsertionPolicy(BaseModel):
     avoid_when: list[str] = Field(default_factory=list)
 
 
+class ChildSchemaRef(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    schema_name: str | None = Field(default=None, alias="schema")
+    path: str | None = None
+    vars: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_shorthand(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return {"schema": value}
+        return value
+
+    @model_validator(mode="after")
+    def require_one_reference(self) -> "ChildSchemaRef":
+        if bool(self.schema_name) == bool(self.path):
+            raise ValueError("children_from entries must set exactly one of schema or path")
+        return self
+
+
 class SchemaNode(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -68,9 +89,22 @@ class SchemaNode(BaseModel):
     insertion_policy: InsertionPolicy | None = None
     template: str | None = None
     children: dict[str, "SchemaNode"] = Field(default_factory=dict)
+    children_from: list[ChildSchemaRef] = Field(default_factory=list)
     required: bool = True
     materialize: bool = True
     dynamic_child: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_shorthand(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return {"description": value}
+        if isinstance(value, dict):
+            children_from = value.get("children_from")
+            if isinstance(children_from, (str, dict)):
+                value = dict(value)
+                value["children_from"] = [children_from]
+        return value
 
 
 class SchemaDocument(BaseModel):
@@ -106,12 +140,32 @@ class MaterializedFile:
 
 
 def load_schema(schema_name: str) -> tuple[Path, SchemaDocument]:
-    schema_dir = REFERENCES_DIR / schema_name
-    schema_path = schema_dir / "schema.yaml"
+    schema_path = REFERENCES_DIR / schema_name / "schema.yaml"
+    return load_schema_file(schema_path)
+
+
+def load_schema_file(schema_path: Path) -> tuple[Path, SchemaDocument]:
     if not schema_path.exists():
         raise FileNotFoundError(f"schema not found: {schema_path}")
     data = yaml.safe_load(schema_path.read_text()) or {}
-    return schema_dir, SchemaDocument.model_validate(data)
+    return schema_path.parent, SchemaDocument.model_validate(data)
+
+
+def schema_path_for_name(schema_name: str) -> Path:
+    return (REFERENCES_DIR / schema_name / "schema.yaml").resolve()
+
+
+def resolve_child_schema_path(parent_schema_dir: Path, child_ref: ChildSchemaRef) -> Path:
+    if child_ref.schema_name:
+        return schema_path_for_name(child_ref.schema_name)
+
+    assert child_ref.path is not None
+    child_path = Path(child_ref.path)
+    if not child_path.is_absolute():
+        child_path = parent_schema_dir / child_path
+    if child_path.is_dir():
+        child_path = child_path / "schema.yaml"
+    return child_path.resolve()
 
 
 def parse_assignments(assignments: list[str]) -> dict[str, str]:
@@ -176,6 +230,11 @@ def validate_variables(document: SchemaDocument, values: dict[str, str]) -> dict
     return context
 
 
+def render_template_text(template: str, context: dict[str, Any]) -> str:
+    env = Environment(undefined=StrictUndefined, autoescape=False)
+    return env.from_string(template).render(**context)
+
+
 def render_segment(segment: str, context: dict[str, Any], *, optional: bool) -> str | None:
     missing = [name for name in PLACEHOLDER_RE.findall(segment) if name not in context]
     if missing:
@@ -183,8 +242,14 @@ def render_segment(segment: str, context: dict[str, Any], *, optional: bool) -> 
             return None
         joined = ", ".join(missing)
         raise ValueError(f"missing variable(s) for path segment {segment!r}: {joined}")
-    env = Environment(undefined=StrictUndefined, autoescape=False)
-    return env.from_string(segment).render(**context)
+    return render_template_text(segment, context)
+
+
+def render_child_vars(child_ref: ChildSchemaRef, context: dict[str, Any]) -> dict[str, str]:
+    rendered: dict[str, str] = {}
+    for name, value in child_ref.vars.items():
+        rendered[name] = render_template_text(str(value), context)
+    return rendered
 
 
 def find_template(schema_dir: Path, template_name: str) -> Path:
@@ -236,14 +301,20 @@ def collect_files(
     rendered_segments: tuple[str, ...] = (),
     optional_parent: bool = False,
     include_paths: list[tuple[str, ...]] | None = None,
+    output_document: SchemaDocument | None = None,
+    schema_stack: tuple[Path, ...] = (),
+    blocked_segments: set[str] | None = None,
 ) -> list[MaterializedFile]:
     files: list[MaterializedFile] = []
     include_paths = include_paths or []
+    output_document = output_document or document
 
     for raw_segment, node in nodes.items():
         optional = optional_parent or not node.required
         rendered_segment = render_segment(raw_segment, context, optional=optional)
         if rendered_segment is None:
+            continue
+        if blocked_segments and rendered_segment in blocked_segments:
             continue
 
         next_raw_path = raw_path + (raw_segment,)
@@ -268,7 +339,7 @@ def collect_files(
             )
             files.append(
                 MaterializedFile(
-                    relative_path=relative_output_path(document, list(next_segments), template_path),
+                    relative_path=relative_output_path(output_document, list(next_segments), template_path),
                     template_path=template_path,
                     context=file_context,
                 )
@@ -284,6 +355,158 @@ def collect_files(
                 rendered_segments=next_segments,
                 optional_parent=optional,
                 include_paths=include_paths,
+                output_document=output_document,
+                schema_stack=schema_stack,
+            )
+        )
+        files.extend(
+            collect_mounted_child_files(
+                schema_dir,
+                output_document,
+                node,
+                context,
+                next_raw_path,
+                next_segments,
+                optional_parent=optional,
+                include_paths=include_paths,
+                schema_stack=schema_stack,
+                existing_paths={item.relative_path for item in files},
+            )
+        )
+
+    return files
+
+
+def rendered_child_nodes(nodes: dict[str, SchemaNode], context: dict[str, Any]) -> dict[str, tuple[str, SchemaNode]]:
+    rendered: dict[str, tuple[str, SchemaNode]] = {}
+    for raw_segment, node in nodes.items():
+        segment = render_segment(raw_segment, context, optional=True)
+        if segment is not None:
+            rendered[segment] = (raw_segment, node)
+    return rendered
+
+
+def collect_mounted_child_files(
+    parent_schema_dir: Path,
+    output_document: SchemaDocument,
+    node: SchemaNode,
+    parent_context: dict[str, Any],
+    raw_path: tuple[str, ...],
+    rendered_segments: tuple[str, ...],
+    *,
+    optional_parent: bool,
+    include_paths: list[tuple[str, ...]],
+    schema_stack: tuple[Path, ...],
+    existing_paths: set[Path],
+) -> list[MaterializedFile]:
+    files: list[MaterializedFile] = []
+    explicit_children = rendered_child_nodes(node.children, parent_context)
+
+    for child_ref in node.children_from:
+        child_schema_path = resolve_child_schema_path(parent_schema_dir, child_ref)
+        if child_schema_path in schema_stack:
+            chain = " -> ".join(str(path) for path in (*schema_stack, child_schema_path))
+            raise ValueError(f"children_from cycle detected: {chain}")
+
+        child_schema_dir, child_document = load_schema_file(child_schema_path)
+        child_values = render_child_vars(child_ref, parent_context)
+        child_context = validate_variables(child_document, child_values)
+        child_files = collect_mounted_document_files(
+            child_schema_dir,
+            child_document,
+            child_context,
+            parent_context,
+            raw_path,
+            rendered_segments,
+            optional_parent=optional_parent,
+            include_paths=include_paths,
+            output_document=output_document,
+            schema_stack=(*schema_stack, child_schema_path),
+            explicit_children=explicit_children,
+        )
+        for item in child_files:
+            if item.relative_path in existing_paths:
+                continue
+            existing_paths.add(item.relative_path)
+            files.append(item)
+
+    return files
+
+
+def collect_mounted_document_files(
+    child_schema_dir: Path,
+    child_document: SchemaDocument,
+    child_context: dict[str, Any],
+    parent_context: dict[str, Any],
+    raw_path: tuple[str, ...],
+    rendered_segments: tuple[str, ...],
+    *,
+    optional_parent: bool,
+    include_paths: list[tuple[str, ...]],
+    output_document: SchemaDocument,
+    schema_stack: tuple[Path, ...],
+    explicit_children: dict[str, tuple[str, SchemaNode]],
+) -> list[MaterializedFile]:
+    files: list[MaterializedFile] = []
+
+    for child_raw_segment, child_node in child_document.tree.items():
+        optional = optional_parent or not child_node.required
+        child_rendered_segment = render_segment(child_raw_segment, child_context, optional=optional)
+        if child_rendered_segment is None:
+            continue
+
+        next_raw_path = raw_path + (child_raw_segment,)
+        next_segments = rendered_segments + (child_rendered_segment,)
+        include_exact, include_descendant = include_state(next_segments, include_paths)
+        if optional and not include_exact and not include_descendant:
+            continue
+
+        if child_rendered_segment in explicit_children:
+            _, parent_child_node = explicit_children[child_rendered_segment]
+            blocked_segments = set(rendered_child_nodes(parent_child_node.children, parent_context))
+            files.extend(
+                collect_files(
+                    child_schema_dir,
+                    child_document,
+                    child_node.children,
+                    child_context,
+                    raw_path=next_raw_path,
+                    rendered_segments=next_segments,
+                    optional_parent=optional,
+                    include_paths=include_paths,
+                    output_document=output_document,
+                    schema_stack=schema_stack,
+                    blocked_segments=blocked_segments,
+                )
+            )
+            files.extend(
+                collect_mounted_child_files(
+                    child_schema_dir,
+                    output_document,
+                    child_node,
+                    child_context,
+                    next_raw_path,
+                    next_segments,
+                    optional_parent=optional,
+                    include_paths=include_paths,
+                    schema_stack=schema_stack,
+                    existing_paths={item.relative_path for item in files},
+                )
+            )
+            continue
+
+        files.extend(
+            collect_files(
+                child_schema_dir,
+                child_document,
+                {child_raw_segment: child_node},
+                child_context,
+                raw_path=raw_path,
+                rendered_segments=rendered_segments,
+                optional_parent=optional_parent,
+                include_paths=include_paths,
+                output_document=output_document,
+                schema_stack=schema_stack,
             )
         )
 
@@ -327,9 +550,17 @@ def materialize(
     skip_existing: bool,
     include_paths: list[tuple[str, ...]],
 ) -> list[Path]:
-    schema_dir, document = load_schema(schema_name)
+    schema_path = schema_path_for_name(schema_name)
+    schema_dir, document = load_schema_file(schema_path)
     context = validate_variables(document, values)
-    files = collect_files(schema_dir, document, document.tree, context, include_paths=include_paths)
+    files = collect_files(
+        schema_dir,
+        document,
+        document.tree,
+        context,
+        include_paths=include_paths,
+        schema_stack=(schema_path,),
+    )
     if not files:
         raise ValueError(f"schema {schema_name!r} produced no files")
 
@@ -378,6 +609,8 @@ def tree_label(segment: str, node: SchemaNode) -> str:
         flags.append(f"template={node.template or DEFAULT_TEMPLATE}")
     else:
         flags.append("path-only")
+    if node.children_from:
+        flags.append(f"children_from={len(node.children_from)}")
     if not node.required:
         flags.append("optional")
     if node.dynamic_child:
@@ -390,18 +623,64 @@ def tree_label(segment: str, node: SchemaNode) -> str:
     return f"{segment}{flag_text}{description}"
 
 
-def print_tree(nodes: dict[str, SchemaNode], *, prefix: str = "") -> None:
+def merge_schema_nodes_for_show(parent_node: SchemaNode, mounted_node: SchemaNode) -> SchemaNode:
+    merged = parent_node.model_copy(deep=True)
+    for segment, child_node in mounted_node.children.items():
+        if segment in merged.children:
+            merged.children[segment] = merge_schema_nodes_for_show(merged.children[segment], child_node)
+        else:
+            merged.children[segment] = child_node.model_copy(deep=True)
+    return merged
+
+
+def expanded_children_for_show(
+    schema_dir: Path,
+    node: SchemaNode,
+    *,
+    schema_stack: tuple[Path, ...],
+) -> dict[str, SchemaNode]:
+    children = {segment: child.model_copy(deep=True) for segment, child in node.children.items()}
+
+    for child_ref in node.children_from:
+        child_schema_path = resolve_child_schema_path(schema_dir, child_ref)
+        if child_schema_path in schema_stack:
+            chain = " -> ".join(str(path) for path in (*schema_stack, child_schema_path))
+            raise ValueError(f"children_from cycle detected: {chain}")
+
+        _, child_document = load_schema_file(child_schema_path)
+        for segment, mounted_node in child_document.tree.items():
+            if segment in children:
+                children[segment] = merge_schema_nodes_for_show(children[segment], mounted_node)
+            else:
+                children[segment] = mounted_node.model_copy(deep=True)
+
+    return children
+
+
+def print_tree(
+    nodes: dict[str, SchemaNode],
+    *,
+    schema_dir: Path,
+    prefix: str = "",
+    schema_stack: tuple[Path, ...] = (),
+) -> None:
     items = list(nodes.items())
     for index, (segment, node) in enumerate(items):
         is_last = index == len(items) - 1
         connector = "`-- " if is_last else "|-- "
         print(f"{prefix}{connector}{tree_label(segment, node)}")
         child_prefix = prefix + ("    " if is_last else "|   ")
-        print_tree(node.children, prefix=child_prefix)
+        print_tree(
+            expanded_children_for_show(schema_dir, node, schema_stack=schema_stack),
+            schema_dir=schema_dir,
+            prefix=child_prefix,
+            schema_stack=schema_stack,
+        )
 
 
 def show_schema(schema_name: str) -> int:
-    _, document = load_schema(schema_name)
+    schema_path = schema_path_for_name(schema_name)
+    schema_dir, document = load_schema_file(schema_path)
     extension = document.output.file_extension or "<template>"
     print(f"{schema_name} [version={document.version} output={document.output.path_style} extension={extension}]")
     if document.variables:
@@ -413,9 +692,9 @@ def show_schema(schema_name: str) -> int:
             print(f"|   {connector}{name}: {', '.join(spec.values)}{default}")
     if document.variables:
         print("`-- tree")
-        print_tree(document.tree, prefix="    ")
+        print_tree(document.tree, schema_dir=schema_dir, prefix="    ", schema_stack=(schema_path,))
     else:
-        print_tree(document.tree)
+        print_tree(document.tree, schema_dir=schema_dir, schema_stack=(schema_path,))
     return 0
 
 
