@@ -81,6 +81,8 @@ The selected base `root` is the authoritative filesystem root for that operation
    - Otherwise, use resolved schema node descriptions to choose candidate nodes.
    - Use `insertion_policy` only as a tie-breaker or guardrail when descriptions leave ambiguity.
    - Before writing, render or derive the expected file path for the chosen schema node under the selected base `root`, including required slug, name, and template conventions.
+   - Create only the chosen target file and its parent directories. Do not materialize a whole schema tree, required sibling nodes, or placeholder/default nodes just to create one knowledge file.
+   - If using a schema helper command, use it only when it can render exactly the selected node. Do not run broad schema materialization commands that also create required siblings under the base root.
    - Compare the expected path with any existing candidate file and schema-owned route or index metadata. If they disagree, treat the candidate as schema drift, not path authority.
    - Do not silently write to a drifted file just because it already exists. If the user's intent is clear and the drift is mechanical, repair the path, slug, and metadata first; otherwise ask.
    - Read the target file's existing headings before inserting; use its headings and the resolved template shape for section placement.
@@ -96,6 +98,7 @@ Treat the knowledge-base argument as either a file-like target or a search query
 - If it is broad or ambiguous, search filenames first, then headings and body text.
 - Prefer updating an existing knowledge base over creating a near-duplicate.
 - If creating a new knowledge base, follow the optional selected base skill's file rules when configured and the resolved `$schema` definitions' naming, placement, frontmatter, and structure conventions.
+- Create only the specific knowledge file needed for the request. Avoid schema scaffold generation that leaves placeholder files such as default navfiles, architecture docs, specs, recipes, or vendor docs.
 
 ## Adding Knowledge
 
@@ -103,6 +106,7 @@ When adding a finding:
 
 - Preserve the knowledge base's existing format and organization.
 - Choose the schema node before writing, then shape new or updated content according to the resolved `$schema` definitions.
+- When the selected file does not exist, create that file directly from the selected node's expected template/sections. Do not initialize the rest of the schema around it.
 - After writing, verify the schema-path invariants: the expected file exists, any wrong-path sibling is absent or intentionally left alone, and route or index metadata points at the expected slug or path.
 - Add the smallest durable note that will be useful later.
 - Include source context when available: originating file, command, log, PR, conversation, date, or rationale.
