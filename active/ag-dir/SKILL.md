@@ -22,7 +22,7 @@ boilerplate, file descriptions, insertion routing, and template sections. Inspec
 schema before creating or auditing an AGD:
 
 ```bash
-../schemas/scripts/schema show ag-dir
+../schemas/scripts/schema.py show ag-dir
 ```
 
 When this skill and the schema disagree, prefer the schema and update stale skill text
@@ -35,7 +35,7 @@ Use `$schemas` to create missing AGD notes instead of hand-writing boilerplate.
 Create or backfill the AGD skeleton:
 
 ```bash
-../schemas/scripts/schema materialize ag-dir \
+../schemas/scripts/schema.py materialize ag-dir \
   --out "$ROOT_DIR" \
   --var project_title="Example Project" \
   --var spec_num=01 \
@@ -46,7 +46,7 @@ Create or backfill the AGD skeleton:
 Add a new active spec plus matching run notes to an existing AGD:
 
 ```bash
-../schemas/scripts/schema materialize ag-dir \
+../schemas/scripts/schema.py materialize ag-dir \
   --out "$ROOT_DIR" \
   --var project_title="Example Project" \
   --var spec_num=02 \
@@ -57,7 +57,7 @@ Add a new active spec plus matching run notes to an existing AGD:
 Materialize an archived spec note only when you explicitly need the optional archive branch:
 
 ```bash
-../schemas/scripts/schema materialize ag-dir \
+../schemas/scripts/schema.py materialize ag-dir \
   --out "$ROOT_DIR" \
   --var project_title="Example Project" \
   --var spec_num=02 \

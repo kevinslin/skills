@@ -5,14 +5,6 @@ output:
 variables:
   prefix: [pkg, vpkg]
   name: ["*"]
-  api_name:
-    values: ["*"]
-    default: api
-    description: API reference page slug for mounted code-core docs.
-  flow:
-    values: ["*"]
-    default: flow
-    description: Flow doc slug for mounted code-core docs.
 schema:
   "{{prefix}}":
     materialize: false
@@ -40,7 +32,6 @@ schema:
                 description: how to test changes
           t:
             description: domain-specific topic namespace
-            required: false
             materialize: false
             children:
               "{{topic}}":
@@ -49,7 +40,6 @@ schema:
                 dynamic_child: true
           ref:
             description: self-contained functionality references
-            required: false
             materialize: false
             children:
               "{{reference}}":
@@ -57,7 +47,6 @@ schema:
                 dynamic_child: true
           api:
             description: public module API namespace
-            required: false
             materialize: false
             children:
               "{{api}}":

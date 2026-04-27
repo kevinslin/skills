@@ -8,6 +8,8 @@ Required cleanup:
   other durable docs that describe the removed feature.
 - Delete or update tests, fixtures, mocks, evals, snapshots, and demo flows
   that assert the old feature still exists.
+- Do not add unit tests, snapshots, or other regression checks whose only
+  purpose is to assert that the removed feature is no longer supported.
 - Remove dead config, flags, routes, prompts, metrics labels, and integration
   wiring that only existed for the removed feature.
 - Search broadly by feature name, user-visible labels, config keys, API fields,

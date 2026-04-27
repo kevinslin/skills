@@ -90,7 +90,6 @@ class SchemaNode(BaseModel):
     template: str | None = None
     children: dict[str, "SchemaNode"] = Field(default_factory=dict)
     children_from: list[ChildSchemaRef] = Field(default_factory=list)
-    required: bool = True
     materialize: bool = True
     dynamic_child: bool = False
 
@@ -248,7 +247,11 @@ def render_segment(segment: str, context: dict[str, Any], *, optional: bool) -> 
 def render_child_vars(child_ref: ChildSchemaRef, context: dict[str, Any]) -> dict[str, str]:
     rendered: dict[str, str] = {}
     for name, value in child_ref.vars.items():
-        rendered[name] = render_template_text(str(value), context)
+        template = str(value)
+        missing = [variable for variable in PLACEHOLDER_RE.findall(template) if variable not in context]
+        if missing:
+            continue
+        rendered[name] = render_template_text(template, context)
     return rendered
 
 
@@ -299,7 +302,6 @@ def collect_files(
     *,
     raw_path: tuple[str, ...] = (),
     rendered_segments: tuple[str, ...] = (),
-    optional_parent: bool = False,
     include_paths: list[tuple[str, ...]] | None = None,
     output_document: SchemaDocument | None = None,
     schema_stack: tuple[Path, ...] = (),
@@ -310,8 +312,7 @@ def collect_files(
     output_document = output_document or document
 
     for raw_segment, node in nodes.items():
-        optional = optional_parent or not node.required
-        rendered_segment = render_segment(raw_segment, context, optional=optional)
+        rendered_segment = render_segment(raw_segment, context, optional=True)
         if rendered_segment is None:
             continue
         if blocked_segments and rendered_segment in blocked_segments:
@@ -320,10 +321,10 @@ def collect_files(
         next_raw_path = raw_path + (raw_segment,)
         next_segments = rendered_segments + (rendered_segment,)
         include_exact, include_descendant = include_state(next_segments, include_paths)
-        if optional and not include_exact and not include_descendant:
+        if not include_exact and not include_descendant:
             continue
 
-        if node.materialize and ((node.required and not optional_parent) or include_exact):
+        if node.materialize and include_exact:
             template_name = node.template or DEFAULT_TEMPLATE
             template_path = find_template(schema_dir, template_name)
             file_context = dict(context)
@@ -353,7 +354,6 @@ def collect_files(
                 context,
                 raw_path=next_raw_path,
                 rendered_segments=next_segments,
-                optional_parent=optional,
                 include_paths=include_paths,
                 output_document=output_document,
                 schema_stack=schema_stack,
@@ -367,7 +367,6 @@ def collect_files(
                 context,
                 next_raw_path,
                 next_segments,
-                optional_parent=optional,
                 include_paths=include_paths,
                 schema_stack=schema_stack,
                 existing_paths={item.relative_path for item in files},
@@ -394,7 +393,6 @@ def collect_mounted_child_files(
     raw_path: tuple[str, ...],
     rendered_segments: tuple[str, ...],
     *,
-    optional_parent: bool,
     include_paths: list[tuple[str, ...]],
     schema_stack: tuple[Path, ...],
     existing_paths: set[Path],
@@ -418,7 +416,6 @@ def collect_mounted_child_files(
             parent_context,
             raw_path,
             rendered_segments,
-            optional_parent=optional_parent,
             include_paths=include_paths,
             output_document=output_document,
             schema_stack=(*schema_stack, child_schema_path),
@@ -441,7 +438,6 @@ def collect_mounted_document_files(
     raw_path: tuple[str, ...],
     rendered_segments: tuple[str, ...],
     *,
-    optional_parent: bool,
     include_paths: list[tuple[str, ...]],
     output_document: SchemaDocument,
     schema_stack: tuple[Path, ...],
@@ -450,15 +446,14 @@ def collect_mounted_document_files(
     files: list[MaterializedFile] = []
 
     for child_raw_segment, child_node in child_document.tree.items():
-        optional = optional_parent or not child_node.required
-        child_rendered_segment = render_segment(child_raw_segment, child_context, optional=optional)
+        child_rendered_segment = render_segment(child_raw_segment, child_context, optional=True)
         if child_rendered_segment is None:
             continue
 
         next_raw_path = raw_path + (child_raw_segment,)
         next_segments = rendered_segments + (child_rendered_segment,)
         include_exact, include_descendant = include_state(next_segments, include_paths)
-        if optional and not include_exact and not include_descendant:
+        if not include_exact and not include_descendant:
             continue
 
         if child_rendered_segment in explicit_children:
@@ -472,7 +467,6 @@ def collect_mounted_document_files(
                     child_context,
                     raw_path=next_raw_path,
                     rendered_segments=next_segments,
-                    optional_parent=optional,
                     include_paths=include_paths,
                     output_document=output_document,
                     schema_stack=schema_stack,
@@ -487,7 +481,6 @@ def collect_mounted_document_files(
                     child_context,
                     next_raw_path,
                     next_segments,
-                    optional_parent=optional,
                     include_paths=include_paths,
                     schema_stack=schema_stack,
                     existing_paths={item.relative_path for item in files},
@@ -503,7 +496,6 @@ def collect_mounted_document_files(
                 child_context,
                 raw_path=raw_path,
                 rendered_segments=rendered_segments,
-                optional_parent=optional_parent,
                 include_paths=include_paths,
                 output_document=output_document,
                 schema_stack=schema_stack,
@@ -611,8 +603,6 @@ def tree_label(segment: str, node: SchemaNode) -> str:
         flags.append("path-only")
     if node.children_from:
         flags.append(f"children_from={len(node.children_from)}")
-    if not node.required:
-        flags.append("optional")
     if node.dynamic_child:
         flags.append("dynamic")
     if node.insertion_policy:

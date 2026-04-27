@@ -13,7 +13,7 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 - `tool`: Dendron note hierarchy for `pkg.<name>` and `vpkg.<name>` tool documentation. See `./references/tool/schema.yaml`.
 - `ag-dir`: Agent Project Directory scaffold with durable root docs, active specs under `docs/`, and per-spec runtime artifacts under `.agents/runs/spec-{num}/`. See `./references/ag-dir/schema.yaml`.
 - `code`: Specy-style code documentation tree under the selected output root, usually a `$mem` base root, at `packages/{{module}}`, including navfiles, dev/QA, reference catchalls, architecture, research, design, specs, flows, state, recipes, FAQ, and vendor docs. See `./references/code/schema.yaml`.
-- `code-core`: Reusable code documentation subtree with `dev/qa`, `dev/obs`, optional `flow/{{flow}}`, and API reference nodes. See `./references/code-core/schema.yaml`.
+- `code-core`: Reusable code documentation subtree with `dev/qa`, `dev/obs`, `flow/{{flow}}`, and API reference nodes. See `./references/code-core/schema.yaml`.
 - `global-core`: Reusable global reference and topic namespaces with `ref/{{reference}}` and `t/{{topic}}`. See `./references/global-core/schema.yaml`.
 
 ## Schema Layout
@@ -64,7 +64,7 @@ schema:
                 module: "{{name}}"
 ```
 
-- `variables`: Values accepted by path segments such as `{{name}}`. Use `["*"]` to allow any value.
+- `variables`: Optional restrictions, defaults, and descriptions for path placeholders such as `{{name}}`. Omit unrestricted placeholders; callers can still pass undeclared values with `--var name=value`.
 - `output.path_style`: Use `dotted` for Dendron-style files such as `pkg.test.cli.md`; use `directory` for directory paths such as `pkg/test/cli.md`.
 - `output.file_extension`: Append this extension to generated paths unless the caller overrides output behavior.
 - `schema`: A tree of path segments. Segments can be literal strings or `{{variable}}` placeholders.
@@ -75,42 +75,42 @@ schema:
   - `avoid_when`: Short phrases describing evidence that should go somewhere else.
 - `template`: Template basename in the schema directory. Omit it to use `default`.
 - `children`: Child nodes below the current path segment.
-- `children_from`: Optional mounted child schemas to add below this node. Use a scalar such as `children_from: code-core` for a bundled schema with no variable mapping, or a list of entries that each set exactly one of `schema` (a bundled `./references/<schema>/schema.yaml`) or `path` (a schema file or directory relative to the parent schema directory). Parent variables are not inherited by default; use `vars` to explicitly pass rendered values into the child schema. Child variables and defaults apply only while traversing the child tree. If a mounted child root conflicts with an explicit parent `children` entry, the parent entry wins for its own fields while non-conflicting child descendants remain available.
-- `required`: Set to `false` for optional namespaces that should not materialize by default.
+- `children_from`: Mounted child schemas to add below this node. Use a scalar such as `children_from: code-core` for a bundled schema with no variable mapping, or a list of entries that each set exactly one of `schema` (a bundled `./references/<schema>/schema.yaml`) or `path` (a schema file or directory relative to the parent schema directory). Parent variables are not inherited by default; use `vars` to explicitly pass rendered values into the child schema. If a `vars` value references a parent value that was not provided, that child var is omitted so unselected child branches can remain skipped. Child variable restrictions and defaults apply only while traversing the child tree. If a mounted child root conflicts with an explicit parent `children` entry, the parent entry wins for its own fields while non-conflicting child descendants remain available.
 - `materialize`: Set to `false` for path-only namespace nodes that should not create a file.
 - `dynamic_child`: Set to `true` when the node represents a namespace that can grow arbitrary named children.
 
 ## Commands
 
 Run commands from the directory containing this `SKILL.md`, or put `./scripts` on `PATH` to use the short `schema ...` form.
-When another sibling skill depends on `schemas`, read this skill first and invoke the CLI relative to that sibling skill directory, for example `../schemas/scripts/schema show tool`.
+When another sibling skill depends on `schemas`, read this skill first and invoke the CLI relative to that sibling skill directory, for example `../schemas/scripts/schema.py show tool`.
 
 List bundled schemas:
 
 ```bash
-./scripts/schema list
+./scripts/schema.py list
 ```
 
 Show a schema tree before generating files:
 
 ```bash
-schema show tool
+./scripts/schema.py show tool
 ```
 
-Materialize a schema:
+Materialize a schema node:
 
 ```bash
-./scripts/schema materialize tool \
+./scripts/schema.py materialize tool \
   --out /tmp/schema-output \
   --var prefix=pkg \
   --var name=test \
+  --include pkg.test \
   --skip-existing
 ```
 
-Materialize an optional branch by including the full rendered path:
+Materialize another node by including its full rendered path:
 
 ```bash
-./scripts/schema materialize tool \
+./scripts/schema.py materialize tool \
   --out /tmp/schema-output \
   --var prefix=pkg \
   --var name=test \
@@ -122,7 +122,7 @@ Materialize an optional branch by including the full rendered path:
 For directory-style schemas, pass `--include` using slash-separated rendered paths so literal-dot directory names still work:
 
 ```bash
-./scripts/schema materialize ag-dir \
+./scripts/schema.py materialize ag-dir \
   --out /tmp/ag-dir-output \
   --var project_title="Example Project" \
   --var archived_spec_num=00 \
@@ -131,16 +131,15 @@ For directory-style schemas, pass `--include` using slash-separated rendered pat
   --skip-existing
 ```
 
-The `schema materialize` subcommand validates `schema.yaml` with Pydantic, renders path placeholders with the provided variables, renders each selected Jinja template, and uses Copier to initialize the output files.
+The `schema.py materialize` subcommand validates `schema.yaml` with Pydantic, renders path placeholders with provided declared or undeclared variables, renders each selected Jinja template, and uses Copier to initialize the output files.
 
 ## Navigation Rules
 
-- Read `schema.yaml` first when deciding which files are required.
+- Read `schema.yaml` first when deciding which files to materialize.
 - Use `description` as the primary guide for choosing where new information belongs.
 - Use `insertion_policy` only as a tie-breaker or guardrail when the description alone is ambiguous. Do not duplicate section headings or restate the description; templates already define document sections.
-- Materialize required nodes by default.
+- Materialize only explicitly requested nodes by passing `--include <full.rendered.path>`.
 - Use `--skip-existing` when initializing into a directory that may already contain hand-edited files.
-- Skip `required: false` nodes unless a task explicitly asks for that optional namespace; pass `--include <full.rendered.path>` for those branches.
 - Treat `dynamic_child: true` as an instruction that more children may be added later; do not invent dynamic children without user intent.
 - Treat `children_from` as schema composition, not inheritance. Plumb parent values into a mounted child only through that mount's `vars` mapping.
 - Keep template names stable and update the schema before adding new template files.

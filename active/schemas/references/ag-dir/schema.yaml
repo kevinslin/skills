@@ -51,12 +51,10 @@ schema:
         template: spec
       ".archive":
         description: Archived specs kept for reference after landing.
-        required: false
         materialize: false
         children:
           "spec-{{archived_spec_num}}-{{archived_spec_name}}":
             description: Archived feature spec.
-            required: false
             template: spec-archive
   ".agents":
     description: Runtime and local-only artifacts for this project.

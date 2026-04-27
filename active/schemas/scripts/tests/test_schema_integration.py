@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 TEST_DIR = Path(__file__).resolve().parent
-SCRIPT_PATH = TEST_DIR.parents[0] / "schema"
+SCRIPT_PATH = TEST_DIR.parents[0] / "schema.py"
 REAL_SKILL_DIR = SCRIPT_PATH.parents[1]
 
 
@@ -51,6 +51,59 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             capture_output=True,
             check=False,
         )
+
+    def test_unrestricted_path_placeholders_do_not_need_variable_definitions(self) -> None:
+        self.write_schema(
+            "unrestricted",
+            """
+            version: 1.0
+            output:
+              path_style: directory
+              file_extension: md
+            schema:
+              root:
+                materialize: false
+                children:
+                  "{{slug}}":
+                    template: page
+            """,
+            {"page.md.jinja": "slug={{ slug }}"},
+        )
+
+        out = self.root / "out"
+        result = self.run_schema(
+            "materialize",
+            "unrestricted",
+            "--out",
+            str(out),
+            "--var",
+            "slug=custom-page",
+            "--include",
+            "root/custom-page",
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual((out / "root" / "custom-page.md").read_text(encoding="utf-8").strip(), "slug=custom-page")
+
+    def test_materialize_without_include_selects_no_files(self) -> None:
+        self.write_schema(
+            "explicit",
+            """
+            version: 1.0
+            output:
+              path_style: directory
+              file_extension: md
+            schema:
+              root:
+                template: page
+            """,
+            {"page.md.jinja": "root"},
+        )
+
+        result = self.run_schema("materialize", "explicit", "--out", str(self.root / "out"))
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("schema 'explicit' produced no files", result.stderr)
 
     def test_children_from_uses_explicit_vars_and_child_defaults_without_parent_inheritance(self) -> None:
         self.write_schema(
@@ -108,6 +161,10 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             "name=parent-name",
             "--var",
             "child_value=mapped-child",
+            "--include",
+            "parent-name",
+            "--include",
+            "parent-name/child",
         )
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
@@ -161,10 +218,12 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             str(self.root / "out"),
             "--var",
             "name=parent-name",
+            "--include",
+            "parent-name/parent-name",
         )
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("missing variable(s) for path segment '{{name}}': name", result.stderr)
+        self.assertIn("schema 'parent' produced no files", result.stderr)
 
     def test_children_from_can_explicitly_plumb_same_named_vars(self) -> None:
         self.write_schema(
@@ -207,12 +266,76 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             str(out),
             "--var",
             "name=parent-name",
+            "--include",
+            "parent-name/parent-name-child",
         )
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertEqual(
             (out / "parent-name" / "parent-name-child.md").read_text(encoding="utf-8").strip(),
             "child=parent-name-child",
+        )
+
+    def test_missing_child_var_mapping_values_are_omitted_until_needed(self) -> None:
+        self.write_schema(
+            "parent",
+            """
+            version: 1.0
+            output:
+              path_style: directory
+              file_extension: md
+            schema:
+              root:
+                materialize: false
+                children_from:
+                  - schema: child
+                    vars:
+                      optional_slug: "{{ optional_slug }}"
+            """,
+            {},
+        )
+        self.write_schema(
+            "child",
+            """
+            version: 1.0
+            schema:
+              static:
+                template: static
+              optional:
+                materialize: false
+                children:
+                  "{{optional_slug}}":
+                    template: optional
+            """,
+            {
+                "static.md.jinja": "static child",
+                "optional.md.jinja": "optional={{ optional_slug }}",
+            },
+        )
+
+        out = self.root / "out"
+        result = self.run_schema("materialize", "parent", "--out", str(out), "--include", "root/static")
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual((out / "root" / "static.md").read_text(encoding="utf-8").strip(), "static child")
+        self.assertFalse((out / "root" / "optional").exists())
+
+        included_out = self.root / "included-out"
+        included_result = self.run_schema(
+            "materialize",
+            "parent",
+            "--out",
+            str(included_out),
+            "--var",
+            "optional_slug=detail",
+            "--include",
+            "root/optional/detail",
+        )
+
+        self.assertEqual(included_result.returncode, 0, msg=included_result.stderr)
+        self.assertEqual(
+            (included_out / "root" / "optional" / "detail.md").read_text(encoding="utf-8").strip(),
+            "optional=detail",
         )
 
     def test_parent_explicit_child_wins_over_mounted_child_conflict(self) -> None:
@@ -251,7 +374,16 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         )
 
         out = self.root / "out"
-        result = self.run_schema("materialize", "parent", "--out", str(out))
+        result = self.run_schema(
+            "materialize",
+            "parent",
+            "--out",
+            str(out),
+            "--include",
+            "root/shared",
+            "--include",
+            "root/child-only",
+        )
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertEqual((out / "root" / "shared.md").read_text(encoding="utf-8").strip(), "parent shared")
@@ -285,7 +417,7 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         )
 
         out = self.root / "out"
-        result = self.run_schema("materialize", "parent", "--out", str(out))
+        result = self.run_schema("materialize", "parent", "--out", str(out), "--include", "root/child")
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertEqual((out / "root" / "child.md").read_text(encoding="utf-8").strip(), "child from path")
@@ -303,7 +435,7 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         self.assertIn("qa [template=qa] - testing", result.stdout)
         self.assertIn("obs [template=obs] - observability", result.stdout)
         self.assertIn("api [path-only] - api reference", result.stdout)
-        self.assertIn("{{api_name}} [template=api] - api reference", result.stdout)
+        self.assertIn("{{api_name}} [template=api dynamic] - api reference", result.stdout)
 
     def test_fixture_schema_materializes_code_core_qa_template(self) -> None:
         self.install_prod_schema("code-core")
@@ -339,11 +471,37 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         self.assertIn("dev [template=dev] - development setup, tests, and debugging", result.stdout)
         self.assertIn("qa [template=default] - how to test changes", result.stdout)
         self.assertIn("obs [template=obs] - observability", result.stdout)
-        self.assertIn("api [path-only optional] - public module API namespace", result.stdout)
+        self.assertIn("api [path-only] - public module API namespace", result.stdout)
         self.assertIn("{{api}} [template=default dynamic] - public interfaces for a module", result.stdout)
-        self.assertIn("{{api_name}} [template=api] - api reference", result.stdout)
-        self.assertIn("flow [path-only optional] - execution-flow documentation", result.stdout)
-        self.assertIn("{{flow}} [template=flow-doc optional dynamic] - flow doc for a specific execution path", result.stdout)
+        self.assertIn("{{api_name}} [template=api dynamic] - api reference", result.stdout)
+        self.assertIn("flow [path-only] - execution-flow documentation", result.stdout)
+        self.assertIn("{{flow}} [template=flow-doc dynamic] - flow doc for a specific execution path", result.stdout)
+
+    def test_tool_schema_materializes_mounted_unrestricted_api_name(self) -> None:
+        self.install_prod_schema("code-core")
+        self.install_prod_schema("tool")
+
+        out = self.root / "out"
+        result = self.run_schema(
+            "materialize",
+            "tool",
+            "--out",
+            str(out),
+            "--var",
+            "prefix=pkg",
+            "--var",
+            "name=test",
+            "--var",
+            "api_name=custom-api",
+            "--include",
+            "pkg.test.api.custom-api",
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn(
+            "# API Reference",
+            (out / "pkg.test.api.custom-api.md").read_text(encoding="utf-8"),
+        )
 
     def test_global_core_schema_shows_and_materializes_reference_and_topic(self) -> None:
         self.install_prod_schema("global-core")
@@ -366,6 +524,10 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             "reference=shared-fact",
             "--var",
             "topic=account",
+            "--include",
+            "ref/shared-fact",
+            "--include",
+            "t/account",
         )
 
         self.assertEqual(materialize_result.returncode, 0, msg=materialize_result.stderr)

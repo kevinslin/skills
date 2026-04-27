@@ -168,7 +168,6 @@ schema:
                 template: feature-spec
               "{{date}}-{{design_topic}}":
                 description: Optional dated feature design spec.
-                required: false
                 insertion_policy:
                   use_when:
                     - The content maps feature requirements to implementation design, file plans, rollout, and rollback.
@@ -177,7 +176,6 @@ schema:
                 template: design-spec
               "{{date}}-{{investigation_topic}}":
                 description: Optional dated investigation spec.
-                required: false
                 insertion_policy:
                   use_when:
                     - The content captures debugging hypotheses, evidence, state timelines, or root-cause analysis.
@@ -186,7 +184,6 @@ schema:
                 template: investigation-spec
               "{{date}}-{{validation_topic}}":
                 description: Optional dated validation spec.
-                required: false
                 insertion_policy:
                   use_when:
                     - The content validates a plan or implementation with automated and manual coverage.
@@ -195,12 +192,10 @@ schema:
                 template: validation-spec
               ".archive":
                 description: Completed specs moved here without renaming.
-                required: false
                 materialize: false
                 children:
                   "{{archived_spec_num}}-{{archived_spec_topic}}":
                     description: Archived completed spec.
-                    required: false
                     template: archived-spec
           flows:
             description: Execution-flow documentation for lifecycle, topic, and reference flows.
@@ -214,11 +209,9 @@ schema:
                 template: flow-doc
               "topic.{{flow_topic}}":
                 description: Optional topic flow for major functionality in a domain.
-                required: false
                 template: flow-doc
               "ref.{{flow_ref}}":
                 description: Optional reference flow for supporting behavior outside core/topic.
-                required: false
                 template: flow-doc
           state:
             description: Terminal-output and state-derivation docs.
@@ -255,21 +248,17 @@ schema:
                     template: vendor-doc
                   reference:
                     description: Optional API reference docs for vendor APIs used by the project.
-                    required: false
                     materialize: false
                     children:
                       "{{vendor_reference}}":
                         description: Vendor API reference doc.
-                        required: false
                         dynamic_child: true
                         template: vendor-reference
                   topics:
                     description: Optional vendor topic deep-dives.
-                    required: false
                     materialize: false
                     children:
                       "{{vendor_topic}}":
                         description: Vendor topic doc.
-                        required: false
                         dynamic_child: true
                         template: vendor-topic

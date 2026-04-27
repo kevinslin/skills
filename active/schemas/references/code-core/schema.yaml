@@ -2,16 +2,11 @@ version: 1.0
 output:
   path_style: directory
   file_extension: md
-variables:
-  api_name:
-    values: ["*"]
-    default: api
-    description: API reference page slug.
-  flow:
-    values: ["*"]
-    default: flow
-    description: Execution-flow doc slug.
 schema:
+  readme:
+    description: general overview of code
+  concepts:
+    description: index of various concepts
   dev:
     description: how to setup for development
     template: dev
@@ -25,12 +20,10 @@ schema:
   flow:
     description: execution-flow documentation
     materialize: false
-    required: false
     children:
       "{{flow}}":
         description: flow doc for a specific execution path
         template: flow-doc
-        required: false
         dynamic_child: true
   api:
     description: api reference
@@ -39,3 +32,4 @@ schema:
       "{{api_name}}":
         description: api reference
         template: api
+        dynamic_child: true
