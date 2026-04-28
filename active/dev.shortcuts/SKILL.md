@@ -36,6 +36,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `merge-pr-basic` | Merge the current remote PR after confirming the branch is committed and checks passed. |
 | `merge-pr` | Merge the remote PR when one exists, otherwise merge the local branch into `main`, then reconcile `main` and clean up the merged branch. |
 | `plan-and-review` | Draft a feature spec with `specy`, review it with `dev.review`, then fold accepted feedback back into the spec. |
+| `prepare` | Stash local changes, switch to local `master` or `main`, and pull latest from `origin`. |
 | `precommit-process` | Run the canonical pre-commit review and validation workflow before committing. |
 | `promote-shortcut-to-skill` | Convert a shortcut into a standalone skill and replace old shortcut references. |
 | `push-code` | Commit if needed, then push the current branch. |
