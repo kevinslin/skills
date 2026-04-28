@@ -24,19 +24,28 @@ Poll every 5 minutes until the pass condition or a terminal stop condition is re
 At each poll:
 
 1. Poll GitHub for new PR activity since the last baseline:
-   - Issue comments and reviews from `gh pr view <pr> --json comments,reviews,reviewDecision,mergeStateStatus,headRefOid`.
+   - Issue comments and reviews from `gh pr view <pr> --json comments,reviews,reviewDecision,mergeStateStatus,mergeable,baseRefName,headRefName,headRefOid`.
    - Inline review threads through GraphQL `pullRequest.reviewThreads`, including unresolved, non-outdated threads and requested changes.
-   - Merge conflicts or blocked merge states.
+   - Branch merge conflicts: treat `mergeStateStatus` of `DIRTY` or `mergeable` of `CONFLICTING` as a PR branch conflict.
+   - Other blocked merge states.
 2. Poll CI for the current head SHA:
    - Start with `gh pr checks <pr>` or `gh pr view <pr> --json statusCheckRollup`.
    - Use repo-specific CI links or provider CLIs when the PR exposes them.
    - Use `trigger:check-ci` from `../dev.shortcuts/SKILL.md` when checks need deeper Buildkite/provider classification.
 3. Classify issues:
    - New actionable comments, requested changes, or unresolved review threads are GitHub issues.
+   - PR branch conflicts are conflict issues.
    - Failed, errored, cancelled, or clearly stuck checks are build issues.
    - Pending/running checks are not build issues, but they do not count toward the quiet-green window.
 
 ## Fix Cycle
+
+When any conflict issue is found:
+
+1. Capture a short evidence summary: PR, head SHA, base branch, head branch, `mergeStateStatus`, `mergeable`, and any GitHub merge-conflict URL.
+2. Invoke `trigger:fix-pr-conflict` from `../dev.shortcuts/SKILL.md` with the PR and conflict evidence.
+3. After the conflict fix flow completes, refresh the PR head SHA and reset the quiet-green timer.
+4. Return to the 5-minute polling loop.
 
 When any GitHub or build issue is found:
 
