@@ -31,11 +31,17 @@ def non_empty_string(value: Any, field: str) -> str:
 
 
 def find_config(cwd: Path, home: Path) -> Path:
-    candidates = [cwd / ".mem.yaml", home / ".mem.yaml"]
+    candidates = [
+        cwd / ".mem.yaml",
+        cwd / ".mem" / ".mem.yaml",
+        home / ".mem.yaml",
+        home / ".mem" / ".mem.yaml",
+    ]
     for candidate in candidates:
         if candidate.is_file():
             return candidate
-    fail(f"missing config: expected {candidates[0]} or {candidates[1]}")
+    expected = ", ".join(str(candidate) for candidate in candidates)
+    fail(f"missing config: expected one of: {expected}")
 
 
 def resolve_root(raw_root: str, config_dir: Path) -> Path:

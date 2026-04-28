@@ -13,7 +13,9 @@ Use this skill as a router for persistent knowledge bases. Resolve the knowledge
 Resolve configuration in this order:
 
 1. `$PWD/.mem.yaml`
-2. `$HOME/.mem.yaml`
+2. `$PWD/.mem/.mem.yaml`
+3. `$HOME/.mem.yaml`
+4. `$HOME/.mem/.mem.yaml`
 
 If neither file exists, stop and ask where the memory configuration should live. Do not guess a root.
 
@@ -34,7 +36,7 @@ Load and validate `.mem.yaml` with the bundled parser script instead of hand-par
 python3 ./scripts/load_config.py --pretty
 ```
 
-Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script searches `$PWD/.mem.yaml` first, then `$HOME/.mem.yaml`, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to the config file directory, requires roots to exist, and prints normalized JSON.
+Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script searches `$PWD/.mem.yaml`, `$PWD/.mem/.mem.yaml`, `$HOME/.mem.yaml`, then `$HOME/.mem/.mem.yaml`, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to the config file directory, requires roots to exist, and prints normalized JSON. When the config lives at `.mem/.mem.yaml`, relative `root` values are resolved from `.mem/`, so a base rooted at `.mem/main` should usually use `root: ./main`.
 
 The parser enforces:
 
