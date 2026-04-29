@@ -1,6 +1,6 @@
 ---
 name: docy
-description: Manage reusable reference docs for agent work through a small doc registry and CLI. Use at startup for coding-related tasks to load the baseline rule set from `./references/core/`, then use again as needed to add language-specific, vendor-specific, or special-topic guidance or to install durable rules into `AGENTS.md`.
+description: Manage reusable reference docs for agent work. Use at startup for coding-related tasks to load the baseline rule set from `./references/core/`, then use again as needed to add language-specific, vendor-specific, or special-topic guidance.
 dependencies: []
 ---
 
@@ -28,6 +28,7 @@ All managed docs live under `./references/` and follow this layout:
 - vendor/
 # special topics
 - ref/
+    - execution-trace.md: How to write runtime-ordered execution trace docs
     - no-back-compat.md: Hard-cut product policy; no backwards compatibility
     - remove-feature.md: Feature removal hygiene; remove stale docs/tests and
       record spec drift in changelog
@@ -56,11 +57,13 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 docy inject ref/no-back-compat
 docy inject ref/remove-feature
 docy inject ref/openclaw-agent-plugins
+docy inject ref/execution-trace
 docy inject vendor/lerna
 
 docy install ref/no-back-compat
 docy install ref/remove-feature
 docy install ref/openclaw-agent-plugins
+docy install ref/execution-trace
 docy install vendor/lerna
 ```
 
@@ -79,6 +82,7 @@ Command behavior:
 - `./references/ref/python-preferred-modules.md`: Python dependency preferences. Use before building runtime validation or CLI behavior from scratch in Python projects.
 - `./references/ref/typescript-preferred-modules.md`: TypeScript dependency preferences. Use before building runtime validation or CLI behavior from scratch in TypeScript projects.
 - `./references/ref/openclaw-agent-plugins.md`: OpenClaw plugin authoring guidance. Use before creating or expanding an OpenClaw plugin so capability ownership, entrypoint shape, SDK imports, and route/setup boundaries stay aligned with the architecture docs.
+- `./references/ref/execution-trace.md`: Execution trace writing guidance. Use before documenting initialization, startup, request, job, command, or other runtime flows where ordered control flow matters.
 - `./references/ref/no-back-compat.md`: Hard-cut product policy. Use before changing
   codepaths that would otherwise introduce migrations, fallback behavior, adapters,
   or other backwards-compatibility glue.

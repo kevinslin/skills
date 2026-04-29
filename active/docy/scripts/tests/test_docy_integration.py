@@ -16,6 +16,7 @@ REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "no-back-compat.md"
 VENDOR_REFERENCE_PATH = SKILL_ROOT / "references" / "vendor" / "lerna.md"
 PYTHON_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "python-preferred-modules.md"
 OPENCLAW_PLUGIN_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "openclaw-agent-plugins.md"
+EXECUTION_TRACE_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "execution-trace.md"
 
 
 class DocyIntegrationTests(unittest.TestCase):
@@ -74,6 +75,16 @@ class DocyIntegrationTests(unittest.TestCase):
         )
         self.assertIn("## Plugin SDK import paths", result.stdout)
         self.assertIn("openclaw/plugin-sdk/plugin-entry", result.stdout)
+
+    def test_inject_execution_trace_doc(self) -> None:
+        result = self.run_cli("inject", "ref/execution-trace")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            EXECUTION_TRACE_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
+        self.assertIn("Writing Execution Trace Docs", result.stdout)
+        self.assertIn("runtime walk", result.stdout)
 
     def test_install_creates_agents_file_in_current_workspace(self) -> None:
         result = self.run_cli("install", "ref/no-backward-compat")
