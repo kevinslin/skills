@@ -16,7 +16,7 @@ important branches, code pointers, log/metric pointers, and related docs.
 ## Template
 
 - `./references/flow-doc-v2/template.md`
-- Use `$dev.diagram` for `## Sequence Diagram`.
+- Use `$dev.diagram mermaid general-flow` for `## Sequence Diagram`.
 - Use `$docy` `ref/execution-trace` for `## Execution Trace`.
 - Use `$sudocode` for compact logic summaries inside execution-trace steps.
 
@@ -38,7 +38,7 @@ important branches, code pointers, log/metric pointers, and related docs.
 - Include at least one and at most three code pointers in `## Entry Points`.
 - Use precise file/function pointers in execution-trace steps.
 - Use `## Sequence Diagram` before `## Execution Trace`.
-- Use `$dev.diagram` to draft or revise the general-flow diagram. Follow the template default: prefer an ASCII box diagram unless preserving an existing format or the user explicitly asks for Mermaid.
+- Use `$dev.diagram mermaid general-flow` to draft or revise the general-flow diagram. The diagram must be a Mermaid `graph TD` general-flow diagram unless revising an existing flow doc whose diagram format the user explicitly asks to preserve.
 - Identify important behavior-changing branches while reading source. Add important branches to the general-flow diagram, including meaningful fallback, retry, permission-denied, validation-failure, timeout, disabled-gate, and terminal-error outcomes when they materially change the flow.
 - Do not force branch detail into the execution trace. The execution trace should follow the happy path end to end, with branch callouts only when needed to explain the next happy-path handoff.
 - Use `$docy` `ref/execution-trace` before writing `## Execution Trace`; keep phases runtime-ordered.
@@ -59,7 +59,7 @@ important branches, code pointers, log/metric pointers, and related docs.
    - `last_updated_session`: `{agent}/{session-id}` after resolving the current session id via `$dev.llm-session`.
 5. Fill `## Overview` with 1-3 sentences describing what the flow covers, what questions it answers, and why the doc exists.
 6. Fill `## Entry Points` with how the flow starts and 1-3 code pointers.
-7. Draft `## Sequence Diagram` with `$dev.diagram`. Keep it as a general-flow diagram, not a full call graph. Show the happy path plus important branches that materially change behavior; omit trivial guards and implementation-only conditionals.
+7. Draft `## Sequence Diagram` with `$dev.diagram mermaid general-flow`. Keep it as a Mermaid general-flow diagram, not a full call graph. Show the happy path plus important branches that materially change behavior; omit trivial guards and implementation-only conditionals.
 8. Load `$docy` `ref/execution-trace` and draft `## Execution Trace` as happy-path, runtime-ordered phases.
 9. For each phase:
    - Use a short phase name.
@@ -90,7 +90,7 @@ important branches, code pointers, log/metric pointers, and related docs.
 
 - [ ] `## Overview` states what the flow covers and why it exists.
 - [ ] `## Entry Points` includes 1-3 code pointers.
-- [ ] `## Sequence Diagram` appears before `## Execution Trace` and includes important behavior-changing branches when they exist.
+- [ ] `## Sequence Diagram` appears before `## Execution Trace`, uses Mermaid general-flow syntax, and includes important behavior-changing branches when they exist.
 - [ ] `## Execution Trace` is phase-based, runtime-ordered, and focused on the happy path.
 - [ ] Execution-trace steps include concrete file/function pointers.
 - [ ] Sudocode uses exact source identifiers for behavior-critical logic.
