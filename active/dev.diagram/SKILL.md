@@ -10,6 +10,22 @@ dependencies: []
 
 Construct diagrams that stay readable in their final destination. Support only two output formats: ASCII for plain-text readability and Mermaid for renderable Markdown.
 
+## Invocation Shape
+
+When the user invokes the skill with positional hints, treat them as:
+
+```text
+$dev.diagram [format] [diagram-kind]
+```
+
+Examples:
+
+- `$dev.diagram mermaid general-flow`
+- `$dev.diagram mermaid linear-flow`
+- `$dev.diagram ascii decision-tree`
+
+If the format and diagram kind conflict, follow the user's explicit format and adapt the kind to that format. If a named diagram kind is unknown, fall back to the closest kind in [Choose The Diagram Kind](#choose-the-diagram-kind).
+
 ## Choose The Format
 
 1. Use ASCII when the user explicitly asks for ASCII, box art, or text diagrams.
@@ -21,11 +37,13 @@ Construct diagrams that stay readable in their final destination. Support only t
 
 ## Choose The Diagram Kind
 
-1. Use a sequence diagram for actor-to-actor messages over time.
-2. Use a flow diagram for ordered steps, branching, and control flow.
-3. Use a state diagram for lifecycle transitions between named states.
-4. Use a dependency or topology diagram for ownership, connectivity, or one-way coupling.
-5. Use a decision tree when the point is rule evaluation rather than runtime sequencing.
+1. Use `linear-flow` for one request or operation through ordered stages. In Mermaid, render it as `sequenceDiagram`.
+2. Use `general-flow` for a call path with important branches grouped by components, ownership, or lifecycle boundaries. In Mermaid, render it as `graph TD`.
+3. Use a sequence diagram for actor-to-actor messages over time when the user says `sequence` but not `linear-flow`.
+4. Use a flow diagram for ordered steps, branching, and control flow.
+5. Use a state diagram for lifecycle transitions between named states.
+6. Use a dependency or topology diagram for ownership, connectivity, or one-way coupling.
+7. Use a decision tree when the point is rule evaluation rather than runtime sequencing.
 
 ## Build The Diagram
 
@@ -70,8 +88,9 @@ Construct diagrams that stay readable in their final destination. Support only t
 
 1. Use Mermaid only inside a `mermaid` fence.
 2. Choose the smallest diagram type that fits:
-   - `flowchart TD` for most flows
-   - `sequenceDiagram` for actor/message sequences
+   - `graph TD` for `general-flow`
+   - `sequenceDiagram` for `linear-flow` and actor/message sequences
+   - `flowchart TD` for most other flows
    - `stateDiagram-v2` for state transitions
 3. Keep node ids short and stable; put readable text in the label.
 4. Always wrap node labels in double quotes when they contain parentheses, commas, arrows, function-like text, or other parser-sensitive punctuation.
@@ -83,30 +102,76 @@ Construct diagrams that stay readable in their final destination. Support only t
 10. Keep styling minimal unless the user explicitly asks for styling or visual emphasis.
 11. Avoid dense cross-links that make the graph unreadable; split the diagram instead.
 12. Treat Mermaid like a grammar parser, not Markdown; never rely on it to infer intent from punctuation.
-13. For `sequenceDiagram`, keep participant ids syntax-safe and alphanumeric, such as `CreateHelper`, `ArchiveParser`, or `SkillClient`; avoid keyword-like ids such as `Create`, `Update`, or `Destroy`.
+13. For `sequenceDiagram`, keep participant ids syntax-safe and alphanumeric, such as `CreateHelper`, `ArchiveParser`, or `SkillClient`.
 14. For `sequenceDiagram`, use readable aliases with `participant CreateHelper as Create helper`, then reference only the safe id in arrows.
 15. Do not quote sequence message text just to protect punctuation. Prefer plain message text and simplify nested quotes, for example `version_no=1` instead of `version_no="1"`.
 
-### Mermaid Pattern
+### Mermaid General-Flow Pattern
+
+Use `general-flow` when the diagram should answer an architectural routing or composition question, such as "which component handles this request?" or "how does this configuration become runtime behavior?"
+
+1. Pick one concrete request path, resource, or artifact as the running example.
+2. Create 2-4 `subgraph` blocks for real component, ownership, or lifecycle boundaries.
+3. Use source-grounded implementation names for nodes.
+4. Put branch predicates on edges, not in surrounding prose.
+5. Show the happy path plus only the important alternate routes.
+6. End at meaningful sinks such as storage, handler, proxy, external service, or terminal state.
+7. Explain source symbols in prose below the diagram instead of expanding every method in the diagram.
+
+```mermaid
+graph TD
+    subgraph Incoming
+        direction LR
+        A["Client"] --> B{"/apis/example/v1/widgets"}
+    end
+
+    subgraph Runtime
+        direction LR
+        B --> C["Gateway"]
+        C -->|known route| D["Core handler"]
+        C -->|extension route| E["Extension proxy"]
+        D --> F["Storage"]
+    end
+```
+
+### Mermaid Linear-Flow Pattern
+
+Use `linear-flow` when the diagram should answer an ordered processing question, such as "what stages does one request pass through?"
+
+1. Pick exactly one request or operation.
+2. Identify the client, coordinator, major semantic stages, and terminal endpoint.
+3. Use 5-8 participants maximum.
+4. For each stage, draw one request and one returned state or decision.
+5. Preserve source-backed ordering invariants.
+6. Collapse observability, timeout, tracing, logging, and bookkeeping wrappers unless they change the business flow.
+7. Keep branches out unless the branch is the topic; encode secondary reject or deny cases in message labels.
+8. Put code/package anchors in surrounding prose, not inside the diagram.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Pipeline
+    participant Authn as Authentication
+    participant Authz as Authorization
+    participant Handler as REST Endpoint
+
+    Client->>Pipeline: Request
+    Pipeline->>Authn: Authenticate
+    Authn-->>Pipeline: User info
+    Pipeline->>Authz: Authorize
+    Authz-->>Pipeline: Allowed or denied
+    Pipeline->>Handler: Handle
+    Handler-->>Pipeline: Response
+    Pipeline-->>Client: Response
+```
+
+### Mermaid Basic Pattern
 
 ```mermaid
 flowchart TD
     A["Start request"] --> B["Check condition"]
     B -->|yes| C["Path A"]
     B -->|no| D["Pass through"]
-```
-
-### Mermaid Sequence Pattern
-
-```mermaid
-sequenceDiagram
-    participant Caller
-    participant CreateHelper as Create helper
-    participant SkillClient as Skills client
-
-    Caller->>CreateHelper: create_skills_from_archive_bytes(...)
-    CreateHelper->>SkillClient: create_skill(..., enable_skill_version=true)
-    SkillClient-->>Caller: created_skills
 ```
 
 ### Mermaid Validation
