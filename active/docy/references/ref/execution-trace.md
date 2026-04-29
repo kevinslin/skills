@@ -4,7 +4,8 @@ Use this guidance when documenting initialization, startup, request handling,
 worker jobs, command execution, or any other flow where ordered control flow
 matters.
 
-Model the document on the Rails initialization guide:
+Use the Rails initialization guide as a model for structure, not as a
+language-specific template:
 https://guides.rubyonrails.org/initialization.html
 
 ## Goal
@@ -24,7 +25,7 @@ Write a runtime walk, not a subsystem overview. The document should answer:
    - Prefer `Gateway Image Attachment Execution Trace` over `Image Attachments Overview`.
 2. Scope
    - State the entrypoint, environment, assumptions, and stop point.
-   - Example: This traces `bin/rails server` through Rails app initialization and Rack handoff. It does not trace Puma internals.
+   - Example: This traces `my-service start --env=dev` from CLI parsing through service initialization and runtime handoff. It does not trace the network server internals.
 3. Trace Map
    - Include a compact ordered path before the detailed walk.
    - Example: `command -> wrapper -> boot config -> dispatch -> app load -> initializers -> runtime handoff`.
@@ -43,7 +44,7 @@ Write a runtime walk, not a subsystem overview. The document should answer:
 ## Section Template
 
 ````markdown
-### N. path/to/file.rb or FunctionName
+### N. path/to/file.ext or FunctionName
 
 Runtime position:
 This runs after `<previous>` and before `<next>`.
@@ -72,9 +73,9 @@ Use control-flow language instead of vague topic transitions.
 
 Good:
 
-- After `config/boot.rb` finishes, control returns to `bin/rails`.
-- `super` transfers execution into `Rackup::Server#initialize`.
-- This call memoizes the wrapped app, so the later `server.run` call reuses it.
+- After `config/load` finishes, control returns to the command wrapper.
+- The base-class call transfers execution into the shared runtime initializer.
+- This call memoizes the constructed app, so the later `run` call reuses it.
 - At this point, the flow crosses from application code into framework code.
 - The callback is registered here, but it does not run until shutdown.
 
@@ -95,7 +96,7 @@ Include details that change runtime understanding:
 - State mutations: env vars, globals, instance variables, config objects, request context, DB writes.
 - Dispatch decisions: aliases, command lookup, handler selection, feature gates.
 - Handoffs between app code, framework code, libraries, runtime, and external services.
-- Return points after `super`, callbacks, memoized calls, deferred execution, and `require` or import chains.
+- Return points after base-class calls, callbacks, memoized calls, deferred execution, and module-loading chains.
 - Scope boundaries and explicit "we stop here" notes.
 
 ## What To Exclude
@@ -115,13 +116,13 @@ Exclude anything that breaks the trace shape:
 Handle branches at the decision point:
 
 ```markdown
-For this trace, `ARGV` is `["server"]`, so alias expansion is a no-op and
-dispatch calls `Rails::Command.invoke("server", ARGV)`.
+For this trace, the parsed command is `start`, so dispatch calls
+`CommandRegistry.invoke("start", args)`.
 
 Other branches:
-- `s` resolves to `server`.
-- Unknown commands fall back to Rake.
-- Empty namespace prints help.
+- `serve` aliases to `start`.
+- Unknown commands print usage and exit.
+- `--help` prints command help without initializing the service.
 
 Only the first branch continues in this document.
 ```
@@ -129,16 +130,16 @@ Only the first branch continues in this document.
 Separate callback registration from callback execution:
 
 ```markdown
-This creates `after_stop_callback`, but the callback is not executed here. It is
-passed into `server.start` and runs only when the server stops.
+This registers `afterStop`, but the callback is not executed here. It is passed
+into `runtime.start` and runs only when the process stops.
 ```
 
 For lifecycle hooks, group by runtime order rather than owner:
 
 ```markdown
-Bootstrap initializers run first, application/railtie initializers run next, and
-finisher initializers run last. Middleware construction belongs in the finisher
-phase because that is when the app becomes runnable.
+Bootstrap hooks run first, application hooks run next, and finisher hooks run
+last. Middleware or handler construction belongs in the finisher phase because
+that is when the app becomes runnable.
 ```
 
 ## Choosing Code Excerpts
@@ -170,7 +171,7 @@ Do not include code just because it is nearby.
 - Organizing by component ownership instead of runtime order.
 - Skipping wrapper files that set important state.
 - Explaining what code is for, but not what it does next.
-- Losing the thread after `super`, callbacks, memoization, imports, or `require`.
+- Losing the thread after base-class calls, callbacks, memoization, imports, or module loading.
 - Treating all branches equally instead of following the active branch.
 - Pasting large source blocks without explaining the state transition.
 - Hiding boundaries between app code, framework code, and runtime code.
