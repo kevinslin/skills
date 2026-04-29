@@ -2,9 +2,11 @@
 name: specy
 description: Create structured docs and specs for codebase exploration and
   feature work 
-version: 1.12.9
+version: 1.13.0
 dependencies:
+- dev.diagram
 - dev.llm-session
+- docy
 - sudocode
 ---
 
@@ -31,6 +33,7 @@ Use this skill when:
 ## Hard Trigger Rule (Flow Docs)
 
 If the request mentions any flow-doc intent (for example: `flow doc`, `flow docs`, `flowdoc`, `call path doc`, `execution flow doc`), you must run this skill and follow the flow-doc workflow before drafting or revising content.
+If the request explicitly mentions `flow-doc-v2`, use the `flow-doc-v2` workflow instead of the legacy `flow-doc` workflow.
 
 ## Root Directory
 
@@ -44,6 +47,7 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 - Architecture Docs (`architecture`): System-level architecture docs covering boundaries, components, interfaces, and key decisions.
 - Research Briefs (`research-brief`): Structured technology/approach research with comparisons and recommendations.
 - Flow Docs (`flow-doc`): Focused execution-flow documentation for core lifecycle, domain-specific behavior, and supporting reference flows.
+- Flow Docs V2 (`flow-doc-v2`): Balanced flow documentation for specified code logic, combining a general-flow diagram, an execution trace, and targeted implementation details.
 - State Docs (`state-doc`): Terminal-output mapping with predicates, required state, and derivation paths.
 - Service Design Docs (`service-design-doc`): Staff-level service/system proposals covering architecture, APIs, reliability, and risks.
 - Feature Design Docs (`design-spec`): Implementation-ready feature or migration designs with rollout/rollback planning.
@@ -57,9 +61,9 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 
 ## Common Instructions (All Doc Types)
 
-1. Find the requested doc type workflow at `@references/[doc-type]/workflow.md`.
+1. Find the requested doc type workflow at `./references/[doc-type]/workflow.md`.
 2. Follow the `Instructions` header in that workflow to do the implementation.
-3. Copy `@references/[doc-type]/template.md` to the requested output location before filling in content.
+3. Copy `./references/[doc-type]/template.md` to the requested output location before filling in content.
 4. For in-place doc types (currently FAQ Specs), use the template as an insertion snippet instead of creating a new file.
 5. Before finalizing any created or revised document, resolve the current agent session id via `$dev.llm-session` and replace the changelog placeholder with the real session id.
 6. For links that point to files inside the current repo, prefer repo-relative markdown targets instead of absolute local checkout or worktree paths. Do not emit `/Users/...` or similar machine-local link targets under `$DOCS_ROOT` unless the document is intentionally pointing outside the repo.
@@ -74,26 +78,41 @@ Do not force all phases into one document. Instead, each isolated flow doc must 
 3. Exit/handoff: what this flow produces for the next flow.
 4. Adjacent flow links: explicit references to related phase docs.
 
+### Flow Docs V2
+
+Use `flow-doc-v2` when the goal is to give a developer a balanced understanding
+of specified code logic with pointers for deeper investigation. Flow docs v2 are
+not line-by-line code descriptions. They combine:
+
+1. A general-flow diagram drafted with $dev.diagram.
+2. An execution trace shaped by $docy `ref/execution-trace`.
+3. Additional notes, observability pointers, related docs, and code/log pointers.
+
+Use `./references/flow-doc-v2/workflow.md` and
+`./references/flow-doc-v2/template.md` for this doc type.
+
 ### Flow Overview Snippet
 
 Every flow doc should place `## Sequence diagram` before `## Call path`, and `## Call path` should begin with a linear `### Overview` subsection. Use:
 
-- `@references/flow-overview/workflow.md`
-- `@references/flow-overview/template.md`
+- `./references/flow-overview/workflow.md`
+- `./references/flow-overview/template.md`
 
 Treat `flow-overview` as a reusable subsection/snippet, not as a standalone document type. The overview should be one linear sudocode block across the major phases. Keep the main path readable top-to-bottom and move branch detail into the detailed phase sections below it.
 
 ## Shared References
 
 - Whenever you need to write sudocode, use `$sudocode`.
-- Source path for this workspace: [$sudocode](/Users/kevinlin/code/skills-public/active/sudocode/SKILL.md).
+- Use [$dev.diagram](../dev.diagram/SKILL.md) to draft or revise flow diagrams.
+- Use [$docy](../docy/SKILL.md) `ref/execution-trace` before writing flow-doc-v2 execution traces.
+- Source path for this workspace: [$sudocode](../sudocode/SKILL.md).
 
 ## Flow-Doc Quality Gate (Required)
 
 Before finalizing any flow doc, run the validator from this skill root:
 
 ```bash
-python3 scripts/validate_flow_doc.py --kind auto --doc "<flow-doc-path>"
+python3 ./scripts/validate_flow_doc.py --kind auto --doc "<flow-doc-path>"
 ```
 
 Resolve validator errors before handoff. Do not skip this check.
@@ -102,7 +121,8 @@ Resolve validator errors before handoff. Do not skip this check.
 ## Required Ending Sections (All Docs)
 
 Every document created or revised using this skill must end with the following sections,
-verbatim and in this order. Keep the Manual Notes content unchanged across edits.
+verbatim and in this order, unless the doc-type template specifies a different
+changelog shape. Keep the Manual Notes content unchanged across edits.
 
 ```
 ## Manual Notes 
@@ -122,35 +142,39 @@ When invoked, follow the mapped workflow section exactly.
 
 ### new-architecture-doc
 
-- Follow `@references/architecture/workflow.md` section `Instructions`.
+- Follow `./references/architecture/workflow.md` section `Instructions`.
 
 ### new-research-brief
 
-- Follow `@references/research-brief/workflow.md` section `Instructions`.
+- Follow `./references/research-brief/workflow.md` section `Instructions`.
 
 ### new-flow-doc-normal
 
-- Follow `@references/flow-doc/workflow.md` section `Instructions`.
+- Follow `./references/flow-doc/workflow.md` section `Instructions`.
+
+### new-flow-doc-v2
+
+- Follow `./references/flow-doc-v2/workflow.md` section `Instructions`.
 
 ### new-state-doc
 
-- Follow `@references/state-doc/workflow.md` section `Instructions`.
+- Follow `./references/state-doc/workflow.md` section `Instructions`.
 
 ### new-service-design-doc
 
-- Follow `@references/service-design-doc/workflow.md` section `Instructions`.
+- Follow `./references/service-design-doc/workflow.md` section `Instructions`.
 
 ### new-design-spec
 
-- Follow `@references/design-spec/workflow.md` section `Instructions`.
+- Follow `./references/design-spec/workflow.md` section `Instructions`.
 
 ### new-feature-spec
 
-- Follow `@references/feature-spec/workflow.md` section `Instructions`.
+- Follow `./references/feature-spec/workflow.md` section `Instructions`.
 
 ### new-investigation-spec
 
-- Follow `@references/investigation-spec/workflow.md` section `Instructions`.
+- Follow `./references/investigation-spec/workflow.md` section `Instructions`.
 
 ### update-flow-doc
 
@@ -162,19 +186,19 @@ When updating existing flow docs, use a preservation-first revision style.
 4. Keep `## Manual Notes` and its content unchanged across revisions.
 5. Before finalizing, run a scope check: if the diff removes unrelated detail or broadens beyond request, reduce to a minimal targeted patch.
 
-- For more details, follow `@references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
+- For more details, follow `./references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
 
 ### new-recipe
 
-- Follow `@references/recipe/workflow.md` section `Instructions`.
+- Follow `./references/recipe/workflow.md` section `Instructions`.
 
 ### new-faq-spec
 
-- Follow `@references/faq-spec/workflow.md` section `Instructions`.
+- Follow `./references/faq-spec/workflow.md` section `Instructions`.
 
 ### new-vendor-docs
 
-- Follow `@references/vendor-doc/workflow.md` section `Instructions`.
+- Follow `./references/vendor-doc/workflow.md` section `Instructions`.
 
 ## Best Practices
 
@@ -225,37 +249,39 @@ FAQ Specs do not create standalone files. They update the target research docume
 
 ## Path Convention
 
-Throughout this skill, paths prefixed with `@` are relative to this skill root.
+Throughout this skill, bundled paths prefixed with `./` are relative to this skill root.
 
-- `@references/architecture/workflow.md` -> `specy/references/architecture/workflow.md`
-- `@references/architecture/template.md` -> `specy/references/architecture/template.md`
-- `@references/research-brief/workflow.md` -> `specy/references/research-brief/workflow.md`
-- `@references/research-brief/template.md` -> `specy/references/research-brief/template.md`
-- `@references/flow-doc/workflow.md` -> `specy/references/flow-doc/workflow.md`
-- `@references/flow-doc/template.md` -> `specy/references/flow-doc/template.md`
-- `@references/flow-overview/workflow.md` -> `specy/references/flow-overview/workflow.md`
-- `@references/flow-overview/template.md` -> `specy/references/flow-overview/template.md`
-- `@references/state-doc/workflow.md` -> `specy/references/state-doc/workflow.md`
-- `@references/state-doc/template.md` -> `specy/references/state-doc/template.md`
-- `@references/service-design-doc/workflow.md` -> `specy/references/service-design-doc/workflow.md`
-- `@references/service-design-doc/template.md` -> `specy/references/service-design-doc/template.md`
-- `@references/design-spec/workflow.md` -> `specy/references/design-spec/workflow.md`
-- `@references/design-spec/template.md` -> `specy/references/design-spec/template.md`
-- `@references/feature-spec/workflow.md` -> `specy/references/feature-spec/workflow.md`
-- `@references/feature-spec/template.md` -> `specy/references/feature-spec/template.md`
-- `@references/feature-spec/effective-planning.md` -> `specy/references/feature-spec/effective-planning.md`
-- `@references/feature-spec/beads.md` -> `specy/references/feature-spec/beads.md`
-- `@references/investigation-spec/workflow.md` -> `specy/references/investigation-spec/workflow.md`
-- `@references/investigation-spec/template.md` -> `specy/references/investigation-spec/template.md`
-- `@references/validation-spec/workflow.md` -> `specy/references/validation-spec/workflow.md`
-- `@references/validation-spec/template.md` -> `specy/references/validation-spec/template.md`
-- `@references/recipe/workflow.md` -> `specy/references/recipe/workflow.md`
-- `@references/recipe/template.md` -> `specy/references/recipe/template.md`
-- `@references/faq-doc/workflow.md` -> `specy/references/faq-doc/workflow.md`
-- `@references/faq-doc/template.md` -> `specy/references/faq-doc/template.md`
-- `@references/faq-spec/workflow.md` -> `specy/references/faq-spec/workflow.md`
-- `@references/faq-spec/template.md` -> `specy/references/faq-spec/template.md`
-- `@references/vendor-doc/workflow.md` -> `specy/references/vendor-doc/workflow.md`
-- `@references/vendor-doc/template.md` -> `specy/references/vendor-doc/template.md`
+- `./references/architecture/workflow.md` -> `./references/architecture/workflow.md`
+- `./references/architecture/template.md` -> `./references/architecture/template.md`
+- `./references/research-brief/workflow.md` -> `./references/research-brief/workflow.md`
+- `./references/research-brief/template.md` -> `./references/research-brief/template.md`
+- `./references/flow-doc/workflow.md` -> `./references/flow-doc/workflow.md`
+- `./references/flow-doc/template.md` -> `./references/flow-doc/template.md`
+- `./references/flow-doc-v2/workflow.md` -> `./references/flow-doc-v2/workflow.md`
+- `./references/flow-doc-v2/template.md` -> `./references/flow-doc-v2/template.md`
+- `./references/flow-overview/workflow.md` -> `./references/flow-overview/workflow.md`
+- `./references/flow-overview/template.md` -> `./references/flow-overview/template.md`
+- `./references/state-doc/workflow.md` -> `./references/state-doc/workflow.md`
+- `./references/state-doc/template.md` -> `./references/state-doc/template.md`
+- `./references/service-design-doc/workflow.md` -> `./references/service-design-doc/workflow.md`
+- `./references/service-design-doc/template.md` -> `./references/service-design-doc/template.md`
+- `./references/design-spec/workflow.md` -> `./references/design-spec/workflow.md`
+- `./references/design-spec/template.md` -> `./references/design-spec/template.md`
+- `./references/feature-spec/workflow.md` -> `./references/feature-spec/workflow.md`
+- `./references/feature-spec/template.md` -> `./references/feature-spec/template.md`
+- `./references/feature-spec/effective-planning.md` -> `./references/feature-spec/effective-planning.md`
+- `./references/feature-spec/beads.md` -> `./references/feature-spec/beads.md`
+- `./references/investigation-spec/workflow.md` -> `./references/investigation-spec/workflow.md`
+- `./references/investigation-spec/template.md` -> `./references/investigation-spec/template.md`
+- `./references/validation-spec/workflow.md` -> `./references/validation-spec/workflow.md`
+- `./references/validation-spec/template.md` -> `./references/validation-spec/template.md`
+- `./references/recipe/workflow.md` -> `./references/recipe/workflow.md`
+- `./references/recipe/template.md` -> `./references/recipe/template.md`
+- `./references/faq-doc/workflow.md` -> `./references/faq-doc/workflow.md`
+- `./references/faq-doc/template.md` -> `./references/faq-doc/template.md`
+- `./references/faq-spec/workflow.md` -> `./references/faq-spec/workflow.md`
+- `./references/faq-spec/template.md` -> `./references/faq-spec/template.md`
+- `./references/vendor-doc/workflow.md` -> `./references/vendor-doc/workflow.md`
+- `./references/vendor-doc/template.md` -> `./references/vendor-doc/template.md`
 
 When you see `$DOCS_ROOT/`, resolve paths relative to the project root directory.

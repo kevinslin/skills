@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/investigation-spec/template.md`
+- `./references/investigation-spec/template.md`
 
 ## Constants
 
@@ -20,7 +20,7 @@
 
 1. Define the bug symptom, expected behavior, and current impact.
 2. Choose a `{topic}` slug that stays within the `{YYYY-MM-DD}-{topic}.md` filename format and includes an `-investigation` qualifier when needed to avoid collisions.
-3. Copy `@references/investigation-spec/template.md` to %%OUTPUT_FILE.
+3. Copy `./references/investigation-spec/template.md` to %%OUTPUT_FILE.
 4. Build a hypothesis table with a fastest falsifier for each branch.
 5. Build a state timeline for critical values from write to read.
 6. Record evidence (logs, code locations, traces) per hypothesis outcome.

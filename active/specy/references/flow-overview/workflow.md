@@ -8,7 +8,7 @@
 
 ## Template
 
-- `@references/flow-overview/template.md`
+- `./references/flow-overview/template.md`
 
 ## Output Location
 
@@ -97,7 +97,7 @@ run_prepared_executable(prepared_run, command, timeout, env) {
 
 1. Read the flow doc and identify the existing phase boundaries under `## Call path`.
 2. Choose the single main path that best explains the lifecycle end to end.
-3. Copy `@references/flow-overview/template.md` into a `### Overview` section directly under `## Call path`.
+3. Copy `./references/flow-overview/template.md` into a `### Overview` section directly under `## Call path`.
 4. Replace the placeholder phase names with the real flow phases from the document.
 5. Choose the concrete entry function/module for each substep, starting from the external entrypoint when the flow has one.
 6. For each numbered substep, keep only the state transitions needed to understand the next major handoff.

@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/feature-spec/template.md`
+- `./references/feature-spec/template.md`
 
 ## Output Location
 
@@ -20,13 +20,13 @@
 1. Review related docs under `$DOCS_ROOT/specs/`, archived specs under `$DOCS_ROOT/specs/.archive/`, and `$DOCS_ROOT/flows/` to align naming and known behavior.
 2. Choose the next feature-spec filename with a monotonic two-digit integer prefix: scan `$DOCS_ROOT/specs/` and `$DOCS_ROOT/specs/.archive/` for filenames matching `[0-9][0-9]-*.md`, choose `max(existing prefix)+1`, and start at `01` when none exist. Do not reuse gaps left by archived, deleted, or renamed specs.
 3. Choose a title slug that stays within the `{NN}-{topic}.md` filename format and includes a qualifier when needed to avoid collisions with sibling specs.
-4. Copy `@references/feature-spec/template.md` to the output location.
+4. Copy `./references/feature-spec/template.md` to the output location.
 5. Fill the required sections with concrete, source-backed details from the repository and current task context. Omit optional subsections when they would only add boilerplate.
-6. Use `@references/feature-spec/effective-planning.md` for planning quality standards.
+6. Use `./references/feature-spec/effective-planning.md` for planning quality standards.
 7. Include a concrete `## Context` section with project-root-relative markdown links and a short explanation of what each item is for, so the agent can decide what to read based on need instead of following a blind pre-read checklist.
 8. Record resolved ambiguities and explicit decisions in the spec as they are discovered; do not leave important pivots buried in chat history.
 9. Include explicit acceptance criteria, validation plan, and done criteria. Acceptance criteria answer "what must be true," validation answers "how it is proven," and done criteria answer "what must be complete before handoff." If a dedicated validation spec is created, link it instead of duplicating a large matrix in the feature spec.
-10. If the repository uses beads for tracking, follow `@references/feature-spec/beads.md`.
+10. If the repository uses beads for tracking, follow `./references/feature-spec/beads.md`.
 11. Present a concise summary plus unresolved questions, unless the user asked to proceed without waiting.
 12. If the user asked to proceed without waiting, answer outstanding questions with best judgment and record assumptions in the spec.
 13. Simplify where possible (remove redundant phases, merge low-value steps, prefer one strong section over many thin ones).

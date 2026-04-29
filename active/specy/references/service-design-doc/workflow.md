@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/service-design-doc/template.md`
+- `./references/service-design-doc/template.md`
 
 ## Output Location
 
@@ -18,7 +18,7 @@
 ## Instructions
 
 1. Review existing design docs under `$DOCS_ROOT/design/` to align with local conventions.
-2. Copy `@references/service-design-doc/template.md` to `$DOCS_ROOT/design/{YYYY-MM-DD}-design-{topic-slug}.md`.
+2. Copy `./references/service-design-doc/template.md` to `$DOCS_ROOT/design/{YYYY-MM-DD}-design-{topic-slug}.md`.
 3. Fill in the design doc based on user requirements, stopping for clarifications when needed.
 
 ## Required for Implementation Handoff

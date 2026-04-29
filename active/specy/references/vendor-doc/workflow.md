@@ -8,7 +8,7 @@
 
 ## Template
 
-- `@references/vendor-doc/template.md`
+- `./references/vendor-doc/template.md`
 
 ## Output Location
 
@@ -33,5 +33,5 @@
 2. Review `$DOCS_ROOT/vendor/` for existing naming conventions.
 3. Identify the subset of vendor functionality actually used in the project.
 4. Create `$DOCS_ROOT/vendor/{library}/` with `reference/` and `topics/` folders.
-5. Copy `@references/vendor-doc/template.md` to `$DOCS_ROOT/vendor/{library}/README.md`.
+5. Copy `./references/vendor-doc/template.md` to `$DOCS_ROOT/vendor/{library}/README.md`.
 6. Populate README, reference, and topic docs with project-relevant summaries.

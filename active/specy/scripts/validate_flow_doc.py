@@ -6,6 +6,7 @@ Checks:
 - Required section headings
 - Ordered call path step coverage
 - Legacy sudocode subsection coverage for preservation-first revisions
+- Flow-doc-v2 heading and trace structure
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ LINE_NUMBERED_SOURCE_RE = re.compile(r"(?im)\bsource\b\s*:\s+\S+#L\d+(?:-L?\d+)?
 LOCAL_ABSOLUTE_MARKDOWN_LINK_RE = re.compile(
     r"\[[^\]]+\]\(((?:/Users/|/home/)[^)]+)\)"
 )
+V2_ENTRY_POINTER_RE = re.compile(r"(?m)^\s*-\s+`?[^`\n]+?\.[A-Za-z0-9]+:[^`\n]+`?\s*$")
 
 
 @dataclass
@@ -207,6 +209,103 @@ def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
         _validate_ordered_call_path(heading.strip(), segment, result)
 
 
+def _validate_required_h2(text: str, required_h2: list[str], result: ValidationResult) -> None:
+    for heading in required_h2:
+        if not _has_h2(text, heading):
+            result.errors.append(f"Missing required section: '## {heading}'")
+
+
+def _validate_v2_frontmatter(text: str, result: ValidationResult) -> None:
+    if not text.startswith("---\n"):
+        result.errors.append("Missing YAML frontmatter block")
+        return
+
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        result.errors.append("YAML frontmatter block is not closed")
+        return
+
+    frontmatter = text[4:end]
+    for key in ("created", "updated", "last_updated_session"):
+        if not re.search(rf"(?m)^{key}:\s*\S+", frontmatter):
+            result.errors.append(f"Missing required frontmatter key: '{key}'")
+
+
+def _validate_v2_entry_points(text: str, result: ValidationResult) -> None:
+    entry_points = _extract_h2_section(text, "Entry Points")
+    if entry_points is None:
+        return
+
+    pointer_count = len(V2_ENTRY_POINTER_RE.findall(entry_points))
+    if pointer_count < 1:
+        result.errors.append("Entry Points must include at least one code pointer")
+    if pointer_count > 3:
+        result.errors.append("Entry Points must include at most three code pointers")
+
+
+def _validate_v2_execution_trace(text: str, result: ValidationResult) -> None:
+    trace = _extract_h2_section(text, "Execution Trace")
+    if trace is None:
+        return
+
+    phase_segments = _extract_segments_by_heading(trace, r"^###\s+\d+\.\s+.+$")
+    if not phase_segments:
+        result.errors.append("Execution Trace must use numbered phase headings like '### 1. Phase Name'")
+        return
+
+    for phase_heading, phase_segment in phase_segments:
+        if "[add additional phases as necessary]" in phase_heading:
+            continue
+        step_segments = _extract_segments_by_heading(phase_segment, r"^####\s+\d+\.\d+\s+.+$")
+        if not step_segments:
+            result.warnings.append(
+                f"{phase_heading.strip()} has no numbered step headings like '#### 1.1 Step Name'"
+            )
+            continue
+
+        for step_heading, step_segment in step_segments:
+            if re.search(r"(?m)^\s*-\s+`?[^`\n]+:[^`\n]+`?\s*$", step_segment) is None:
+                result.errors.append(
+                    f"{step_heading.strip()} must include a file/function pointer bullet"
+                )
+            if CODE_BLOCK_RE.search(step_segment) is None:
+                result.errors.append(f"{step_heading.strip()} must include a fenced sudocode block")
+
+
+def _validate_v2_manual_notes_and_changelog_order(text: str, result: ValidationResult) -> None:
+    manual_pos = _h2_position(text, "Manual Notes")
+    changelog_pos = _h2_position(text, "Changelog")
+    if manual_pos is None or changelog_pos is None:
+        return
+    if manual_pos > changelog_pos:
+        result.errors.append("Section order must place '## Manual Notes' before '## Changelog'")
+
+
+def _validate_v2_flow_doc(text: str, result: ValidationResult) -> None:
+    required_h2 = [
+        "Overview",
+        "Entry Points",
+        "Sequence Diagram",
+        "Execution Trace",
+        "Notes",
+        "Observability",
+        "Related docs",
+        "Manual Notes",
+        "Changelog",
+    ]
+    _validate_v2_frontmatter(text, result)
+    _validate_required_h2(text, required_h2, result)
+
+    sequence_pos = _h2_position(text, "Sequence Diagram")
+    trace_pos = _h2_position(text, "Execution Trace")
+    if sequence_pos is not None and trace_pos is not None and sequence_pos > trace_pos:
+        result.errors.append("Section order must place '## Sequence Diagram' before '## Execution Trace'")
+
+    _validate_v2_entry_points(text, result)
+    _validate_v2_execution_trace(text, result)
+    _validate_v2_manual_notes_and_changelog_order(text, result)
+
+
 def _validate_portable_repo_links(text: str, result: ValidationResult) -> None:
     scrubbed = CODE_BLOCK_RE.sub("", text)
     for match in LOCAL_ABSOLUTE_MARKDOWN_LINK_RE.finditer(scrubbed):
@@ -217,6 +316,8 @@ def _validate_portable_repo_links(text: str, result: ValidationResult) -> None:
 
 
 def _auto_kind(text: str) -> str:
+    if _has_h2(text, "Execution Trace"):
+        return "v2"
     return "normal"
 
 
@@ -224,7 +325,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Validate flow-doc structure and sudocode coverage.")
     parser.add_argument(
         "--kind",
-        choices=["auto", "normal"],
+        choices=["auto", "normal", "v2", "flow-doc-v2"],
         default="auto",
         help="Flow doc type. Default: auto-detect.",
     )
@@ -241,9 +342,13 @@ def main() -> int:
 
     text = doc_path.read_text(encoding="utf-8")
     kind = _auto_kind(text) if args.kind == "auto" else args.kind
+    normalized_kind = "v2" if kind == "flow-doc-v2" else kind
 
     result = ValidationResult()
-    _validate_normal_flow_doc(text, result)
+    if normalized_kind == "v2":
+        _validate_v2_flow_doc(text, result)
+    else:
+        _validate_normal_flow_doc(text, result)
     _validate_portable_repo_links(text, result)
 
     if result.errors:

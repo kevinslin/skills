@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/architecture/template.md`
+- `./references/architecture/template.md`
 
 ## Default Output Location
 
@@ -23,7 +23,7 @@
    - subsystem-scoped if the request is about one service, package, runtime, or workflow
 2. Check for an existing `ARCHITECTURE.md` at the target path.
    - If one exists, revise in place and preserve any useful source-backed content and the required ending sections.
-   - If one does not exist, copy `@references/architecture/template.md` to the target path.
+   - If one does not exist, copy `./references/architecture/template.md` to the target path.
 3. Gather source-backed context from the repository before drafting:
    - runtime entry points
    - key modules and directories

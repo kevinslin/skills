@@ -9,7 +9,7 @@
 
 ## Template
 
-- `@references/research-brief/template.md`
+- `./references/research-brief/template.md`
 
 ## Output Location
 
@@ -18,7 +18,7 @@
 ## Instructions
 
 1. Review `$DOCS_ROOT/research/` to see recent research briefs.
-2. Copy `@references/research-brief/template.md` to `$DOCS_ROOT/research/{YYYY-MM-DD}-research-{topic-slug}.md`.
+2. Copy `./references/research-brief/template.md` to `$DOCS_ROOT/research/{YYYY-MM-DD}-research-{topic-slug}.md`.
 3. Use kebab-case for the topic slug (for example: `2025-01-15-research-auth-strategies.md`).
 4. Begin filling in the brief based on the user instructions, stopping for clarifications when needed.
 

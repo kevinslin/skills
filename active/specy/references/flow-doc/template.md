@@ -33,11 +33,11 @@ Draft with `$dev.diagram`. Prefer an ASCII box diagram unless preserving an exis
 
 ## Call path
 
-[Start with `### Overview` using `@references/flow-overview/template.md`. Keep the overview linear and move branch detail into the phase sections below.]
+[Start with `### Overview` using `./references/flow-overview/template.md`. Keep the overview linear and move branch detail into the phase sections below.]
 
 ### Overview
 
-[Required. Insert a single linear `ts` block using `@references/flow-overview/template.md`.]
+[Required. Insert a single linear `ts` block using `./references/flow-overview/template.md`.]
 
 ### Phase 1: [Short phase name]
 
