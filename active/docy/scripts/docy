@@ -33,6 +33,11 @@ DOCS = {
         rel_path="vendor/lerna.md",
         description="Modern Lerna operating guidance for agents.",
     ),
+    "ref/commit-messages": DocSpec(
+        slug="ref/commit-messages",
+        rel_path="ref/commit-messages.md",
+        description="Repo-aware commit message drafting.",
+    ),
     "ref/python-preferred-modules": DocSpec(
         slug="ref/python-preferred-modules",
         rel_path="ref/python-preferred-modules.md",

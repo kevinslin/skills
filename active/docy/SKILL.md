@@ -1,6 +1,6 @@
 ---
 name: docy
-description: Manage reusable reference docs for agent work. Use at startup for coding-related tasks to load the baseline rule set from `./references/core/`, then use again as needed to add language-specific, vendor-specific, or special-topic guidance.
+description: Load reusable reference docs for coding-related agent work.
 dependencies: []
 ---
 
@@ -28,6 +28,8 @@ All managed docs live under `./references/` and follow this layout:
 - vendor/
 # special topics
 - ref/
+    - commit-messages.md: Repo-aware commit message drafting; inspect local
+      history and mirror conventions before writing a subject line
     - execution-trace.md: How to write runtime-ordered execution trace docs
     - no-back-compat.md: Hard-cut product policy; no backwards compatibility
     - remove-feature.md: Feature removal hygiene; remove stale docs/tests and
@@ -54,12 +56,14 @@ For coding-related tasks, use this loading order:
 Run the bundled CLI directly or put `scripts/` on `PATH`.
 
 ```bash
+docy inject ref/commit-messages
 docy inject ref/no-back-compat
 docy inject ref/remove-feature
 docy inject ref/openclaw-agent-plugins
 docy inject ref/execution-trace
 docy inject vendor/lerna
 
+docy install ref/commit-messages
 docy install ref/no-back-compat
 docy install ref/remove-feature
 docy install ref/openclaw-agent-plugins
@@ -79,6 +83,9 @@ Command behavior:
   specs, flows, and other durable docs synchronized when an architectural change
   invalidates older guidance.
 - `./references/vendor/lerna.md`: Modern Lerna operating guidance for agents. Use before changing, validating, or releasing code in a Lerna-managed monorepo.
+- `./references/ref/commit-messages.md`: Repo-aware commit message drafting. Use
+  before writing a commit message so the subject mirrors recent local history
+  instead of forcing one universal style.
 - `./references/ref/python-preferred-modules.md`: Python dependency preferences. Use before building runtime validation or CLI behavior from scratch in Python projects.
 - `./references/ref/typescript-preferred-modules.md`: TypeScript dependency preferences. Use before building runtime validation or CLI behavior from scratch in TypeScript projects.
 - `./references/ref/openclaw-agent-plugins.md`: OpenClaw plugin authoring guidance. Use before creating or expanding an OpenClaw plugin so capability ownership, entrypoint shape, SDK imports, and route/setup boundaries stay aligned with the architecture docs.

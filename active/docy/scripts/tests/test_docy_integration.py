@@ -13,6 +13,7 @@ from pathlib import Path
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "docy"
 SKILL_ROOT = SCRIPT_PATH.parents[1]
 REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "no-back-compat.md"
+COMMIT_MESSAGES_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "commit-messages.md"
 VENDOR_REFERENCE_PATH = SKILL_ROOT / "references" / "vendor" / "lerna.md"
 PYTHON_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "python-preferred-modules.md"
 OPENCLAW_PLUGIN_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "openclaw-agent-plugins.md"
@@ -55,6 +56,15 @@ class DocyIntegrationTests(unittest.TestCase):
             VENDOR_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
         )
         self.assertIn("workspace-aware task runner", result.stdout)
+
+    def test_inject_commit_messages_doc(self) -> None:
+        result = self.run_cli("inject", "ref/commit-messages")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            COMMIT_MESSAGES_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
+        self.assertIn("Repo Profiles", result.stdout)
 
     def test_inject_python_preferred_modules_doc(self) -> None:
         result = self.run_cli("inject", "ref/python-preferred-modules")
