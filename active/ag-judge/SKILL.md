@@ -1,6 +1,6 @@
 ---
 name: ag-judge
-description: Review AI agent work and decide whether to classify each judgement as APPROVE, REJECT, or ESCALATE by scoring impact, risk, and size from 1-5 against a topic-specific judge book. Use when asked to vet agent-generated recommendations, especially agent-efficiency or workflow optimization proposals.
+description: Judge agent work as approve, reject, or escalate.
 dependencies: [sc]
 ---
 

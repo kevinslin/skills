@@ -1,6 +1,6 @@
 ---
 name: debug-test-failure
-description: Debug whether test failures were introduced by the current branch. Use when asked to determine branch specific regressions.
+description: Determine whether test failures come from the current branch.
 dependencies:
 - dev.worktrees
 ---

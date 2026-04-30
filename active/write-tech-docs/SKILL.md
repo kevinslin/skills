@@ -1,6 +1,6 @@
 ---
 name: tech-doc-writer
-description: This skill should be used when writing or reviewing technical documentation such as READMEs, API documentation, quickstart guides, or any user-facing documentation. Apply editorial principles focused on leading with value, cutting redundancy, and creating scannable, actionable content. Use when the user requests help writing docs, improving existing documentation, or creating user guides.
+description: Write or review technical documentation.
 ---
 
 # Tech Doc Writer

@@ -1,6 +1,6 @@
 ---
 name: dev.worktrees
-description: Standardize git worktree creation and management with all worktrees stored under ~/.worktrees/[repo]/[branch-name]. Use whenever running or planning git worktree commands (add/list/remove/prune), creating parallel checkouts, or setting up isolated branch workspaces.
+description: Create, inspect, or manage git worktrees.
 ---
 
 # dev.worktrees

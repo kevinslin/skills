@@ -1,6 +1,6 @@
 ---
 name: fin
-description: Finalize a completed task from either a GitHub PR or a local checkout. Run `fin [context]` with optional `gh` or `local`; if omitted, detect whether the current branch has an active PR and choose `gh` when it does, otherwise choose `local`. Then archive any matching `specy` spec, land the change in the selected context, reconcile `main`, and run `ag-learn` to propose retrospective improvements.
+description: Finalize completed PR or local checkout work.
 dependencies:
 - ag-learn
 - dev.shortcuts

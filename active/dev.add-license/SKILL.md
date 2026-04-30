@@ -1,6 +1,6 @@
 ---
 name: dev.add-license
-description: This skill should be used when the user wants to add a LICENSE file to their repository. Currently supports Apache License 2.0 with automatic copyright information detection from git configuration. Also updates package.json license field if the file exists.
+description: Add an Apache 2.0 license and update package metadata.
 ---
 
 # Add License

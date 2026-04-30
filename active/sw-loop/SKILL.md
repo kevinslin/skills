@@ -1,12 +1,6 @@
 ---
 name: sw-loop
-description: Swarm-based feature delivery workflow that coordinates a manager agent,
-  spec work, implementation, review, cleanup, and verification across multiple subagents.
-  Use when the user explicitly wants a swarm of agents, parallelized feature work,
-  or a managed loop that should delegate orchestration to `$sw-ctrl`, create a feature
-  spec with `$specy`, stop after planning when ambiguity remains or the user wants
-  plan review, implement with `$dev.loop`, run parallel `$dev.review` passes for code/docs/dead-code
-  follow-up, and finish verification in a separate subagent.
+description: Run explicitly requested swarm workflows for feature delivery.
 dependencies:
 - dev.loop
 - dev.review

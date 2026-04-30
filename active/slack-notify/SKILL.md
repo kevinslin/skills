@@ -1,6 +1,6 @@
 ---
 name: slack-notify
-description: Send explicit Slack notifications through slack-post using credentials loaded by the secrets skill.
+description: Send explicit Slack notifications through `slack-post`.
 dependencies:
 - secrets
 ---

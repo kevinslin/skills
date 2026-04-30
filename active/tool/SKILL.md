@@ -1,6 +1,6 @@
 ---
 name: tool
-description: Install and/or document local tools end to end. 
+description: Install or document local command-line tools end to end.
 dependencies:
 - dendron
 - schemas

@@ -1,6 +1,6 @@
 ---
 name: dev.can-make-public
-description: Scan a repository and its git history for secrets, credentials, private keys, internal URLs, PII, and other sensitive artifacts before making it public. Use when a user asks if a repo is safe to open-source, requests a pre-publication audit, or wants to sanitize a repo for public release.
+description: Scan a repo for sensitive data before making it public.
 ---
 
 # Dev.Can-Make-Public

@@ -1,9 +1,6 @@
 ---
 name: ag-dir
-description: Define and maintain an Agent Project Directory (AGD) with clear durable
-  docs, canonical status ownership, and isolated runtime artifacts. Use when creating
-  a new AGD, auditing an existing AGD against the canonical layout, or materializing
-  missing AGD notes into an existing project directory.
+description: Create or audit Agent Project Directory docs and status structure.
 dependencies:
 - ag-ledger
 - dev.shortcuts

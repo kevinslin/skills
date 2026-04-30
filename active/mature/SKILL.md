@@ -1,6 +1,6 @@
 ---
 name: mature
-description: Add or update CLI maturity ratings in a repository's README and AGENTS instructions. Use when a user wants a maturity legend, per-tool maturity emojis, or a repo rule that new tools must include a maturity label in the CLI index.
+description: Add or update CLI maturity ratings in repo docs.
 dependencies: []
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: dev.conventional-commits
-description: Explain and apply the Conventional Commits specification for commit messages, including required format, types/scopes, breaking change notation, and examples. Use when asked to draft, validate, or review commit messages or when a repo wants Conventional Commits adoption.
+description: Draft, validate, or explain Conventional Commit messages.
 ---
 
 # Conventional Commits Guide

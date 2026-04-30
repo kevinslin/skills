@@ -1,6 +1,6 @@
 ---
 name: babysit-pr
-description: Babysit an active pull request by polling GitHub and CI until it is stable green or needs fixes.
+description: Watch a pull request and CI until green or needing fixes.
 dependencies: [dev.shortcuts, gen-notifier]
 ---
 

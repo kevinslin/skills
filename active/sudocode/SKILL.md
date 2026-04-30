@@ -1,6 +1,6 @@
 ---
 name: sudocode
-description: Write consistent sudocode from real code. Use whenever sudocode needs to be written, including flow docs, specs, architecture docs, or code-to-sudocode transformations.
+description: Write sudocode from real code for docs and specs.
 ---
 
 # SudoCode

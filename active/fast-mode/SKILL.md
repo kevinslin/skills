@@ -1,6 +1,6 @@
 ---
 name: fast-mode
-description: Operate Codex in fast-mode by skipping skill loading and going directly to task execution, while allowing only explicitly whitelisted skills from a local allow-list file. Use when a user requests fast-mode, minimal overhead, or "no skills unless allowed."
+description: Run in fast-mode with only explicitly allowed skills.
 ---
 
 # Fast Mode

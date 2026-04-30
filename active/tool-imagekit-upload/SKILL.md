@@ -1,6 +1,6 @@
 ---
 name: imagekit-upload
-description: Upload images to ImageKit from file paths or clipboard, returning the CDN URL for easy sharing and embedding. Use when a user wants an existing image uploaded to ImageKit. 
+description: Upload existing images to ImageKit and return CDN URLs.
 version: 1.0.0
 ---
 

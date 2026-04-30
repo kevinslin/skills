@@ -1,6 +1,6 @@
 ---
 name: create-task
-description: Create tasks across target platforms. Use when a user asks to create an issue/ticket/task. Currently supports GitHub Issues and always appends a required Context footer with the LLM session to the task body.
+description: Create tracked tasks or issues with session context.
 ---
 
 # Create Task

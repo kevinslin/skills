@@ -1,6 +1,6 @@
 ---
 name: secrets
-description: Load and manage local dotenvx credential sets for agent workflows. Use when directly invoked as $secrets or when a task needs credentials from ~/.secrets/.env.*.
+description: Load local dotenvx credential sets for agent workflows.
 dependencies: []
 ---
 

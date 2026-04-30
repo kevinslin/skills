@@ -1,6 +1,6 @@
 ---
 name: dev.bootstrap.typescript
-description: Bootstrap or augment TypeScript projects. Use when asked to scaffold a new TypeScript project using the Copier template at /Users/kevinlin/code/copier-typescript-codex, or when asked to add a pre-commit hook that runs formatting and linting in an existing project.
+description: Bootstrap TypeScript projects or add TypeScript pre-commit checks.
 ---
 
 # Dev.bootstrap.typescript

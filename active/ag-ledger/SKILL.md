@@ -1,6 +1,6 @@
 ---
 name: ag-ledger
-description: Record and query append-only agent activity ledger entries, and sync recent Codex conversations into local JSONL daily files under META_LEDGER_ROOT (default ~/.llm/ag-ledger). Use when setting up automation-backed activity tracking, recovering ledger history from recent Codex sessions, or reviewing activity by session, workspace, or time range.
+description: Record, sync, and query local agent activity ledger entries.
 dependencies: []
 ---
 

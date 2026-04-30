@@ -1,8 +1,6 @@
 ---
 name: ag-learn
-description: learn from the current session, run a time-bounded review across sessions,
-  or reflect on a merged PR to identify simplicity and maintainability improvements.
-  Use when asked to "learn", "review sessions", or "learn from PR"
+description: Learn from sessions or merged PRs to improve agent workflows.
 dependencies:
 - ag-ledger
 - dev.llm-session

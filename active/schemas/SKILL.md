@@ -1,6 +1,6 @@
 ---
 name: schemas
-description: Materialize schema-defined file and directory hierarchies from bundled YAML schemas and Jinja templates. Use when asked to list or inspect available schemas, navigate a hierarchical schema, validate schema structure, or generate files from schemas such as Dendron note sets.
+description: List, inspect, validate, or materialize bundled file schemas.
 dependencies: []
 ---
 

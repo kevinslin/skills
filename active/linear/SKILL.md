@@ -1,6 +1,6 @@
 ---
 name: linear
-description: Manage Linear issues, projects, comments, and team workflows with the `linear-cli` terminal client. Use when the user invokes `linear`, asks to work in Linear from the terminal, or wants issue/project reads or updates performed through `linear-cli` rather than a plugin or SDK.
+description: Manage Linear issues and projects through `linear-cli`.
 dependencies: []
 ---
 

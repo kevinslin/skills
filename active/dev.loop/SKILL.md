@@ -1,10 +1,6 @@
 ---
 name: dev.loop
-description: Drive a development task end-to-end from a user-stated goal through planning,
-  context gathering, execution, verification. Use when the user asks to run a devloop,
-  drive a task to completion, or wants a plan-gather-execute-verify workflow with
-  phased commits and CI verification. Also use if user asks to invoke any individual
-  phase of the devloop
+description: Drive a development task through planning, execution, and verification.
 dependencies:
 - dev.shortcuts
 - specy

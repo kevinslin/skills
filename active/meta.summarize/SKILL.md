@@ -1,10 +1,6 @@
 ---
 name: meta.summarize
-description: Summarize Codex activity from ag-ledger using optional `scope`, `lookup`,
-  and `groupby` arguments (`meta.summarize [scope] [lookup] [groupby]`). Use when
-  asked to summarize the current conversation (`convo`), summarize sessions that started
-  in the current workspace (`workspace`), or summarize all sessions across workspaces
-  (`all`) over current day, last 24 hours, last week, or last month.
+description: Summarize Codex activity from the agent ledger.
 dependencies: []
 ---
 

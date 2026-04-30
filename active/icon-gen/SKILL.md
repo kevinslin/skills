@@ -1,6 +1,6 @@
 ---
 name: icon-gen
-description: Generate project icons with a paired general icon and inline icon asset. Use when the user asks to create or refresh a logo, mascot icon, emoji-like icon, or small inline brand mark for a repo, README, docs, or CLI. Saves outputs into the current project's `assets/` directory and defaults to the `chibi` style.
+description: Generate project icons, logos, or inline brand marks.
 dependencies:
 - imagegen
 ---

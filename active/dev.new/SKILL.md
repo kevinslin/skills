@@ -1,6 +1,6 @@
 ---
 name: dev.new
-description: Sync a repo to the latest master branch by checking out master and pulling from origin. Use when the user asks to refresh local state before new work.
+description: Refresh a repo by syncing local master from origin.
 ---
 
 # dev.new

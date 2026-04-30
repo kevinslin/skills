@@ -1,7 +1,6 @@
 ---
 name: specy
-description: Create structured docs and specs for codebase exploration and
-  feature work 
+description: Create structured specs and code exploration docs.
 version: 1.13.0
 dependencies:
 - dev.diagram

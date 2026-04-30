@@ -1,6 +1,6 @@
 ---
 name: integ
-description: Create or maintain dedicated integration-test harness repositories under `~/integ/[project]`. Use only when explicitly invoked as `integ` to bootstrap a per-project integration repo, wire its `AGENTS.md`, add canonical runner scripts, or allocate numbered proof directories for integration evidence.
+description: Use only when explicitly invoked to manage ~/integ/[project] harness repos.
 dependencies: []
 ---
 

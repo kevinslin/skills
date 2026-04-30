@@ -1,6 +1,6 @@
 ---
 name: proofread
-description: Proofread posts before publication. Use when asked to review a draft blog post, article, social post, announcement, essay, or other publish-ready writing for spelling, grammar, repeated phrasing, logic or factual mistakes, weak arguments, or empty and placeholder links.
+description: Proofread publish-ready drafts for clarity, correctness, and links.
 dependencies: []
 ---
 

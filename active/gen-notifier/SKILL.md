@@ -1,6 +1,6 @@
 ---
 name: gen-notifier
-description: Generic desktop notification skill for agents. Send exactly one desktop notification per job at the final terminal state, immediately before the final user-facing report, unless the user says otherwise.
+description: Send exactly one final-state desktop notification before the final report.
 version: 1.1.0
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: mem
-description: Manage user-defined knowledge bases. Use when directly invoked via `$mem`.
+description: Manage user-defined knowledge bases when `$mem` is invoked.
 dependencies: []
 ---
 

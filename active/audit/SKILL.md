@@ -1,6 +1,6 @@
 ---
 name: audit
-description: "Audit a codebase for heuristic quality problems and route to focused audit subcommands documented under `./references/*.md`. Use when a user asks for a repo audit, code smell scan, or concrete findings plus improvement advice for a named heuristic. Current supported subcommand: `slop` for likely LLM-generated code slop."
+description: Audit a repo for code quality issues using focused heuristics.
 dependencies: []
 ---
 

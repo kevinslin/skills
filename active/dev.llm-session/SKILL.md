@@ -1,6 +1,6 @@
 ---
 name: dev.llm-session
-description: Derive Codex CLI session IDs and resume interactive sessions. Use when asked to resume Codex sessions, find or map session IDs, inspect ~/.codex/history.jsonl or ~/.codex/sessions, or troubleshoot Codex resume behavior.
+description: Find, map, or resume Codex CLI sessions.
 ---
 
 # dev.llm-session

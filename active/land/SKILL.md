@@ -1,6 +1,6 @@
 ---
 name: land
-description: Finalize a task by syncing status to the originating GitHub issue and, when in an AG directory, updating durable project docs (`progress.md`, `memory.md`, and related task tracking files).
+description: Land completed work and update AGD status docs.
 dependencies:
 - ag-dir
 ---

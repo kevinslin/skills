@@ -1,6 +1,6 @@
 ---
 name: meta.skill-optimizer
-description: Optimize existing skills and their associated files (SKILL.md, scripts, references, assets) for clarity, concision, and ease of use. Use when asked to optimize, streamline, simplify, or clean up a skill; consolidate duplicated or conflicting instructions; add small, clarifying examples; or run an evidence-based skill review using past runs/sessions and learnings.
+description: Optimize skill instructions, resources, and usability.
 ---
 
 # Meta Skill Optimizer

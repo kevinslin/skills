@@ -1,9 +1,6 @@
 ---
 name: dev.do
-description: End-to-end development task intake and execution. Use when the user gives
-  a dev task (feature/bug/refactor) as a file path, pasted description, or git issue
-  and wants it completed; this skill gathers context, asks clarifying questions if
-  needed, then runs the dev.loop workflow to deliver the change.
+description: Run a development task from intake through implementation.
 dependencies:
 - dev.llm-session
 - specy

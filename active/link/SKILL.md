@@ -1,6 +1,6 @@
 ---
 name: link
-description: Link the current Codex session to a markdown note and keep that note as the durable task ledger. Use when the user invokes `$link` with a path to an `.md` note, asks to "associate this session" with a note, or wants an investigation/task note that records Summary, Tasks, Notes, and Log while work proceeds.
+description: Link the current Codex session to a durable Markdown task note.
 dependencies: []
 ---
 

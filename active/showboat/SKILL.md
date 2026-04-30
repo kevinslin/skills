@@ -1,6 +1,6 @@
 ---
 name: showboat
-description: Create executable demo documents with Showboat that some logic actually works. Use when asked to produce a reproducible demo. 
+description: Create executable Showboat demos that prove behavior.
 dependencies: []
 ---
 

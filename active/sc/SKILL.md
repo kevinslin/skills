@@ -1,8 +1,6 @@
 ---
 name: sc
-description: Guide for creating or updating skills and SKILL.md content. Use whenever
-  a user asks to create/update a skill, directly invokes $sc, or mentions a skill
-  name and requests changes (e.g., 'update $learn skill', 'edit skill description')
+description: Create or update skills and SKILL.md content.
 dependencies: []
 license: Complete terms in LICENSE.txt
 ---

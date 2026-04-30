@@ -1,6 +1,6 @@
 ---
 name: sw-ctrl
-description: Manager-orchestrator skill for driving tasks to completion by breaking work into scoped subagent tasks, monitoring progress, unblocking stalled agents, and integrating results. Use when the user wants a supervising agent to coordinate docs, implementation, and learnings across multiple threads instead of doing all work in one rollout.
+description: Coordinate explicitly requested subagent work as a manager.
 dependencies:
 - specy
 - dev.loop

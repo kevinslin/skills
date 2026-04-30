@@ -1,6 +1,6 @@
 ---
 name: dev.review
-description: Review code, specs, architecture, UX, and design docs. Use when the user asks for a review or critique.
+description: Review code, specs, architecture, UX, or design docs.
 dependencies: [specy]
 ---
 

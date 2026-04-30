@@ -1,6 +1,6 @@
 ---
 name: dev.diagram
-description: Create or update engineering diagrams in plain ASCII or Mermaid, choosing the format that matches the destination medium and surrounding document. Use when an agent needs to add, revise, convert, or simplify architecture, flow, sequence, state, dependency, or decision diagrams in docs, specs, PRs, or Markdown, especially when the user asks for box art, ASCII, or Mermaid.
+description: Create or revise engineering diagrams in ASCII or Mermaid.
 dependencies: []
 ---
 

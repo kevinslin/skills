@@ -1,6 +1,6 @@
 ---
 name: hn-title
-description: This skill should be used when the user wants to create, analyze, or improve blog titles for Hacker News submissions. Invoke when the user mentions "HN title", "Hacker News title", wants to optimize their post title, or wants to increase their chances of reaching the HN front page.
+description: Create or improve Hacker News submission titles.
 ---
 
 # Hacker News Title Skill

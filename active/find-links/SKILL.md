@@ -1,6 +1,6 @@
 ---
 name: find-links
-description: This skill should be used when the user wants to fill in TODO links, placeholder links, or missing links in markdown files. Invoke when the user mentions "fill links", "TODO links", "find links", or asks to add appropriate links to concepts in a document.
+description: Fill TODO, placeholder, or missing Markdown links.
 ---
 
 # Find Links Skill

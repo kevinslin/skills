@@ -1,6 +1,6 @@
 ---
 name: op
-description: Use 1Password CLI (`op`) safely from agent workflows. Use when a task involves retrieving, injecting, configuring, troubleshooting, or documenting secrets with 1Password CLI; using `op read`, `op run`, `op item`, secret references, service accounts, or `OP_SERVICE_ACCOUNT_TOKEN`; or giving Codex/agents/tools access to credentials stored in 1Password.
+description: Use 1Password CLI safely for agent credential workflows.
 dependencies: []
 ---
 
