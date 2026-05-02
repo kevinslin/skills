@@ -15,13 +15,13 @@ Use this skill at the end of a task before the final user-facing report.
 
 Run `fin [context]`.
 
-- `gh`: finalize from a GitHub PR context. Use this when the task should land by merging the current remote PR. The original `fin` workflow maps to this context.
+- `gh`: finalize from a GitHub PR context. Use this when the task should land by merging the current remote PR or when the matching PR already merged and only cleanup/final verification remains. The original `fin` workflow maps to this context.
 - `local`: finalize from a local checkout. Use this when the task should land directly from local git state without depending on GitHub PR state.
 - If the current checkout is detached `HEAD`, treat that as a preflight issue, not a valid finalization state. Create a short-lived local branch from the current commit before auto-detecting context, checking mergeability, or attempting worktree cleanup.
 - If the argument is `gh` or `local`, respect it throughout the flow. Do not silently switch later just because repo state would make the other path easier.
 - If the argument is omitted, detect the context from the current branch before any archival or landing work:
-  - Choose `gh` when the current branch has an active PR that corresponds to the branch being finalized.
-  - Choose `local` when the current branch has no active PR and the work should land directly from local git state.
+  - Choose `gh` when the current branch has an open or already-merged PR that corresponds to the branch being finalized.
+  - Choose `local` when the current branch has no matching PR and the work should land directly from local git state.
 - If the argument is present but not one of `gh` / `local`, stop and ask the user which context to use.
 - Report whether the finalization context was explicitly provided or auto-detected.
 
@@ -35,12 +35,14 @@ Run `fin [context]`.
 - After converting detached `HEAD` into a named branch, lock that branch identity for the rest of the run. Do not continue finalization from anonymous detached state.
 - When the user omitted the context, lock the detected context once and use it for the rest of the run. Do not re-detect after archiving or mid-landing.
 - Do not silently switch contexts after selection. If the user requested `gh`, do not fall back to local-only landing. If the user requested `local`, do not silently land via PR merge just because a PR exists.
-- For `gh`, confirm the current PR is mergeable against `main` or its base branch.
+- For `gh`, identify the current PR and check its state before testing mergeability or attempting any merge command.
+- If the current PR is already merged, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
+- For `gh`, when the current PR is still open, confirm it is mergeable against `main` or its base branch.
 - For `local`, confirm the current branch is mergeable into local `main`.
 - If the `gh` flow is blocked only by base-branch conflicts, run `trigger:fix-pr-conflict` and let it try to restore a clean merge state.
 - If the `gh` flow is blocked by broader PR issues, or conflict repair needs a fuller pass, run `trigger:fix-pr`.
 - If the `local` flow is blocked only by trunk drift, run `trigger:sync-branch` or otherwise rebase the current branch onto the merge target before retrying the check.
-- Continue only after mergeability is confirmed. If repair cannot restore a mergeable state, stop and report the blockage instead of archiving the spec or landing the change.
+- Continue only after mergeability is confirmed or the matching PR is already merged. If repair cannot restore a mergeable state, stop and report the blockage instead of archiving the spec or landing the change.
 
 2. Resolve the active spec
 - Respect `DOCS_ROOT` when it is configured; otherwise default to `./docs`.
@@ -59,14 +61,15 @@ Run `fin [context]`.
 ## `gh` Context Workflow
 
 4. Merge the PR
-- Run `trigger:merge-pr` immediately after the matching spec has been marked complete and archived.
+- Before running a merge command, check the current PR state with GitHub. If the PR is already `MERGED`, do not run `trigger:merge-pr`; record the merge commit or merged-at details when available and proceed as an already-landed PR.
+- If the PR is not already merged, run `trigger:merge-pr` immediately after the matching spec has been marked complete and archived.
 - Treat the merge as part of finalization, not a follow-up option.
 - If the merge command reports that the local branch cannot be deleted because it is still attached to a linked worktree, check whether the remote PR actually merged before treating the step as failed.
 - When the PR merged remotely but local branch deletion failed only because of the linked worktree attachment, treat that as a successful merge followed by incomplete cleanup and continue with worktree removal from another checkout.
 - If there is no matching PR to merge, state that explicitly instead of claiming the task fully landed.
 
 5. Remove the merged worktree
-- If the merged branch lives in a linked git worktree, remove that worktree after the PR merge succeeds.
+- If the merged branch lives in a linked git worktree, remove that worktree after the PR merge succeeds or after confirming the PR was already merged.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - If `gh pr merge --delete-branch` already deleted the remote branch but failed local deletion because the branch was still attached to the worktree, finish the cleanup explicitly instead of retrying the merge.
 - Fully remove the worktree, then run `git worktree prune`.
@@ -74,7 +77,7 @@ Run `fin [context]`.
 - If there is no linked worktree for the task branch, state that explicitly and continue.
 
 6. Update the local `main` checkout
-- After the PR merge succeeds and any linked-worktree cleanup is finished, update the local main checkout before reporting completion.
+- After the PR merge succeeds, or after confirming the PR was already merged, update the local main checkout before reporting completion once any linked-worktree cleanup is finished.
 - Run this refresh from the main checkout, not from a detached or soon-to-be-removed worktree.
 - Check out `main` if needed.
 - Pull or otherwise fast-forward `main` to `origin/main`.
@@ -111,7 +114,7 @@ Run `fin [context]`.
 
 7. Run the retrospective
 - Run `$ag-learn` after the task lands in the requested context and after any matching spec has been archived.
-- For `gh`, run it after the PR merge and local `main` refresh complete.
+- For `gh`, run it after the PR merge or already-merged confirmation and local `main` refresh complete.
 - For `local`, run it after the local merge and local `main` verification complete.
 - Review the saved learning note and extract 2-3 high-signal learnings.
 - Present these as proposed learnings for follow-up, not mandatory extra scope.
@@ -120,9 +123,9 @@ Run `fin [context]`.
 8. Report the finished state
 - State which context ran: `gh` or `local`.
 - State whether that context was explicitly requested or auto-detected from current-branch PR state.
-- State whether the mergeability check passed directly or required `fix-pr-conflict` / `fix-pr` / `sync-branch` / manual repair.
+- State whether the mergeability check passed directly, was skipped because the PR was already merged, or required `fix-pr-conflict` / `fix-pr` / `sync-branch` / manual repair.
 - State whether a spec was archived and include the source and destination paths when applicable.
-- For `gh`, state whether `merge-pr` ran successfully, including whether the remote merge succeeded directly or required separate post-merge worktree cleanup because local branch deletion failed.
+- For `gh`, state whether the PR was already merged and `merge-pr` was skipped, or whether `merge-pr` ran successfully, including whether the remote merge succeeded directly or required separate post-merge worktree cleanup because local branch deletion failed.
 - For `local`, state whether the branch landed via local merge, was already on `main`, or was blocked before landing.
 - State whether a linked worktree was removed, pruned, and had its merged branch deleted when applicable.
 - State whether the local `main` checkout was updated or verified successfully and identify the resulting `main` tip when relevant.
@@ -136,10 +139,11 @@ Run `fin [context]`.
 - Do not move a spec into `.archive` unless the task is actually complete.
 - Do not archive unrelated active specs.
 - Do not try to finalize directly from detached `HEAD`; create a named branch first.
-- Do not archive a spec or land the change before the current branch or PR is confirmed mergeable for the chosen context.
+- Do not archive a spec or land the change before the current branch or PR is confirmed mergeable for the chosen context, unless the matching PR is already merged.
 - Do not silently switch from `gh` to `local` or from `local` to `gh`.
 - Do not ask the user to choose `gh` vs `local` when the argument is omitted and branch PR state clearly determines the context.
 - Do not choose `gh` from a no-argument invocation unless the PR belongs to the current branch being finalized.
+- Do not run `trigger:merge-pr` when GitHub reports the matching PR is already `MERGED`; use the existing merged state and continue finalization from there.
 - If `gh` repair via `fix-pr-conflict` or `fix-pr` cannot restore a mergeable state, stop and report the blockage instead of continuing the finalization flow.
 - If `local` repair via branch sync or rebase cannot restore a mergeable state, stop and report the blockage instead of continuing the finalization flow.
 - Do not run `merge-pr` in `gh` mode before the matching spec is marked complete and archived.
@@ -156,10 +160,10 @@ Run `fin [context]`.
 - `fin` was run with either an explicit `gh` / `local` argument or no argument and a context auto-detected from current-branch PR state.
 - If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
 - The chosen or detected context was locked once and respected throughout the flow.
-- Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, and any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
+- Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, unless the matching PR was already merged; any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
 - Matching active spec, if any, is marked complete and moved to `$DOCS_ROOT/specs/.archive/`.
 - Unrelated active specs remain untouched.
-- In `gh` mode, `trigger:merge-pr` has been run after archival, or the missing-PR condition was reported explicitly.
+- In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
 - In `local` mode, the completed branch has been merged into local `main` or verified as already landed there.
 - Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere.
 - The local `main` checkout was refreshed or verified to include the landed work before the task was reported complete.
