@@ -1,7 +1,7 @@
 ---
 name: specy
 description: Create structured specs and code exploration docs.
-version: 1.13.0
+version: 2.0.0
 dependencies:
 - dev.diagram
 - dev.llm-session
@@ -31,8 +31,8 @@ Use this skill when:
 
 ## Hard Trigger Rule (Flow Docs)
 
-If the request mentions any flow-doc intent (for example: `flow doc`, `flow docs`, `flowdoc`, `call path doc`, `execution flow doc`), you must run this skill and follow the flow-doc workflow before drafting or revising content.
-If the request explicitly mentions `flow-doc-v2`, use the `flow-doc-v2` workflow instead of the legacy `flow-doc` workflow.
+If the request mentions any flow-doc intent (for example: `flow doc`, `flow docs`, `flowdoc`, `call path doc`, or `execution flow doc`), you must run this skill and follow the `flow-doc` workflow before drafting or revising content.
+Only the `flow-doc` doc type is supported for flow docs. Do not route to old phase-based flow-doc material or alternate flow-doc doc-type names.
 
 ## Root Directory
 
@@ -45,8 +45,7 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 
 - Architecture Docs (`architecture`): System-level architecture docs covering boundaries, components, interfaces, and key decisions.
 - Research Briefs (`research-brief`): Structured technology/approach research with comparisons and recommendations.
-- Flow Docs (`flow-doc`): Focused execution-flow documentation for core lifecycle, domain-specific behavior, and supporting reference flows.
-- Flow Docs V2 (`flow-doc-v2`): Balanced flow documentation for specified code logic, combining a general-flow diagram, an execution trace, and targeted implementation details.
+- Flow Docs (`flow-doc`): Balanced flow documentation for specified code logic, combining a general-flow diagram, an execution trace, and targeted implementation details.
 - State Docs (`state-doc`): Terminal-output mapping with predicates, required state, and derivation paths.
 - Service Design Docs (`service-design-doc`): Staff-level service/system proposals covering architecture, APIs, reliability, and risks.
 - Feature Design Docs (`design-spec`): Implementation-ready feature or migration designs with rollout/rollback planning.
@@ -70,40 +69,31 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 ### Flow Docs in Isolated Scope (Core vs Topic vs Reference)
 
 Flow docs in this skill are often intentionally isolated by lifecycle or domain (for example `core.init` vs `topic.orchestration` vs `ref.new-task-kickoff`).
-Do not force all phases into one document. Instead, each isolated flow doc must include boundary contracts:
+Do not force all phases into one document. Instead, each isolated flow doc must capture boundary contracts in `## Overview`, `## Entry Points`, `## Notes`, or `## Related docs`:
 
 1. Entry assumptions: what state/context already exists at flow entry.
 2. Snapshot points: where state is copied/frozen inside this flow.
 3. Exit/handoff: what this flow produces for the next flow.
 4. Adjacent flow links: explicit references to related phase docs.
 
-### Flow Docs V2
+### Flow Docs
 
-Use `flow-doc-v2` when the goal is to give a developer a balanced understanding
-of specified code logic with pointers for deeper investigation. Flow docs v2 are
+Use `flow-doc` when the goal is to give a developer a balanced understanding
+of specified code logic with pointers for deeper investigation. Flow docs are
 not line-by-line code descriptions. They combine:
 
 1. A general-flow diagram drafted with $dev.diagram.
 2. An execution trace shaped by $docy `ref/execution-trace`.
 3. Additional notes, observability pointers, related docs, and code/log pointers.
 
-Use `./references/flow-doc-v2/workflow.md` and
-`./references/flow-doc-v2/template.md` for this doc type.
-
-### Flow Overview Snippet
-
-Every flow doc should place `## Sequence diagram` before `## Call path`, and `## Call path` should begin with a linear `### Overview` subsection. Use:
-
-- `./references/flow-overview/workflow.md`
-- `./references/flow-overview/template.md`
-
-Treat `flow-overview` as a reusable subsection/snippet, not as a standalone document type. The overview should be one linear sudocode block across the major phases. Keep the main path readable top-to-bottom and move branch detail into the detailed phase sections below it.
+Use `./references/flow-doc/workflow.md` and
+`./references/flow-doc/template.md` for this doc type.
 
 ## Shared References
 
 - Whenever you need to write sudocode, use `$sudocode`.
 - Use [$dev.diagram](../dev.diagram/SKILL.md) to draft or revise flow diagrams.
-- Use [$docy](../docy/SKILL.md) `ref/execution-trace` before writing flow-doc-v2 execution traces.
+- Use [$docy](../docy/SKILL.md) `ref/execution-trace` before writing flow-doc execution traces.
 - Source path for this workspace: [$sudocode](../sudocode/SKILL.md).
 
 ## Flow-Doc Quality Gate (Required)
@@ -111,7 +101,7 @@ Treat `flow-overview` as a reusable subsection/snippet, not as a standalone docu
 Before finalizing any flow doc, run the validator from this skill root:
 
 ```bash
-python3 ./scripts/validate_flow_doc.py --kind auto --doc "<flow-doc-path>"
+python3 ./scripts/validate_flow_doc.py --kind flow-doc --doc "<flow-doc-path>"
 ```
 
 Resolve validator errors before handoff. Do not skip this check.
@@ -147,13 +137,9 @@ When invoked, follow the mapped workflow section exactly.
 
 - Follow `./references/research-brief/workflow.md` section `Instructions`.
 
-### new-flow-doc-normal
+### new-flow-doc
 
 - Follow `./references/flow-doc/workflow.md` section `Instructions`.
-
-### new-flow-doc-v2
-
-- Follow `./references/flow-doc-v2/workflow.md` section `Instructions`.
 
 ### new-state-doc
 
@@ -185,7 +171,7 @@ When updating existing flow docs, use a preservation-first revision style.
 4. Keep `## Manual Notes` and its content unchanged across revisions.
 5. Before finalizing, run a scope check: if the diff removes unrelated detail or broadens beyond request, reduce to a minimal targeted patch.
 
-- For more details, follow `./references/flow-doc/workflow.md` section `Instructions: Revise Flow Doc`.
+- For more details, follow `./references/flow-doc/workflow.md` section `Revision Instructions`.
 
 ### new-recipe
 
@@ -256,10 +242,6 @@ Throughout this skill, bundled paths prefixed with `./` are relative to this ski
 - `./references/research-brief/template.md` -> `./references/research-brief/template.md`
 - `./references/flow-doc/workflow.md` -> `./references/flow-doc/workflow.md`
 - `./references/flow-doc/template.md` -> `./references/flow-doc/template.md`
-- `./references/flow-doc-v2/workflow.md` -> `./references/flow-doc-v2/workflow.md`
-- `./references/flow-doc-v2/template.md` -> `./references/flow-doc-v2/template.md`
-- `./references/flow-overview/workflow.md` -> `./references/flow-overview/workflow.md`
-- `./references/flow-overview/template.md` -> `./references/flow-overview/template.md`
 - `./references/state-doc/workflow.md` -> `./references/state-doc/workflow.md`
 - `./references/state-doc/template.md` -> `./references/state-doc/template.md`
 - `./references/service-design-doc/workflow.md` -> `./references/service-design-doc/workflow.md`

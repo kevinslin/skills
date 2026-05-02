@@ -1,150 +1,52 @@
-# [Component/Feature] Flow
+---
+created: {{date}}
+updated: {{date}}
+last_updated_session: {{agent}}/{{session-id}}
+---
 
-Last updated: YYYY-MM-DD
+# [Feature] Flow
 
-## Purpose
+## Overview
 
 [1-3 sentences describing what this flow covers, what question(s) it answers, and why this flow exists]
 
-## Entry points
+## Entry Points
 
-- `path/to/file.ts`: [route/handler/hook/builder/component entrypoint]
-- `path/to/other_file.ts`: [supporting entrypoint used in the same flow]
+[how this flow starts. could be a user typing something into a form or something else. include at least and at most 3 code pointers as well]
 
-## Sequence diagram
+- path/to/file.ts: [route/handler/hook/builder/component entrypoint]
 
-Draft with `$dev.diagram`. Prefer an ASCII box diagram unless preserving an existing format or the user explicitly asks for Mermaid.
+## Sequence Diagram
+
+[Draft with `$dev.diagram mermaid general-flow`. Show the happy path plus important behavior-changing branches. Include meaningful fallback, retry, permission-denied, validation-failure, timeout, disabled-gate, and terminal-error outcomes when they materially change the flow. Omit trivial guards and implementation-only conditionals.]
+
+## Execution Trace
+
+[Focus this section on the happy-path execution from trigger to terminal effect. Mention branches only when needed to explain the next happy-path handoff; put important branch details in the general-flow diagram and Notes.]
+
+### 1. [Phase Name]
+
+[1-2 sentence describing what this phase does]
+
+#### 1.1 [Step in phase]
+
+[short description of what is happening in this step]
+
+- path/to/file.ts:{{functionName}}
 
 ```
-+----------------------+
-| [entry / trigger]    |
-+----------------------+
-          |
-          v
-+----------------------+
-| [phase / decision]   |
-+----------------------+
-   | yes         | no
-   v             v
-+-----------+ +-----------+
-| [path A]  | | [path B]  |
-+-----------+ +-----------+
+[$sudocode describing]
 ```
 
-## Call path
+#### ...
 
-[Start with `### Overview` using `./references/flow-overview/template.md`. Keep the overview linear and move branch detail into the phase sections below.]
+[add more steps as necessary]
 
-### Overview
+### 2. [add additional phases as necessary]
 
-[Required. Insert a single linear `ts` block using `./references/flow-overview/template.md`.]
+## Notes
 
-### Phase 1: [Short phase name]
-
-Trigger / entry condition:
-- [What starts this phase?]
-
-Entrypoints:
-- `path/to/file.ts:[functionName]`
-
-Ordered call path:
-1. [Short, concrete action]
-   ```ts
-   // Source: path/to/file.ts#L28
-   [use $sudocode skill for this step only; keep the description terse and move logic/branch callouts into comments]
-   ```
-2. [Next short action]
-   ```ts
-   // Source: path/to/file.ts#L42-L58
-   [sudocode for this step only]
-   ```
-3. [Next short action]
-   ```ts
-   // Source: path/to/file.ts#L64
-   [sudocode for this step only]
-   ```
-
-State transitions / outputs:
-- Input: [state/args entering the phase]
-- Output: [state/value/artifact produced by the phase]
-
-Branch points:
-- [Gate/check/fallback and its effect]
-
-External boundaries:
-- [HTTP/RPC/service call or `None identified`]
-
-### Phase 2: [Short phase name]
-
-Trigger / entry condition:
-- [What starts this phase?]
-
-Entrypoints:
-- `path/to/file.ts:[functionName]`
-
-Ordered call path:
-1. [Short, concrete action]
-   ```ts
-   // Source: path/to/file.ts#L28
-   [sudocode for this step only]
-   ```
-2. [Next short action]
-   ```ts
-   // Source: path/to/file.ts#L42-L58
-   [sudocode for this step only]
-   ```
-
-State transitions / outputs:
-- Input: [state/args entering the phase]
-- Output: [state/value/artifact produced by the phase]
-
-Branch points:
-- [Gate/check/fallback and its effect]
-
-External boundaries:
-- [HTTP/RPC/service call or `None identified`]
-
-### Phase N: [Short phase name]
-
-Trigger / entry condition:
-- [What starts this phase?]
-
-Entrypoints:
-- `path/to/file.ts:[functionName]`
-
-Ordered call path:
-1. [Short, concrete action]
-   ```ts
-   // Source: path/to/file.ts#L28
-   [sudocode for this step only]
-   ```
-
-State transitions / outputs:
-- Input: [state/args entering the phase]
-- Output: [state/value/artifact produced by the phase]
-
-Branch points:
-- [Gate/check/fallback and its effect]
-
-External boundaries:
-- [HTTP/RPC/service call or `None identified`]
-
-## State
-
-### Core state / ordering risks
-
-- `[state_name]`: [where the value is written/derived], first consumed by [consumer], [ordering/representation caveat if any]
-
-### Runtime controls (or `None identified`)
-
-| Name | Kind | Where Read | Effect on Flow |
-|---|---|---|---|
-| [e.g., migrate_gmail] | [statsig/env/cli/config/request] | `path/to/file.ts` | [behavior change] |
-
-### Notable gates
-
-- `[gate/check name]`: [what it gates and where]
-- `[route/type check]`: [how it changes the flow]
+[used to describe any quirks in behavior, important branch details, edge cases, and additional detail that does not belong in the happy-path execution trace]
 
 ## Observability
 

@@ -1,17 +1,24 @@
-# Flow Doc (Normal) Workflow
+# Flow Doc Workflow
 
 ## Use When
 
-- Documenting how a system bootstraps or initializes
-- Describing the lifecycle of an API request
-- Capturing the execution sequence of a feature
-- Creating a fast context-recapture doc for humans and LLMs
+- Creating a balanced overview of specified code logic.
+- Explaining how a startup, request, job, command, UI action, or feature flow works.
+- Giving developers enough context to understand the main logic and then dive deeper through code and logs.
+- The user asks for any flow-doc intent, including `flow doc`, `flow docs`, `flowdoc`, `call path doc`, or `execution flow doc`.
+
+## Purpose
+
+Flow docs explain how given logic works without becoming a line-by-line code
+commentary. Optimize for a developer who needs the flow shape, major phases,
+important branches, code pointers, log/metric pointers, and related docs.
 
 ## Template
 
 - `./references/flow-doc/template.md`
-- `./references/flow-overview/template.md` for the required `### Overview` subsection at the beginning of `## Call path`
-- The flow-doc template places `## Sequence diagram` before `## Call path` so readers see the high-level shape before the detailed call path.
+- Use `$dev.diagram mermaid general-flow` for `## Sequence Diagram`.
+- Use `$docy` `ref/execution-trace` for `## Execution Trace`.
+- Use `$sudocode` for compact logic summaries inside execution-trace steps.
 
 ## Output Location
 
@@ -19,106 +26,76 @@
 
 ## Flow Naming Contract
 
-- Core flows:
-  - `core.init.md`: how the system gets started.
-  - `core.exit.md`: how the system does cleanup.
-- Topic flows cover major functionality for a given domain (for example orchestration):
-  - `topic.{name}.md`
-- Ref flows cover anything that is not `core` or `topic` (for example how to kickstart a new task):
-  - `ref.{name}.md`
-- `{name}` should be concise and kebab-case.
+- Use concise kebab-case for `{flow-name}`.
+- Prefer the feature or behavior name over the implementation class name.
+- If the repository already uses `core.*`, `topic.*`, or `ref.*` flow names, keep that convention.
 
 ## Authoring Requirements
 
-- Flow docs are question-first and debugging-oriented. Optimize for traceability.
-- Use $sudocode with file annotations to describe code logic
-- Cite precise files and line numbers where logic occurs.
-- Format every sudocode source annotation as `path/to/file.ts#L28` or a tight range like `path/to/file.ts#L28-L42`.
-- Use repo-relative markdown links for `Related docs` and other repo-internal references. Do not embed absolute local checkout or worktree paths such as `/Users/...` in flow docs.
-- Preserve any line ending with `// manual` exactly across updates.
-- Use a required `State` section.
-- Use the compact `State` structure:
-  `Core state / ordering risks`, `Runtime controls`, and `Notable gates`.
-- In `Runtime controls`, capture user-settable configuration impacting the flow:
-  Statsig gates/configs/experiments/layers, environment variables, and other user-controlled runtime flags/inputs.
-- If no user-settable configuration applies, explicitly write `None identified` under `Runtime controls`.
-- `Sequence diagram` is required.
-- Use `$dev.diagram` to draft or revise the `Sequence diagram`.
-- Prefer ASCII box diagrams for flow docs unless preserving an existing diagram format or the user explicitly asks for Mermaid.
-- Place `## Sequence diagram` before `## Call path`.
-- `$sudocode` is required
-- Start `## Call path` with a `### Overview` subsection using `./references/flow-overview/template.md`.
-- Refer to `./references/flow-overview/workflow.md` for instructions on filling out the section. The overview uses `### Phase N: ...` headings with separate fenced `ts` blocks before the detailed phase sections.
-- Each `Ordered call path` entry should be a numbered step followed immediately by the relevant fenced sudocode block.
-- Keep ordered-call-path prose terse; put detailed logic, branch callouts, and side notes in the sudocode and sudocode comments.
-- The `Call path` section must be phase-based and must include:
-  - trigger / entry condition
-  - concrete entrypoints
-  - ordered call path
-  - state transitions / outputs
-  - branch points / guards
-  - external boundaries (RPC/HTTP/service calls) where relevant
+- Keep the flow question-first and developer-oriented.
+- Keep repo-internal markdown links portable and repo-relative.
+- Do not use absolute local checkout paths under `$DOCS_ROOT`.
+- Include at least one and at most three code pointers in `## Entry Points`.
+- Use precise file/function pointers in execution-trace steps.
+- Use `## Sequence Diagram` before `## Execution Trace`.
+- Use `$dev.diagram mermaid general-flow` to draft or revise the general-flow diagram. The diagram must be a Mermaid `graph TD` general-flow diagram unless revising an existing flow doc whose diagram format the user explicitly asks to preserve.
+- Identify important behavior-changing branches while reading source. Add important branches to the general-flow diagram, including meaningful fallback, retry, permission-denied, validation-failure, timeout, disabled-gate, and terminal-error outcomes when they materially change the flow.
+- Do not force branch detail into the execution trace. The execution trace should follow the happy path end to end, with branch callouts only when needed to explain the next happy-path handoff.
+- Use `$docy` `ref/execution-trace` before writing `## Execution Trace`; keep phases runtime-ordered.
+- Use `$sudocode` inside execution-trace steps when summarizing code logic.
+- Keep each step concise. Put behavior-changing conditions, state writes, side effects, and external boundaries in the sudocode or nearby notes.
+- Fill `## Notes` with quirks, important constraints, important branch details, edge cases, and extra details that do not belong in the happy-path trace.
+- Fill `## Observability` with concrete metrics and logs. If none are found, write `None identified`.
+- Preserve `## Manual Notes` and its content exactly across edits.
 
 ## Instructions
 
-1. Review existing architecture documents and relevant patterns used in the project.
-2. Review existing flow docs in `$DOCS_ROOT/flows/` for consistency.
-3. Choose `{flow-name}` using the naming contract:
-   - `core.init` for how the system gets started.
-   - `core.exit` for how the system does cleanup.
-   - `topic.{name}` for major functionality within a specific domain.
-   - `ref.{name}` for any supporting flow that is not `core` or `topic`.
-4. Copy `./references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
-5. Fill the required `Purpose` and `Entry points` sections first so scope is explicit.
-6. Draft `## Sequence diagram` before `## Call path` using `$dev.diagram`. Prefer an ASCII box diagram unless preserving an existing diagram format or the user explicitly asks for Mermaid; revise it after the detailed call path if the phase boundaries change.
-7. Draft a `### Overview` subsection at the beginning of `## Call path` using `./references/flow-overview/workflow.md` and `./references/flow-overview/template.md`.
-8. Draft the detailed `Call path` as phases. For each phase, capture trigger, entrypoints, ordered call path, state transitions, branch points, and external boundaries.
-9. Under each phase's `Ordered call path`, use numbered steps with terse descriptions. Follow each numbered step immediately with a fenced sudocode block that includes source file annotations with line numbers.
-10. Keep detailed logic, guard callouts, and external-call notes in the sudocode and sudocode comments instead of verbose step prose.
-11. Fill the required `State` section using the compact structure: summarize key state/ordering risks, list runtime controls in one table, and call out notable gates. If no runtime controls apply, write `None identified`.
-12. Fill in `Observability` and `Related docs`.
-13. Before handoff, scan markdown links and convert any repo-internal absolute local paths to repo-relative targets.
-14. Run validator from this skill root:
-    - `python3 ./scripts/validate_flow_doc.py --kind normal --doc "$DOCS_ROOT/flows/{flow-name}.md"`
-15. Fill in the new flow document based on user instructions, stopping for clarifications when needed.
+1. Review existing architecture, flow, design, and debugging docs relevant to the target logic.
+2. Read the source code for the target flow before drafting. Identify the external trigger, happy-path runtime phases, important branch points, state changes, external calls, and terminal effects.
+3. Choose `{flow-name}` and copy `./references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
+4. Fill frontmatter:
+   - `created`: current date for new docs.
+   - `updated`: current date.
+   - `last_updated_session`: `{agent}/{session-id}` after resolving the current session id via `$dev.llm-session`.
+5. Fill `## Overview` with 1-3 sentences describing what the flow covers, what questions it answers, and why the doc exists.
+6. Fill `## Entry Points` with how the flow starts and 1-3 code pointers.
+7. Draft `## Sequence Diagram` with `$dev.diagram mermaid general-flow`. Keep it as a Mermaid general-flow diagram, not a full call graph. Show the happy path plus important branches that materially change behavior; omit trivial guards and implementation-only conditionals.
+8. Load `$docy` `ref/execution-trace` and draft `## Execution Trace` as happy-path, runtime-ordered phases.
+9. For each phase:
+   - Use a short phase name.
+   - Add 1-2 sentences describing the phase.
+   - Add only the steps needed to understand the logic.
+   - Include concrete file/function pointers.
+   - Add compact `$sudocode` for behavior-critical code.
+10. Fill `## Notes` with quirks, important branch details, additional detail, and important behavior not covered by the happy-path trace.
+11. Fill `## Observability` with metrics and logs, or `None identified`.
+12. Fill `## Related docs` with related flow docs, architecture docs, specs, design docs, PR docs, and debugging notes.
+13. Keep `## Manual Notes` unchanged.
+14. Add a `## Changelog` entry with the current date and resolved session id.
+15. Scan markdown links and convert repo-internal absolute local paths to repo-relative targets.
+16. Run validator from this skill root:
+    - `python3 ./scripts/validate_flow_doc.py --kind flow-doc --doc "$DOCS_ROOT/flows/{flow-name}.md"`
+17. Resolve validator errors before handoff.
 
-## Instructions: Revise Flow Doc
+## Revision Instructions
 
-1. Read the given flow document.
-2. Read all code referenced in the document.
-3. Systematically review related code to identify gaps, inaccuracies, and stale sections.
-4. Revise the doc so it matches current code while preserving style, structure, and existing useful detail where possible.
-5. Prefer additive edits over broad rewrites; remove or reshape major sections only when they are inaccurate or explicitly requested.
-6. Keep `## Manual Notes` and its content unchanged across revisions.
-7. If the request includes specific questions, add focused clarifications that answer each question directly with file citations.
-8. For context/state-sensitive behavior, make ordering validity explicit in the `Call path` and `State` sections.
-9. Ensure the `State` section is accurate and complete, or explicitly says `None identified` under `Runtime controls` when no user-settable configuration applies.
-10. Add or revise `### Overview` at the beginning of `## Call path` using `./references/flow-overview/workflow.md`.
-11. If updating to the new format, move per-phase `#### Sudocode (...)` content into the matching numbered `Ordered call path` entries. If no format migration was requested, preserving legacy separate sudocode subsections is acceptable.
-12. Ensure `## Sequence diagram` appears before `## Call path`; move the existing diagram section if needed without changing its content unless it is stale.
-13. If migrating structure is not explicitly requested, prefer targeted/additive updates over format rewrites.
-14. Convert any repo-internal absolute local markdown links to repo-relative targets before finalizing.
-15. Run validator from this skill root:
-    - `python3 ./scripts/validate_flow_doc.py --kind normal --doc "<path-to-flow-doc>"`
-16. Perform a final scope check to ensure the diff is minimal and aligned with the user request.
+1. Read the existing flow doc and preserve useful structure and detail.
+2. Preserve `## Manual Notes` exactly.
+3. Prefer targeted additive edits unless the existing doc is structurally wrong.
+4. Re-read current source for any code paths being changed or corrected.
+5. Update `updated`, `last_updated_session`, and `## Changelog`.
+6. Re-run the flow-doc validator before handoff.
 
-## Pre-Handoff Checklist (Required)
+## Pre-Handoff Checklist
 
-- [ ] `## Sequence diagram` appears before `## Call path`.
-- [ ] `## Call path` exists and is phase-based.
-- [ ] `## Call path` starts with a linear `### Overview` subsection.
-- [ ] Each call-path phase includes numbered `Ordered call path` steps with embedded fenced sudocode blocks, or intentionally preserved legacy `#### Sudocode (...)` subsections when migration was not requested.
-- [ ] Ordered-call-path sudocode includes source annotations with line numbers and reflects runtime branch ordering.
-- [ ] `## State` is present.
-- [ ] Repo-internal markdown links use repo-relative targets rather than absolute local filesystem paths.
-- [ ] `validate_flow_doc.py` passes with no errors.
-
-## Best Practices
-
-- Focus on lifecycle and execution sequence, not only static architecture.
-- Link related docs where available.
-- Keep one lifecycle/behavior per document.
-- Keep sudocode readable and source-cited with tight line-numbered annotations.
-- Keep ordered-call-path descriptions terse; put nuance in sudocode/comments.
-- Keep call-path phases and ordered-step sudocode aligned (same phase boundaries and branch labels).
-- End your response with the exact flow-doc path (for discoverability).
+- [ ] `## Overview` states what the flow covers and why it exists.
+- [ ] `## Entry Points` includes 1-3 code pointers.
+- [ ] `## Sequence Diagram` appears before `## Execution Trace`, uses Mermaid general-flow syntax, and includes important behavior-changing branches when they exist.
+- [ ] `## Execution Trace` is phase-based, runtime-ordered, and focused on the happy path.
+- [ ] Execution-trace steps include concrete file/function pointers.
+- [ ] Sudocode uses exact source identifiers for behavior-critical logic.
+- [ ] `## Notes` captures quirks or explicitly says `None identified`.
+- [ ] `## Observability` includes metrics/logs or `None identified`.
+- [ ] Repo-internal markdown links are repo-relative.
+- [ ] `## Manual Notes` was preserved.
+- [ ] `validate_flow_doc.py --kind flow-doc` passes.

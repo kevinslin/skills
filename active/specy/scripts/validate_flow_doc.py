@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-Validate normal flow-doc structure and sudocode coverage for specy workflows.
+Validate flow-doc structure for specy workflows.
 
 Checks:
-- Required section headings
-- Ordered call path step coverage
-- Legacy sudocode subsection coverage for preservation-first revisions
-- Flow-doc-v2 heading and trace structure
+- Flow-doc heading and trace structure
 """
 
 from __future__ import annotations
@@ -19,11 +16,10 @@ from pathlib import Path
 
 
 CODE_BLOCK_RE = re.compile(r"```[A-Za-z0-9_-]*\n.*?```", re.S)
-LINE_NUMBERED_SOURCE_RE = re.compile(r"(?im)\bsource\b\s*:\s+\S+#L\d+(?:-L?\d+)?\b")
 LOCAL_ABSOLUTE_MARKDOWN_LINK_RE = re.compile(
     r"\[[^\]]+\]\(((?:/Users/|/home/)[^)]+)\)"
 )
-V2_ENTRY_POINTER_RE = re.compile(r"(?m)^\s*-\s+`?[^`\n]+?\.[A-Za-z0-9]+:[^`\n]+`?\s*$")
+ENTRY_POINTER_RE = re.compile(r"(?m)^\s*-\s+`?[^`\n]+?\.[A-Za-z0-9]+:[^`\n]+`?\s*$")
 
 
 @dataclass
@@ -41,10 +37,6 @@ def _h2_position(text: str, heading: str) -> int | None:
     pattern = re.compile(rf"(?im)^##\s+{re.escape(heading)}\s*$")
     match = pattern.search(text)
     return match.start() if match else None
-
-
-def _has_any_h2(text: str, headings: list[str]) -> bool:
-    return any(_has_h2(text, heading) for heading in headings)
 
 
 def _extract_h2_section(text: str, heading: str) -> str | None:
@@ -71,151 +63,13 @@ def _extract_segments_by_heading(section: str, heading_pattern: str) -> list[tup
     return segments
 
 
-def _section_contains_sudocode_heading(section: str) -> bool:
-    return re.search(r"(?im)^####\s+.*sudocode.*$", section) is not None
-
-
-def _extract_labeled_block(section: str, label: str, next_patterns: list[str]) -> str | None:
-    start_re = re.compile(rf"(?im)^{re.escape(label)}\s*$")
-    match = start_re.search(section)
-    if not match:
-        return None
-
-    start = match.end()
-    next_indices = [
-        next_match.start()
-        for pattern in next_patterns
-        if (next_match := re.compile(pattern, re.I | re.M).search(section, start))
-    ]
-    end = min(next_indices) if next_indices else len(section)
-    return section[start:end]
-
-
-def _validate_legacy_sudocode_sections(scope: str, section: str, result: ValidationResult) -> None:
-    sudocode_sections = _extract_segments_by_heading(section, r"^####\s+.*sudocode.*$")
-    for heading, segment in sudocode_sections:
-        if CODE_BLOCK_RE.search(segment) is None:
-            result.errors.append(f"{scope} has no fenced code block in legacy sudocode section: {heading.strip()}")
-        if re.search(r"(?im)\bsource\b\s*:", segment) is None:
-            result.warnings.append(
-                f"{scope} has no explicit source annotation ('Source:') in legacy sudocode section: {heading.strip()}"
-            )
-        elif LINE_NUMBERED_SOURCE_RE.search(segment) is None:
-            result.warnings.append(
-                f"{scope} source annotation should include a line reference like 'path/to/file.ts#L28' in legacy sudocode section: {heading.strip()}"
-            )
-
-
-def _is_detailed_phase_segment(section: str) -> bool:
-    return re.search(
-        r"(?im)^(Trigger / entry condition:|Entrypoints:|Ordered call path:)\s*$",
-        section,
-    ) is not None
-
-
-def _validate_ordered_call_path(scope: str, section: str, result: ValidationResult) -> None:
-    ordered_call_path = _extract_labeled_block(
-        section,
-        "Ordered call path:",
-        [
-            r"^State transitions / outputs:\s*$",
-            r"^Branch points:\s*$",
-            r"^External boundaries:\s*$",
-            r"^###\s+Phase\b.*$",
-            r"^##\s+",
-        ],
-    )
-    if ordered_call_path is None:
-        result.errors.append(f"{scope} is missing an 'Ordered call path:' block.")
-        return
-
-    step_segments = _extract_segments_by_heading(ordered_call_path, r"^\d+\.\s+.+$")
-    if not step_segments:
-        if _section_contains_sudocode_heading(section):
-            result.warnings.append(
-                f"{scope} uses legacy separate sudocode subsections; prefer numbered Ordered call path steps with embedded code blocks."
-            )
-            _validate_legacy_sudocode_sections(scope, section, result)
-            return
-        result.errors.append(f"{scope} must use numbered steps under 'Ordered call path:'.")
-        return
-
-    steps_with_code = 0
-    for heading, segment in step_segments:
-        if CODE_BLOCK_RE.search(segment) is None:
-            result.errors.append(f"{scope} ordered step has no fenced code block: {heading.strip()}")
-            continue
-        steps_with_code += 1
-        if re.search(r"(?im)\bsource\b\s*:", segment) is None:
-            result.warnings.append(
-                f"{scope} ordered step has no explicit source annotation ('Source:'): {heading.strip()}"
-            )
-        elif LINE_NUMBERED_SOURCE_RE.search(segment) is None:
-            result.warnings.append(
-                f"{scope} ordered step source annotation should include a line reference like 'path/to/file.ts#L28': {heading.strip()}"
-            )
-
-    if steps_with_code == 0 and _section_contains_sudocode_heading(section):
-        result.warnings.append(
-            f"{scope} uses legacy separate sudocode subsections; prefer numbered Ordered call path steps with embedded code blocks."
-        )
-        _validate_legacy_sudocode_sections(scope, section, result)
-
-
-def _validate_normal_flow_doc(text: str, result: ValidationResult) -> None:
-    required_h2 = [
-        "Purpose",
-        "Entry points",
-        "Call path",
-        "Sequence diagram",
-    ]
-    for heading in required_h2:
-        if not _has_h2(text, heading):
-            result.errors.append(f"Missing required section: '## {heading}'")
-
-    sequence_pos = _h2_position(text, "Sequence diagram")
-    call_path_pos = _h2_position(text, "Call path")
-    if sequence_pos is not None and call_path_pos is not None and sequence_pos > call_path_pos:
-        result.errors.append("Section order must place '## Sequence diagram' before '## Call path'")
-
-    if not _has_any_h2(text, ["State", "State, config, and gates"]):
-        result.errors.append("Missing required section: '## State'")
-
-    call_path = _extract_h2_section(text, "Call path")
-    if call_path is None:
-        return
-
-    phase_segments = _extract_segments_by_heading(call_path, r"^###\s+Phase\b.*$")
-    if not phase_segments:
-        result.warnings.append(
-            "Call path does not use explicit '### Phase ...' headings; phase/ordered-step alignment cannot be fully validated."
-        )
-        _validate_ordered_call_path("Call path", call_path, result)
-        return
-
-    detailed_phase_segments = [
-        (heading, segment)
-        for heading, segment in phase_segments
-        if _is_detailed_phase_segment(segment)
-    ]
-    if not detailed_phase_segments:
-        result.errors.append(
-            "Call path has '### Phase ...' headings but no detailed phase blocks with "
-            "'Trigger / entry condition:', 'Entrypoints:', or 'Ordered call path:'."
-        )
-        return
-
-    for heading, segment in detailed_phase_segments:
-        _validate_ordered_call_path(heading.strip(), segment, result)
-
-
 def _validate_required_h2(text: str, required_h2: list[str], result: ValidationResult) -> None:
     for heading in required_h2:
         if not _has_h2(text, heading):
             result.errors.append(f"Missing required section: '## {heading}'")
 
 
-def _validate_v2_frontmatter(text: str, result: ValidationResult) -> None:
+def _validate_frontmatter(text: str, result: ValidationResult) -> None:
     if not text.startswith("---\n"):
         result.errors.append("Missing YAML frontmatter block")
         return
@@ -231,19 +85,19 @@ def _validate_v2_frontmatter(text: str, result: ValidationResult) -> None:
             result.errors.append(f"Missing required frontmatter key: '{key}'")
 
 
-def _validate_v2_entry_points(text: str, result: ValidationResult) -> None:
+def _validate_entry_points(text: str, result: ValidationResult) -> None:
     entry_points = _extract_h2_section(text, "Entry Points")
     if entry_points is None:
         return
 
-    pointer_count = len(V2_ENTRY_POINTER_RE.findall(entry_points))
+    pointer_count = len(ENTRY_POINTER_RE.findall(entry_points))
     if pointer_count < 1:
         result.errors.append("Entry Points must include at least one code pointer")
     if pointer_count > 3:
         result.errors.append("Entry Points must include at most three code pointers")
 
 
-def _validate_v2_execution_trace(text: str, result: ValidationResult) -> None:
+def _validate_execution_trace(text: str, result: ValidationResult) -> None:
     trace = _extract_h2_section(text, "Execution Trace")
     if trace is None:
         return
@@ -272,7 +126,7 @@ def _validate_v2_execution_trace(text: str, result: ValidationResult) -> None:
                 result.errors.append(f"{step_heading.strip()} must include a fenced sudocode block")
 
 
-def _validate_v2_manual_notes_and_changelog_order(text: str, result: ValidationResult) -> None:
+def _validate_manual_notes_and_changelog_order(text: str, result: ValidationResult) -> None:
     manual_pos = _h2_position(text, "Manual Notes")
     changelog_pos = _h2_position(text, "Changelog")
     if manual_pos is None or changelog_pos is None:
@@ -281,7 +135,7 @@ def _validate_v2_manual_notes_and_changelog_order(text: str, result: ValidationR
         result.errors.append("Section order must place '## Manual Notes' before '## Changelog'")
 
 
-def _validate_v2_flow_doc(text: str, result: ValidationResult) -> None:
+def _validate_flow_doc(text: str, result: ValidationResult) -> None:
     required_h2 = [
         "Overview",
         "Entry Points",
@@ -293,7 +147,7 @@ def _validate_v2_flow_doc(text: str, result: ValidationResult) -> None:
         "Manual Notes",
         "Changelog",
     ]
-    _validate_v2_frontmatter(text, result)
+    _validate_frontmatter(text, result)
     _validate_required_h2(text, required_h2, result)
 
     sequence_pos = _h2_position(text, "Sequence Diagram")
@@ -301,9 +155,9 @@ def _validate_v2_flow_doc(text: str, result: ValidationResult) -> None:
     if sequence_pos is not None and trace_pos is not None and sequence_pos > trace_pos:
         result.errors.append("Section order must place '## Sequence Diagram' before '## Execution Trace'")
 
-    _validate_v2_entry_points(text, result)
-    _validate_v2_execution_trace(text, result)
-    _validate_v2_manual_notes_and_changelog_order(text, result)
+    _validate_entry_points(text, result)
+    _validate_execution_trace(text, result)
+    _validate_manual_notes_and_changelog_order(text, result)
 
 
 def _validate_portable_repo_links(text: str, result: ValidationResult) -> None:
@@ -315,19 +169,13 @@ def _validate_portable_repo_links(text: str, result: ValidationResult) -> None:
         )
 
 
-def _auto_kind(text: str) -> str:
-    if _has_h2(text, "Execution Trace"):
-        return "v2"
-    return "normal"
-
-
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate flow-doc structure and sudocode coverage.")
+    parser = argparse.ArgumentParser(description="Validate flow-doc structure.")
     parser.add_argument(
         "--kind",
-        choices=["auto", "normal", "v2", "flow-doc-v2"],
-        default="auto",
-        help="Flow doc type. Default: auto-detect.",
+        choices=["flow-doc"],
+        default="flow-doc",
+        help="Flow doc type. Only flow-doc is supported.",
     )
     parser.add_argument("--doc", required=True, help="Path to flow doc markdown file.")
     args = parser.parse_args()
@@ -341,14 +189,10 @@ def main() -> int:
         return 2
 
     text = doc_path.read_text(encoding="utf-8")
-    kind = _auto_kind(text) if args.kind == "auto" else args.kind
-    normalized_kind = "v2" if kind == "flow-doc-v2" else kind
+    kind = args.kind
 
     result = ValidationResult()
-    if normalized_kind == "v2":
-        _validate_v2_flow_doc(text, result)
-    else:
-        _validate_normal_flow_doc(text, result)
+    _validate_flow_doc(text, result)
     _validate_portable_repo_links(text, result)
 
     if result.errors:
