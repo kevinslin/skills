@@ -8,7 +8,7 @@ dependencies: []
 
 ## Overview
 
-Use `uvx showboat` to build Markdown documents that mix short notes, executable commands, and captured output. Reach for it when the deliverable should both explain and prove behavior.
+Use `uvx showboat` to build Markdown documents that mix short notes, executable commands, and captured output. Reach for it when the deliverable should both explain and prove behavior. This should be used to do live integration tests. You should NOT use showboat to run existing tests. 
 
 ## Workflow
 
@@ -26,6 +26,7 @@ Use `uvx showboat` to build Markdown documents that mix short notes, executable 
 
 - Use Showboat to prove functionality works, not just to describe the plan.
 - If the raw output is nondeterministic, do not capture it verbatim when the document should later pass `showboat verify`.
+- Do write raw output verbatim in a separate file at `demo-{num}-{title}.raw.md` - this is for manual human inspection later
 - Common unstable fields to sanitize or summarize:
   - timestamps
   - temp directories
@@ -38,7 +39,6 @@ Use `uvx showboat` to build Markdown documents that mix short notes, executable 
 ## Good Fits
 
 - Creating a reproducible `demo-{num}-{title}.md` for a feature or CLI workflow
-- Proving that tests, smoke checks, or integration flows pass
 - Capturing a bug reproduction plus the command that fixes or validates it
 - Handing off a workflow another agent can replay with `showboat verify`
 
@@ -47,3 +47,4 @@ Use `uvx showboat` to build Markdown documents that mix short notes, executable 
 - Using Showboat when a plain response is enough and no proof artifact is needed
 - Capturing secrets, credentials, or private tokens in output blocks
 - Leaving known-unstable output unsanitized when later verification matters
+- Proving that tests, smoke checks, or integration flows pass
