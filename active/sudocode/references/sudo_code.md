@@ -99,6 +99,7 @@ runner.run_forever(limit=limit) {
 - Did I remove only plumbing and keep behavior?
 - Are key branches and side effects still explicit?
 - Did I avoid duplicating the same logic in multiple places?
+- Is code fence hint `ts`?
 
 ## Examples
 

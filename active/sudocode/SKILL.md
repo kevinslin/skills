@@ -37,7 +37,8 @@ target_call(args) {
 ```
 
 5. Preserve behavior-critical side effects (state writes, logs, error branches).
-6. Run the checklist in `references/sudo_code.md` before finalizing.
+6. Ensure $sudocode is rendered as `ts` code fences
+7. Run the checklist in `references/sudo_code.md` before finalizing.
 
 ## Non-Negotiables
 
