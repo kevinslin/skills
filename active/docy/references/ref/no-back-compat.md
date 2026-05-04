@@ -19,3 +19,4 @@
     - exact deletion criteria
     - the ADR/task that tracks its removal
 - Default stance across the app: delete old-state compatibility code rather than carrying it forward.
+- When removing features, do not add unit tests that check the feature is removed
