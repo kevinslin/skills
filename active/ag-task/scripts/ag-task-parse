@@ -1,0 +1,368 @@
+#!/usr/bin/env python3
+"""Parse a Markdown task file into frontmatter, level-2 tasks, and level-3 follow-ons."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+
+ATX_HEADING_RE = re.compile(r"^[ \t]{0,3}(#{1,6})(?:[ \t]+|$)(.*?)[ \t]*$")
+FENCE_START_RE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})(.*)$")
+FRONTMATTER_KEY_RE = re.compile(r"^([A-Za-z0-9_.-]+):(.*)$")
+
+
+def split_lines(text: str) -> list[str]:
+    return text.splitlines(keepends=True)
+
+
+def extract_frontmatter(lines: list[str]) -> tuple[str, int, list[str]]:
+    """Return frontmatter text, body start line number, and warnings."""
+    warnings: list[str] = []
+    if not lines:
+        return "", 1, warnings
+
+    first = lines[0].lstrip("\ufeff").strip()
+    if first != "---":
+        return "", 1, warnings
+
+    for index in range(1, len(lines)):
+        if lines[index].strip() in {"---", "..."}:
+            text = "".join(lines[1:index])
+            return text, index + 2, warnings
+
+    warnings.append("opening frontmatter delimiter found without a closing delimiter; treating file as body")
+    return "", 1, warnings
+
+
+def split_unquoted_commas(text: str) -> list[str]:
+    parts: list[str] = []
+    current: list[str] = []
+    quote: str | None = None
+    escape = False
+
+    for char in text:
+        if escape:
+            current.append(char)
+            escape = False
+            continue
+        if char == "\\" and quote == '"':
+            current.append(char)
+            escape = True
+            continue
+        if quote:
+            current.append(char)
+            if char == quote:
+                quote = None
+            continue
+        if char in {"'", '"'}:
+            current.append(char)
+            quote = char
+            continue
+        if char == ",":
+            parts.append("".join(current).strip())
+            current = []
+            continue
+        current.append(char)
+
+    tail = "".join(current).strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def strip_unquoted_comment(text: str) -> str:
+    quote: str | None = None
+    escape = False
+    for index, char in enumerate(text):
+        if escape:
+            escape = False
+            continue
+        if char == "\\" and quote == '"':
+            escape = True
+            continue
+        if quote:
+            if char == quote:
+                quote = None
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            continue
+        if char == "#" and (index == 0 or text[index - 1].isspace()):
+            return text[:index].rstrip()
+    return text.strip()
+
+
+def parse_scalar(value: str) -> Any:
+    value = strip_unquoted_comment(value)
+    lower = value.lower()
+    if value == "":
+        return ""
+    if lower in {"null", "~"}:
+        return None
+    if lower == "true":
+        return True
+    if lower == "false":
+        return False
+    if len(value) >= 2 and value[0] == value[-1] == '"':
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value[1:-1]
+    if len(value) >= 2 and value[0] == value[-1] == "'":
+        return value[1:-1].replace("''", "'")
+    if value.startswith("[") and value.endswith("]"):
+        inner = value[1:-1].strip()
+        return [] if not inner else [parse_scalar(part) for part in split_unquoted_commas(inner)]
+    if re.fullmatch(r"[-+]?[0-9]+", value):
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    if re.fullmatch(r"[-+]?(?:[0-9]+\.[0-9]*|\.[0-9]+)", value):
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    return value
+
+
+def parse_child_block(lines: list[str]) -> Any:
+    meaningful = [line for line in lines if line.strip() and not line.lstrip().startswith("#")]
+    if not meaningful:
+        return {}
+
+    if all(line.lstrip().startswith("- ") for line in meaningful):
+        return [parse_scalar(line.lstrip()[2:].strip()) for line in meaningful]
+
+    mapping: dict[str, Any] = {}
+    for line in meaningful:
+        stripped = line.strip()
+        match = FRONTMATTER_KEY_RE.match(stripped)
+        if not match:
+            return "\n".join(line.strip() for line in meaningful)
+        key, value = match.groups()
+        mapping[key] = parse_scalar(value.strip())
+    return mapping
+
+
+def parse_frontmatter_subset(text: str, warnings: list[str]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    lines = text.splitlines()
+    index = 0
+
+    while index < len(lines):
+        line = lines[index]
+        if not line.strip() or line.lstrip().startswith("#"):
+            index += 1
+            continue
+        if line[:1].isspace():
+            warnings.append(f"ignored unexpected indented frontmatter line {index + 1}: {line.strip()}")
+            index += 1
+            continue
+
+        match = FRONTMATTER_KEY_RE.match(line)
+        if not match:
+            warnings.append(f"ignored unsupported frontmatter line {index + 1}: {line.strip()}")
+            index += 1
+            continue
+
+        key, value = match.groups()
+        value = value.strip()
+        index += 1
+
+        if value in {"|", ">"}:
+            block_lines = []
+            while index < len(lines) and (not lines[index].strip() or lines[index][:1].isspace()):
+                block_lines.append(lines[index][2:] if lines[index].startswith("  ") else lines[index].lstrip())
+                index += 1
+            result[key] = "\n".join(block_lines).rstrip("\n")
+            continue
+
+        if value:
+            result[key] = parse_scalar(value)
+            continue
+
+        child_lines = []
+        while index < len(lines) and (not lines[index].strip() or lines[index][:1].isspace()):
+            child_lines.append(lines[index])
+            index += 1
+        result[key] = parse_child_block(child_lines)
+
+    return result
+
+
+def parse_frontmatter(text: str, warnings: list[str]) -> Any:
+    if not text.strip():
+        return {}
+
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        return parse_frontmatter_subset(text, warnings)
+
+    try:
+        parsed = yaml.safe_load(text)
+    except Exception as exc:  # pragma: no cover - exact parser errors vary.
+        warnings.append(f"frontmatter YAML parse failed; using built-in subset parser: {exc}")
+        return parse_frontmatter_subset(text, warnings)
+
+    return {} if parsed is None else parsed
+
+
+def fence_end_re(marker: str) -> re.Pattern[str]:
+    char = re.escape(marker[0])
+    min_count = len(marker)
+    return re.compile(rf"^[ \t]{{0,3}}{char}{{{min_count},}}[ \t]*$")
+
+
+def heading_from_line(line: str) -> tuple[int, str] | None:
+    match = ATX_HEADING_RE.match(line.rstrip("\r\n"))
+    if not match:
+        return None
+
+    hashes, raw_title = match.groups()
+    title = re.sub(r"[ \t]+#+[ \t]*$", "", raw_title).strip()
+    return len(hashes), title
+
+
+def collect_heading_events(body_lines: list[str], body_start_line: int) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    in_fence = False
+    active_fence_end: re.Pattern[str] | None = None
+
+    for offset, line in enumerate(body_lines):
+        if in_fence:
+            if active_fence_end and active_fence_end.match(line.rstrip("\r\n")):
+                in_fence = False
+                active_fence_end = None
+            continue
+
+        fence_match = FENCE_START_RE.match(line.rstrip("\r\n"))
+        if fence_match:
+            in_fence = True
+            active_fence_end = fence_end_re(fence_match.group(1))
+            continue
+
+        heading = heading_from_line(line)
+        if heading is None:
+            continue
+
+        level, title = heading
+        if level in {2, 3}:
+            events.append(
+                {
+                    "level": level,
+                    "title": title,
+                    "body_index": offset,
+                    "line": body_start_line + offset,
+                }
+            )
+
+    return events
+
+
+def line_range(body_start_line: int, start_index: int, end_index: int) -> dict[str, int]:
+    if end_index <= start_index:
+        line = body_start_line + start_index
+        return {"start": line, "end": line}
+    return {"start": body_start_line + start_index, "end": body_start_line + end_index - 1}
+
+
+def parse_markdown_task_text(text: str, source: str = "<memory>") -> dict[str, Any]:
+    lines = split_lines(text)
+    frontmatter_text, body_start_line, warnings = extract_frontmatter(lines)
+    body_lines = lines[body_start_line - 1 :]
+    frontmatter = parse_frontmatter(frontmatter_text, warnings)
+    events = collect_heading_events(body_lines, body_start_line)
+
+    h2_events = [event for event in events if event["level"] == 2]
+    tasks: list[dict[str, Any]] = []
+
+    first_h2_index = h2_events[0]["body_index"] if h2_events else len(body_lines)
+    preamble = "".join(body_lines[:first_h2_index]).strip("\n")
+
+    for task_index, h2 in enumerate(h2_events, start=1):
+        h2_body_index = h2["body_index"]
+        next_h2_body_index = (
+            h2_events[task_index]["body_index"] if task_index < len(h2_events) else len(body_lines)
+        )
+        h3_events = [
+            event
+            for event in events
+            if event["level"] == 3 and h2_body_index < event["body_index"] < next_h2_body_index
+        ]
+
+        first_h3_body_index = h3_events[0]["body_index"] if h3_events else next_h2_body_index
+        initial_start = h2_body_index + 1
+        initial_range = line_range(body_start_line, initial_start, first_h3_body_index)
+        task_range = line_range(body_start_line, h2_body_index, next_h2_body_index)
+
+        followons = []
+        for followon_index, h3 in enumerate(h3_events, start=1):
+            h3_body_index = h3["body_index"]
+            next_h3_body_index = (
+                h3_events[followon_index]["body_index"]
+                if followon_index < len(h3_events)
+                else next_h2_body_index
+            )
+            body_start = h3_body_index + 1
+            followons.append(
+                {
+                    "index": followon_index,
+                    "title": h3["title"],
+                    "heading_line": h3["line"],
+                    "body_lines": line_range(body_start_line, body_start, next_h3_body_index),
+                    "body": "".join(body_lines[body_start:next_h3_body_index]).strip("\n"),
+                }
+            )
+
+        tasks.append(
+            {
+                "index": task_index,
+                "title": h2["title"],
+                "heading_line": h2["line"],
+                "lines": task_range,
+                "initial_instruction_lines": initial_range,
+                "initial_instruction": "".join(body_lines[initial_start:first_h3_body_index]).strip("\n"),
+                "followons": followons,
+            }
+        )
+
+    return {
+        "source": source,
+        "frontmatter": frontmatter,
+        "frontmatter_text": frontmatter_text,
+        "body_start_line": body_start_line,
+        "preamble": preamble,
+        "task_count": len(tasks),
+        "tasks": tasks,
+        "warnings": warnings,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Parse a Markdown task file for ag-task.")
+    parser.add_argument("markdown_file", help="Markdown file to parse")
+    parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
+    args = parser.parse_args()
+
+    path = Path(args.markdown_file).expanduser().resolve()
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"ag-task-parse: failed to read {path}: {exc}", file=sys.stderr)
+        return 1
+
+    data = parse_markdown_task_text(text, source=str(path))
+    json.dump(data, sys.stdout, indent=2 if args.pretty else None, sort_keys=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

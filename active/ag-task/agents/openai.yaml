@@ -1,0 +1,4 @@
+interface:
+  display_name: "AG Task"
+  short_description: "Run Markdown task files with subagents"
+  default_prompt: "Use $ag-task with a Markdown task file to split level-2 sections into subagent lanes and run level-3 follow-ons in order."
