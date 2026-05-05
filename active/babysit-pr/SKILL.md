@@ -50,9 +50,10 @@ When any conflict issue is found:
 When any GitHub or build issue is found:
 
 1. Capture a short evidence summary: PR, head SHA, comment/review/check identifiers, URLs, and failure names.
-2. Invoke `trigger:fix-pr` from `../dev.shortcuts/SKILL.md` with the PR and evidence.
-3. After the fix flow completes, refresh the PR head SHA and reset the quiet-green timer.
-4. Return to the 5-minute polling loop.
+2. Invoke `trigger:fix-pr` from `../dev.shortcuts/SKILL.md` with the PR and evidence. Do not hand-roll PR comment cleanup inside this skill; `trigger:fix-pr` owns addressing feedback, committing/pushing when needed, resolving addressed review threads, and checking CI.
+3. After the fix flow completes, re-query `pullRequest.reviewThreads` through GraphQL and verify that every addressed thread has `isResolved: true`. If any actionable or addressed-but-unresolved thread remains, treat that as a GitHub issue and invoke `trigger:fix-pr` again with the remaining thread ids/URLs as evidence.
+4. Refresh the PR head SHA and reset the quiet-green timer.
+5. Return to the 5-minute polling loop.
 
 Do not mark the babysit loop complete immediately after a fix. Completion requires a fresh quiet-green window.
 
