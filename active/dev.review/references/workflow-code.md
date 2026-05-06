@@ -22,6 +22,11 @@ Use this workflow to review code with a bias toward simplicity and correctness.
    - Use `$specy` under `$ROOT_DIR/prs/`.
    - Capture PR context, key files touched, execution/data flow, major risks, and open questions.
    - Use a stable PR-based filename when possible, for example `<pr-number>-<slug>.md`.
+7. For PR review loops, verify the remote gate before handoff.
+   - Confirm the current PR head SHA after every push or amend.
+   - Inspect current checks, actionable comments/reviews, and unresolved non-outdated review threads.
+   - Do not report the loop as finished while required checks are failed/pending or review items remain.
+   - In the handoff, include head SHA, failing/pending check count, unresolved thread count, and any blocker that still needs user action.
 
 ## Severity Guidance
 

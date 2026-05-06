@@ -16,6 +16,11 @@ dependencies: [specy]
    - For `integrator`, default input artifacts are outputs from `ag-learn` and adjacent retrospectives.
    - For code reviews that require flow docs, use the sibling dependency at `../specy/SKILL.md`.
 3. Apply the workflow to the material and produce the review.
+4. For review-loop requests, keep going until the remote exit condition is met.
+   - Applies when the user says `trigger:loop`, asks to finish a PR review loop, or asks to address review findings/CI.
+   - Completion is remote-state based, not patch based: current head SHA is known, relevant CI is green, unresolved non-outdated review threads are zero, and actionable comments are addressed or explicitly routed to the user.
+   - Before saying the loop is finished, run a final PR gate query and report head SHA, failing/pending check count, unresolved thread count, and actionable comment count.
+   - If any required check is failed/pending or any actionable review item remains, the loop is not finished; continue fixing or report the exact blocker.
 
 ## Output
 
