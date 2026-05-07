@@ -19,7 +19,7 @@ If the runtime has no first-class thread automation API, emulate the loop in the
 
 ## Polling Loop
 
-Poll every 5 minutes until the pass condition or a terminal stop condition is reached.
+Poll every 2 minutes until the pass condition or a terminal stop condition is reached.
 
 At each poll:
 
@@ -32,10 +32,11 @@ At each poll:
    - Start with `gh pr checks <pr>` or `gh pr view <pr> --json statusCheckRollup`.
    - Use repo-specific CI links or provider CLIs when the PR exposes them.
    - Use `trigger:check-ci` from `../dev.shortcuts/SKILL.md` when checks need deeper Buildkite/provider classification.
+   - For failed, errored, cancelled, or clearly stuck rollup checks, inspect the leaf check/job log before classifying relatedness. Prefer the check details URL or job id; use `gh run view <run-id> --job <job-id> --log` or the provider CI equivalent when available. If `gh` cannot write to its default cache location, set `XDG_CACHE_HOME` to a writable temp directory for the log fetch. Treat rollup status names as pointers, not evidence.
 3. Classify issues:
    - New actionable comments, requested changes, or unresolved review threads are GitHub issues.
    - PR branch conflicts are conflict issues.
-   - Failed, errored, cancelled, or clearly stuck checks are build issues.
+   - Failed, errored, cancelled, or clearly stuck checks are build issues only after leaf log evidence shows a concrete failure. If the leaf job is still running or logs are unavailable because CI has not produced them yet, keep the check pending/running and continue polling.
    - Pending/running checks are not build issues, but they do not count toward the quiet-green window.
 
 ## Fix Cycle
@@ -45,15 +46,15 @@ When any conflict issue is found:
 1. Capture a short evidence summary: PR, head SHA, base branch, head branch, `mergeStateStatus`, `mergeable`, and any GitHub merge-conflict URL.
 2. Invoke `trigger:fix-pr-conflict` from `../dev.shortcuts/SKILL.md` with the PR and conflict evidence.
 3. After the conflict fix flow completes, refresh the PR head SHA and reset the quiet-green timer.
-4. Return to the 5-minute polling loop.
+4. Return to the 2-minute polling loop.
 
 When any GitHub or build issue is found:
 
-1. Capture a short evidence summary: PR, head SHA, comment/review/check identifiers, URLs, and failure names.
+1. Capture a short evidence summary: PR, head SHA, comment/review/check identifiers, URLs, failure names, and leaf job log excerpts or failing file/test names when available.
 2. Invoke `trigger:fix-pr` from `../dev.shortcuts/SKILL.md` with the PR and evidence. Do not hand-roll PR comment cleanup inside this skill; `trigger:fix-pr` owns addressing feedback, committing/pushing when needed, resolving addressed review threads, and checking CI.
 3. After the fix flow completes, re-query `pullRequest.reviewThreads` through GraphQL and verify that every addressed thread has `isResolved: true`. If any actionable or addressed-but-unresolved thread remains, treat that as a GitHub issue and invoke `trigger:fix-pr` again with the remaining thread ids/URLs as evidence.
 4. Refresh the PR head SHA and reset the quiet-green timer.
-5. Return to the 5-minute polling loop.
+5. Return to the 2-minute polling loop.
 
 Do not mark the babysit loop complete immediately after a fix. Completion requires a fresh quiet-green window.
 
@@ -63,9 +64,9 @@ Complete only after all of these are true:
 
 1. CI is green for the current head SHA.
 2. No new actionable GitHub issues have appeared.
-3. The PR has stayed in that green/no-new-issues state for at least 20 continuous minutes, checked at the 5-minute cadence.
+3. The PR has stayed in that green/no-new-issues state for at least 10 continuous minutes, checked at the 2-minute cadence.
 
-Reset the 20-minute timer whenever a new commit appears, CI stops being green, or new actionable GitHub activity appears.
+Reset the 10-minute timer whenever a new commit appears, CI stops being green, or new actionable GitHub activity appears.
 
 ## Completion And Cleanup
 
