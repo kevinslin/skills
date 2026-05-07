@@ -1,0 +1,116 @@
+---
+name: showboat-v2
+description: Create schema-backed Showboat integration proofs with scenario summaries, raw artifacts, and replayable verification.
+dependencies:
+  - schemas
+---
+
+# Showboat V2
+
+## Overview
+
+Use this skill when the user wants an executable Showboat proof that also has a durable, structured proof directory. It is for live integration or behavior proof, not for wrapping an existing unit test run as the whole proof.
+
+Use `../schemas/SKILL.md` to inspect and materialize the directory structure before writing proof content. Prefer the bundled `integ-proof` schema when the user does not name another schema.
+
+## Workflow
+
+1. Resolve the proof target from the user or project convention. Do not assume a specific repository, connector, plugin, app, or artifact root.
+2. Pick a kebab-case proof slug and one kebab-case slug per scenario.
+3. Read the schema before materializing:
+
+```bash
+../schemas/scripts/schema.py show integ-proof
+```
+
+4. Materialize the root proof file and each scenario file with explicit includes:
+
+```bash
+../schemas/scripts/schema.py materialize integ-proof \
+  --out <proofs-root> \
+  --var proof=<proof-slug> \
+  --var scenario=<scenario-slug> \
+  --include <proof-slug>/proof \
+  --include <proof-slug>/scenario/<scenario-slug> \
+  --skip-existing
+```
+
+5. Treat `<proof-root>` as `<proofs-root>/<proof-slug>`, then create the dynamic artifact directories before writing into them:
+
+```bash
+mkdir -p <proof-root>/raw <proof-root>/scripts
+```
+
+Keep bulky logs, transcripts, screenshots, JSON, and nondeterministic command output in `raw/`; keep proof-local collection or summarization helpers in `scripts/`.
+6. Confirm Showboat is available:
+
+```bash
+uvx showboat --help
+```
+
+7. Use Showboat to capture a stable, replayable proof summary under `raw/`, usually `raw/showboat-summary.md`:
+
+```bash
+uvx showboat init <proof-root>/raw/showboat-summary.md "<Proof Title>"
+uvx showboat note <proof-root>/raw/showboat-summary.md "<short context>"
+uvx showboat exec <proof-root>/raw/showboat-summary.md bash "<deterministic command>"
+uvx showboat verify <proof-root>/raw/showboat-summary.md
+```
+
+8. Run the real live actions needed for the scenario. Capture enough raw material to audit the behavior, then summarize the stable observed result in `scenario/<scenario>.md`.
+9. Fill `proof.md` last with the claim, expected behavior, target, status, scenario result table or bullets, relevant scripts, and raw artifact index.
+
+## Scenario Template
+
+Use the materialized schema template for each scenario file. Keep it concise and fill these sections:
+
+```markdown
+# Scenario: {title}
+
+## Purpose
+
+{one line}
+
+## Preconditions
+
+## Config
+
+## Action
+
+## Expected
+
+## Observed
+
+## Related
+
+- raw artifacts:
+
+## Notes
+```
+
+Omit or mark `Config` as not applicable only when the scenario genuinely has no relevant configuration. Link proof-local summarizers under `Related` or `Notes` when they are relevant.
+
+## Proof Rules
+
+- The proof directory shape comes from `schemas`; do not invent a parallel layout when a schema exists.
+- The Showboat document proves replayable behavior. Scenario files explain what each scenario means and link to the relevant raw artifacts.
+- Raw, nondeterministic output should not be embedded directly in a Showboat command block that must verify later. Store raw output separately and capture a deterministic summary command in Showboat.
+- Redact secrets, credentials, account identifiers, and private tokens before writing any artifact.
+- Normalize unstable fields such as timestamps, temp paths, generated IDs, durations, random ordering, and stochastic model text.
+- Unit tests and static checks can support the proof, but live behavior observation is required for an integration proof.
+- If a scenario fails, record the failure honestly in `Observed`, mark the proof status accordingly, and keep the raw artifact that explains the failure.
+
+## Expected Tree
+
+For the default `integ-proof` schema, the finished proof should look like this:
+
+```text
+<proof-slug>/
+├── proof.md
+├── scenario/
+│   └── <scenario-slug>.md
+├── scripts/
+└── raw/
+```
+
+Use additional files or nested folders under `raw/` and `scripts/` when the proof needs them.

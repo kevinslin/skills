@@ -1,7 +1,8 @@
 ---
 name: claw-integ
-description: Run live OpenClaw integration proof against a named claw gateway profile with Showboat.
-dependencies: [showboat]
+description: Run live OpenClaw integration proof against a named claw gateway profile with showboat-v2.
+dependencies:
+  - showboat-v2
 ---
 
 # claw-integ
@@ -18,7 +19,7 @@ $claw-integ [profile] "test it"
 
 ## Contract
 
-Run a live integration proof through the requested claw gateway profile and capture the evidence with `$showboat`.
+Run a live integration proof through the requested claw gateway profile and capture the evidence with `../showboat-v2/SKILL.md`.
 
 Do not use Showboat to wrap existing unit tests. The proof must exercise the expected behavior through the live gateway/TUI or the closest repo-supported live gateway client path.
 
@@ -53,7 +54,7 @@ Before running the proof:
 
 1. Confirm the gateway profile config points at the intended profile.
 2. Confirm the gateway is running or start/restart it with the repo-supported command.
-3. Record a redacted config summary in Showboat, including:
+3. Record a redacted config summary in the proof, including:
    - profile name
    - gateway URL or port
    - enabled OpenClaw plugin/extension relevant to the test
@@ -79,27 +80,40 @@ If the test needs Codex plugins, ensure the selected profile has the required `a
 
 ## Showboat Proof
 
-Use `$showboat` for every `$claw-integ` run.
+Use `../showboat-v2/SKILL.md` for every `$claw-integ` run.
 
-The Showboat document should live in the OpenClaw memory/proof area when available:
+The proof directory should live in the OpenClaw memory/proof area when available:
 
 ```text
-.mem/main/proofs/demo-{num}-{profile}-{slug}.md
+.mem/main/proofs/demo-{num}-{profile}-{slug}/
 ```
 
-If `.mem/main/proofs` is unavailable, place the document in the current workspace and state the fallback path.
+If `.mem/main/proofs` is unavailable, place the proof directory in the current workspace and state the fallback path.
+
+Use these OpenClaw-specific values with `showboat-v2`:
+
+- `<proofs-root>`: `$mem claw/main proofs` when available, otherwise the fallback proof root.
+- `<proof-slug>`: `demo-{num}-{profile}-{slug}`.
+- `<proof-root>`: `<proofs-root>/<proof-slug>`.
+- `<scenario-slug>`: a short behavior slug; use one scenario file per distinct behavior path.
+
+Follow `showboat-v2` to materialize `proof.md` and each `scenario/<scenario-slug>.md`, create `raw/` and `scripts/`, and capture the stable Showboat summary at:
+
+```text
+<proof-root>/raw/showboat-summary.md
+```
 
 The proof must include:
 
-1. A note describing the requested profile and test prompt.
-2. A deterministic profile/config summary with secrets redacted.
+1. `proof.md` with the claim, expected behavior, target details, status, scenario results, and raw artifact index.
+2. At least one `scenario/<scenario-slug>.md` describing the requested profile, test prompt, preconditions, relevant redacted config, live action, expected result, observed result, and raw artifact links.
 3. The exact setup or migration command used for required live apps/plugins.
 4. The live gateway/TUI invocation or gateway request that exercises the behavior.
 5. A deterministic summary of the observed result.
-6. Any raw nondeterministic output saved beside the proof, not embedded directly in a way that breaks `showboat verify`.
-7. A final `uvx showboat verify <file>` pass.
+6. Raw nondeterministic output under `raw/`, not embedded directly in a way that breaks `showboat verify`.
+7. A final `uvx showboat verify <proof-root>/raw/showboat-summary.md` pass.
 
-When the output includes timestamps, temp paths, session ids, event ids, or stochastic model text, save raw output in a sibling `.raw.md` or `.raw.txt` file and capture a stable summary command in the verified Showboat document.
+When the output includes timestamps, temp paths, session ids, event ids, or stochastic model text, save raw output under `raw/` and capture a stable summary command in the verified Showboat summary.
 
 ## Profile Copy From dev
 
@@ -115,8 +129,8 @@ cp -R "$HOME/.openclaw-dev" "$HOME/.openclaw-<profile>"
 ```
 
 This intentionally copies local state and credentials for a local integration profile. Do not print copied secret values, and never commit the copied state.
-5. If only the config values are needed and full state copy would be excessive, copy `~/.openclaw-dev/openclaw.json` into a newly created `~/.openclaw-<profile>/openclaw.json`, then document that narrower fallback in Showboat.
-6. Re-read the new profile config after creation and record a redacted summary.
+5. If only the config values are needed and full state copy would be excessive, copy `~/.openclaw-dev/openclaw.json` into a newly created `~/.openclaw-<profile>/openclaw.json`, then document that narrower fallback in the proof directory.
+6. Re-read the new profile config after creation and record a redacted summary in the proof directory.
 7. Stop if `dev` is missing or ambiguous; do not guess values.
 
 ## Completion Criteria
@@ -126,7 +140,8 @@ The run is complete only when:
 - the requested profile was selected or created from `dev`
 - the claw gateway for that profile was used
 - the requested behavior was exercised live
-- Showboat verification passed
-- the final answer reports the proof path, profile used, observed result, and any untested gaps
+- the `showboat-v2` proof directory was materialized and filled
+- `uvx showboat verify <proof-root>/raw/showboat-summary.md` passed
+- the final answer reports the proof directory, profile used, observed result, and any untested gaps
 
-If any step is blocked, save the partial Showboat proof with the blocker evidence and report the blocker directly.
+If any step is blocked, save the partial proof directory with the blocker evidence and report the blocker directly.
