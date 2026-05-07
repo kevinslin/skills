@@ -31,11 +31,17 @@ Run `fin [context]`.
 - Use this flow only when the requested scope is complete.
 - If work is partial or blocked, do not archive specs and do not present the task as finished.
 - Before archiving any spec or attempting to land the change, determine the current branch, whether it is attached to a linked worktree, and where the non-worktree `main` checkout lives.
+- Check `~/.fin.yaml` for repo-specific finalization instructions before landing or cleanup. If the file exists, parse entries shaped as `workspace: [{path: ..., instructions: ...}]`.
+- If `~/.fin.yaml` exists but cannot be parsed, do not treat the parse failure as "no hooks". Report the parser error separately and inspect the raw file. Continue only when the raw content is clearly non-executable, unambiguous context; if it might contain commands, hooks, destructive instructions, or ambiguous cleanup requirements, stop before spec archival, landing cleanup, or linked-worktree removal and report the malformed config as the blocker.
+- Match `workspace[].path` against the normalized non-worktree checkout root for the branch's repository, not against a transient linked worktree path. Resolve symlinks and trailing slashes before comparing.
+- If a matching `~/.fin.yaml` workspace entry exists, record its `instructions` and apply them after the PR merge / already-merged confirmation or local landing succeeds, but before removing any linked worktree. This preserves ignored or untracked files that may need to be copied out of the soon-to-be-removed worktree.
+- If `~/.fin.yaml` is missing or no workspace entry matches the non-worktree checkout root, state that no repo-specific final hooks applied and continue.
 - If the checkout is detached `HEAD`, create a temporary local branch from the current commit first. Prefer the repo's normal task-branch prefix when one exists, otherwise use a short `codex/` branch name derived from the task.
 - After converting detached `HEAD` into a named branch, lock that branch identity for the rest of the run. Do not continue finalization from anonymous detached state.
 - When the user omitted the context, lock the detected context once and use it for the rest of the run. Do not re-detect after archiving or mid-landing.
 - Do not silently switch contexts after selection. If the user requested `gh`, do not fall back to local-only landing. If the user requested `local`, do not silently land via PR merge just because a PR exists.
 - For `gh`, identify the current PR and check its state before testing mergeability or attempting any merge command.
+- For `gh`, identify any active PR babysit/watch automation for the same PR or branch when automation state is visible. Record its id so it can be updated or deleted after the PR lands.
 - If the current PR is already merged, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
 - For `gh`, when the current PR is still open, confirm it is mergeable against `main` or its base branch.
 - For `local`, confirm the current branch is mergeable into local `main`.
@@ -69,11 +75,13 @@ Run `fin [context]`.
 - If there is no matching PR to merge, state that explicitly instead of claiming the task fully landed.
 
 5. Remove the merged worktree
+- Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
 - If the merged branch lives in a linked git worktree, remove that worktree after the PR merge succeeds or after confirming the PR was already merged.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - If `gh pr merge --delete-branch` already deleted the remote branch but failed local deletion because the branch was still attached to the worktree, finish the cleanup explicitly instead of retrying the merge.
 - Fully remove the worktree, then run `git worktree prune`.
 - If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete the merged branch too.
+- If local branch deletion reports that the branch is not merged into current `HEAD`, do not use ancestry alone as the safety check. For squash or rebase merges, verify the GitHub PR is `MERGED`, record the PR head SHA and merge commit, refresh local `main`, confirm local `main` contains the merge commit, and only then delete the local branch when no worktree checks it out.
 - If there is no linked worktree for the task branch, state that explicitly and continue.
 
 6. Update the local `main` checkout
@@ -82,6 +90,8 @@ Run `fin [context]`.
 - Check out `main` if needed.
 - Pull or otherwise fast-forward `main` to `origin/main`.
 - Confirm the local `main` HEAD includes the merge commit for the landed PR before continuing.
+- If branch cleanup was deferred because the PR used a squash/rebase merge or `git branch -d` rejected ancestry, finish that branch deletion now after local `main` contains the PR merge commit and the branch is no longer checked out anywhere.
+- Delete or cancel any active PR babysit/watch automation that was tracking the now-merged PR. If the automation cannot be deleted, report the exact blocker instead of leaving silent stale state behind.
 - If the local `main` refresh fails, stop and report the exact git error instead of claiming the task is fully finalized.
 
 ## `local` Context Workflow
@@ -96,6 +106,7 @@ Run `fin [context]`.
 - If a remote is configured and pushing `main` is appropriate for the repo, push the updated `main` after the local merge. If the flow is intentionally local-only, state that explicitly in the report.
 
 5. Remove the merged worktree and branch
+- Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
 - If the merged branch lives in a linked git worktree, remove that worktree after the local merge succeeds.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - Fully remove the worktree, then run `git worktree prune`.
@@ -113,9 +124,9 @@ Run `fin [context]`.
 ## Retrospective And Reporting
 
 7. Run the retrospective
-- Run `$ag-learn` after the task lands in the requested context and after any matching spec has been archived.
-- For `gh`, run it after the PR merge or already-merged confirmation and local `main` refresh complete.
-- For `local`, run it after the local merge and local `main` verification complete.
+- Run `$ag-learn` after the task lands in the requested context, after any matching spec has been archived, and after any matching repo-specific final hooks from `~/.fin.yaml` have completed.
+- For `gh`, run it after the PR merge or already-merged confirmation, repo-specific final hooks, and local `main` refresh complete.
+- For `local`, run it after the local merge, repo-specific final hooks, and local `main` verification complete.
 - Review the saved learning note and extract 2-3 high-signal learnings.
 - Present these as proposed learnings for follow-up, not mandatory extra scope.
 - If `ag-learn` finds no meaningful improvement opportunities, say that explicitly.
@@ -128,7 +139,10 @@ Run `fin [context]`.
 - For `gh`, state whether the PR was already merged and `merge-pr` was skipped, or whether `merge-pr` ran successfully, including whether the remote merge succeeded directly or required separate post-merge worktree cleanup because local branch deletion failed.
 - For `local`, state whether the branch landed via local merge, was already on `main`, or was blocked before landing.
 - State whether a linked worktree was removed, pruned, and had its merged branch deleted when applicable.
+- For `gh`, state whether any PR babysit/watch automation was found and whether it was deleted, already absent, or blocked.
+- If branch deletion required squash/rebase merge proof, state the PR head SHA, merge commit, and local `main` containment check used as the cleanup proof.
 - State whether the local `main` checkout was updated or verified successfully and identify the resulting `main` tip when relevant.
+- State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
 - If `local` pushed `main`, state whether the push succeeded. If it intentionally remained local-only, say that explicitly.
 - Summarize the proposed learnings as a numbered list so each item can be referenced later.
 - Mention where `ag-learn` saved the learning note.
@@ -150,6 +164,12 @@ Run `fin [context]`.
 - Do not require a PR in `local` mode.
 - Do not treat `gh pr merge --delete-branch` local branch-deletion failures caused only by linked worktree attachment as a failed merge when the remote PR already landed.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
+- Do not leave a PR babysit/watch automation active after its PR has merged. Delete or cancel it during finalization, and report any deletion blocker.
+- Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state. Verify local `main` contains the PR merge commit first, and verify no worktree still checks out the branch.
+- Do not remove a linked worktree before running any matching repo-specific final hooks from `~/.fin.yaml`.
+- Do not match `~/.fin.yaml` workspace paths against temporary linked worktree roots; match the non-worktree checkout root for the branch's repository.
+- Do not ignore a matching `~/.fin.yaml` workspace entry. If the additional instructions are ambiguous, destructive, or cannot be verified, stop and report the blocker before cleanup.
+- Do not silently ignore malformed `~/.fin.yaml`; a parse failure is a finalization preflight issue unless raw content is clearly non-executable and unambiguous. Never delete a linked worktree while malformed fin config might contain unrun hooks or cleanup instructions.
 - Do not try to remove the current live worktree from inside itself; switch to another checkout first.
 - Do not report final success while local `main` still points behind the landed result unless the user explicitly says not to refresh or verify it.
 - Do not invent a parallel spec layout; use the `specy` convention already present in the workspace.
@@ -163,9 +183,12 @@ Run `fin [context]`.
 - Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, unless the matching PR was already merged; any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
 - Matching active spec, if any, is marked complete and moved to `$DOCS_ROOT/specs/.archive/`.
 - Unrelated active specs remain untouched.
+- `~/.fin.yaml` was checked, parsed or explicitly handled as malformed, and any workspace entry matching the non-worktree checkout root was applied before linked-worktree removal.
 - In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
 - In `local` mode, the completed branch has been merged into local `main` or verified as already landed there.
 - Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere.
+- Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
+- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
 - The local `main` checkout was refreshed or verified to include the landed work before the task was reported complete.
 - `$ag-learn` has been run.
 - The final report states whether the context was explicit or auto-detected.
