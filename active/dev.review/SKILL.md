@@ -1,7 +1,9 @@
 ---
 name: dev.review
 description: Review code, specs, architecture, UX, or design docs.
-dependencies: [specy]
+dependencies:
+- sc
+- specy
 ---
 
 # dev.review
@@ -9,10 +11,11 @@ dependencies: [specy]
 ## Workflow
 
 1. Identify the review type from the user's request and artifact.
-   - Examples: code, design-doc, spec, architecture, ux, integrator, deslop.
+   - Examples: code, design-doc, spec, architecture, ux, skills, integrator, deslop.
    - If ambiguous, ask one clarifying question before reviewing.
 2. Load the matching workflow from `./references/workflow-[review-type].md`.
    - If the workflow file does not exist, ask the user for the prompt to add and pause the review.
+   - For skills reviews, use the sibling dependency at `../sc/SKILL.md` for the local skill-authoring contract.
    - For `integrator`, default input artifacts are outputs from `ag-learn` and adjacent retrospectives.
    - For code reviews that require flow docs, use the sibling dependency at `../specy/SKILL.md`.
 3. Apply the workflow to the material and produce the review.
@@ -37,5 +40,6 @@ dependencies: [specy]
 - `./references/workflow-spec.md` for product, implementation, or test spec review.
 - `./references/workflow-architecture.md` for architecture and system-boundary review.
 - `./references/workflow-ux.md` for UX review.
+- `./references/workflow-skills.md` for reviewing `SKILL.md` files and bundled skill resources.
 - `./references/workflow-integrator.md` for integrating learnings into skill/code/project changes.
 - `./references/workflow-deslop.md` for anti-slop code review focused on excess complexity, patch size, and unnecessary helper extraction.
