@@ -4,6 +4,7 @@ description: Run explicitly requested swarm workflows for feature delivery.
 dependencies:
 - dev.loop
 - dev.review
+- dev.shortcuts
 - specy
 - sw-ctrl
 ---
@@ -39,10 +40,12 @@ changes.
 - Pre-implementation review: use `$dev.review` to critique the spec and apply straightforward
   spec improvements before coding.
 - Implementation track: use `$dev.loop` to execute the approved plan.
-- Post-implementation review swarm: run three parallel `$dev.review` passes for
-  code review, documentation review, and dead code cleanup.
+- Post-implementation review swarm in parallel: trigger:loop `$dev.review` passes for
+  code review, slop, documentation review, and dead code cleanup
 - Verification track: run the verify phase of `$dev.loop` in a separate subagent
   after review fixes land.
+- PR push track: after verification succeeds, run `trigger:push-pr` as the final
+  delivery step unless the user explicitly said not to push.
 
 ## Workflow
 
@@ -74,7 +77,7 @@ changes.
 
 ### 4. Review Swarm
 
-Spawn multiple `$dev.review` subagents with disjoint scopes:
+trigger:loop `$dev.review` subagents with disjoint scopes:
 
 1. Regular code review: find correctness issues, regressions, missing tests, and risky abstractions.
 2. Documentation review: find README, flow docs, design docs, specs, or other docs that should change because of the implementation.
@@ -94,6 +97,14 @@ or unclear ownership, bubble it up for human review instead of guessing.
   review findings.
 - Do not treat verification as implicit. It is a dedicated track with its own owner.
 
+### 6. Push PR
+
+- After verification succeeds and review fixes are committed, run `trigger:push-pr`.
+- Treat PR push as required for full execution unless the user explicitly requested
+  planning/review only or explicitly said not to push.
+- Include the PR URL in the final handoff. If push or PR creation fails, report
+  the exact failure and treat the swarm run as incomplete.
+
 ## Manager Rules
 
 - Do not send multiple agents after the same unresolved question.
@@ -104,6 +115,6 @@ or unclear ownership, bubble it up for human review instead of guessing.
 
 ## Completion
 
-Only finish when the spec, implementation, review follow-up, and verify track are
-all resolved, or when the ambiguity/plan-review gate explicitly requires stopping
-for user input.
+Only finish when the spec, implementation, review follow-up, verify track, and
+PR push are all resolved, or when the ambiguity/plan-review gate explicitly
+requires stopping for user input.
