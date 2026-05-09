@@ -1,6 +1,6 @@
 ---
 name: mem
-description: Manage user-defined knowledge bases when `$mem` is invoked.
+description: Manage user-defined knowledge bases when `$mem` is invoked or durable knowledge is being saved.
 dependencies: []
 ---
 
@@ -8,16 +8,21 @@ dependencies: []
 
 Use this skill as a router for persistent knowledge bases. Resolve the knowledge base configuration from `.mem.yaml`, then use the configured per-base schemas and optional skill for file operations in that base.
 
+## Invocation Rule
+
+Invoke `$mem` whenever saving durable knowledge. Do not write durable knowledge directly to ad hoc files, repo-local `.mem` trees, Dendron notes, or other long-lived knowledge stores without first using this skill to resolve the configured base, schemas, and optional base-specific file rules.
+
+This rule applies even when another skill discovers the learning, finding, decision, or workflow improvement. The discovering skill can decide what should be remembered, but `$mem` owns where and how that knowledge is persisted.
+
 ## Configuration
 
 Resolve configuration in this order:
 
 1. `$PWD/.mem.yaml`
-2. `$PWD/.mem/.mem.yaml`
-3. `$HOME/.mem.yaml`
-4. `$HOME/.mem/.mem.yaml`
+2. `$HOME/.mem.yaml`
 
 If neither file exists, stop and ask where the memory configuration should live. Do not guess a root.
+If user does not specify name, match to the base where `root` equals the working directory. If there is no exact match, stop and ask the user. Do not guess.
 
 Expected shape:
 
@@ -36,7 +41,7 @@ Load and validate `.mem.yaml` with the bundled parser script instead of hand-par
 python3 ./scripts/load_config.py --pretty
 ```
 
-Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script searches `$PWD/.mem.yaml`, `$PWD/.mem/.mem.yaml`, `$HOME/.mem.yaml`, then `$HOME/.mem/.mem.yaml`, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to the config file directory, requires roots to exist, and prints normalized JSON. When the config lives at `.mem/.mem.yaml`, relative `root` values are resolved from `.mem/`, so a base rooted at `.mem/main` should usually use `root: ./main`.
+Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script searches `$PWD/.mem.yaml`, then `$HOME/.mem.yaml`, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to the config file directory, requires roots to exist, and prints normalized JSON.
 
 The parser enforces:
 

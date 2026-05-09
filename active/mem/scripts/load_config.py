@@ -33,9 +33,7 @@ def non_empty_string(value: Any, field: str) -> str:
 def find_config(cwd: Path, home: Path) -> Path:
     candidates = [
         cwd / ".mem.yaml",
-        cwd / ".mem" / ".mem.yaml",
         home / ".mem.yaml",
-        home / ".mem" / ".mem.yaml",
     ]
     for candidate in candidates:
         if candidate.is_file():
