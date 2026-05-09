@@ -39,7 +39,8 @@ changes.
   explicit verification targets.
 - Pre-implementation review: use `$dev.review` to critique the spec and apply straightforward
   spec improvements before coding.
-- Implementation track: use `$dev.loop` to execute the approved plan.
+- Implementation track: use the `cody` subagent (if available) for writing code, with `$dev.loop`
+  owning the approved plan, phase gates, and integration.
 - Post-implementation review swarm in parallel: trigger:loop `$dev.review` passes for
   code review, slop, documentation review, and dead code cleanup
 - Verification track: run the verify phase of `$dev.loop` in a separate subagent
@@ -67,7 +68,11 @@ changes.
 
 ### 3. Implement
 
-- Use `$dev.loop` to implement the approved plan.
+- Use the `cody` subagent for code-writing work. Give it the approved plan,
+  explicit file/module ownership, expected tests, and the relevant `$dev.loop`
+  phase context.
+- Keep `$dev.loop` as the implementation workflow owner for plan execution,
+  integration, verification planning, cleanup, and delivery gates.
 - Keep ownership clear when delegating code changes. Assign files or modules and
   remind subagents they are not alone in the codebase.
 - Integrate changes centrally instead of letting multiple agents edit the same surface
