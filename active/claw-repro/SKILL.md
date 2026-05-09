@@ -16,6 +16,7 @@ Complete the work in this order:
 2. Use `$sw-ctrl` to create a feature spec and write the fix.
 3. Write the feature spec inside OpenClaw `$mem` under the `main` base.
 4. Prove the fixed behavior with `$showboat` using a fresh integration Gateway.
+5. Push changes and babysit pr
 
 Do not skip the repro proof unless the issue cannot be reproduced after concrete attempts; in that case, write the failed repro evidence and stop before making speculative code changes.
 
@@ -36,6 +37,22 @@ Run OpenClaw integration commands from the repo root. The local helpers are expe
 ```
 
 Use the helpers rather than changing normal `~/.openclaw` state.
+
+## Artifact Roots
+
+Resolve canonical artifact roots before creating any spec, proof, or Showboat document. Start from the OpenClaw repo root, read `.mem.yaml` when it exists, and honor active workspace or prep instructions that override the memory root.
+
+Use the `main` memory base for issue specs and proof documents unless the user or workspace instructions explicitly select another base. For OpenClaw AGD work this normally means:
+
+```text
+.mem/main/flow/<issue-or-feature-slug>.md
+.mem/main/integ/<issue-or-feature-slug>-repro.md
+.mem/main/integ/<issue-or-feature-slug>-fixed.md
+```
+
+Only use `.mem/integ/proofs/` when the active workspace instructions explicitly choose integration-local proofs. In sparse or temporary worktrees, write or copy final artifacts to the durable canonical OpenClaw memory root, such as `/Users/kevinlin/code/openclaw/.mem`, before handoff.
+
+After writing artifacts, verify the final paths with `ls -l` and check that links or path references inside the flow and proof docs point at the same canonical locations.
 
 ## Random Gateway Ports
 
@@ -58,7 +75,7 @@ Use a new workspace name for the before-fix repro and another new workspace name
 
 ## Repro Proof
 
-Use `$showboat` for the live repro artifact, preferably under `.mem/integ/proofs/` in the OpenClaw repo. Keep raw nondeterministic output in a sibling `.raw.md` or raw text file, then capture stable summaries in the verified Showboat document.
+Use `$showboat` for the live repro artifact under the canonical proof directory resolved above. Keep raw nondeterministic output in a sibling `.raw.md` or raw text file, then capture stable summaries in the verified Showboat document.
 
 The repro proof should include:
 
@@ -74,7 +91,7 @@ Do not use Showboat as a wrapper around existing unit tests. Use it to exercise 
 
 Use `$sw-ctrl` for the managed implementation phase. Keep the immediate blocker local, then delegate independent docs, code, or review work when useful.
 
-The feature spec must be written through `$mem` from the OpenClaw repo root so `.mem.yaml` resolves the local OpenClaw memory base. Target `main` unless the user says otherwise. Prefer a focused spec path under the selected base, such as:
+The feature spec must be written through `$mem` from the OpenClaw repo root so `.mem.yaml` resolves the local OpenClaw memory base. Target `main` unless the user says otherwise. Prefer a focused spec path under the canonical artifact root resolved above, such as:
 
 ```text
 flow/<issue-or-feature-slug>.md
@@ -104,3 +121,7 @@ The fixed proof should include:
 - `uvx showboat verify <file>` result
 
 Completion requires the repro artifact, feature spec, code fix, and fixed proof to be present or a clear blocker explaining why one of those deliverables could not be completed.
+
+## Push changes and babysit
+
+After proof is established, trigger:push-pr
