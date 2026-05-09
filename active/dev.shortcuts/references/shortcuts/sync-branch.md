@@ -27,6 +27,6 @@ Create a to-do list with the following items then perform all of them:
 5. If rebase conflicts occur, resolve them and continue until the rebase completes:
    - Use `git status` to list conflicted files.
    - Resolve conflict markers in the affected files, then `git add <resolved-files>`.
-   - Run `git rebase --continue`.
+   - Run `git -c core.editor=true rebase --continue` so Git keeps the existing commit message without opening an editor in a noninteractive agent shell.
    - Repeat until the rebase succeeds or a blocking issue requires user input.
    - If the user asks to stop, run `git rebase --abort`.

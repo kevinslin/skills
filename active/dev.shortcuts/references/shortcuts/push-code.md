@@ -1,6 +1,6 @@
 ---
-name: push-pr
-description: push a pr
+name: push-code
+description: push code
 ---
 
 Instructions:

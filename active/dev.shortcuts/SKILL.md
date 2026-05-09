@@ -1,6 +1,6 @@
 ---
 name: dev.shortcuts
-description: Resolve explicit shortcut triggers and usage.
+description: Resolve explicit shortcut triggers and usage. Always read this file at the start of a thread or when user uses `trigger`.
 dependencies: []
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: push-pr
 description: push a pr
+dependencies: [babysit-pr]
 ---
 
 Instructions:
@@ -34,5 +35,5 @@ PR_URL_FILE="${LOOPS_PR_ARTIFACT_FILE:-/tmp/${CURRENT_DIR}-devloop-pr}"
 printf '%s\n' "$PR_URL" > "$PR_URL_FILE"
 echo "Wrote PR URL to $PR_URL_FILE"
 ```
-4. invoke:check-ci -> if failure, invoke:fix-pr
+4. invoke $babysit-pr skill
 5. notify if everything passes
