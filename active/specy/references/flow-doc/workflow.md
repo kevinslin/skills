@@ -19,6 +19,7 @@ important branches, code pointers, log/metric pointers, and related docs.
 - Use `$dev.diagram mermaid general-flow` for `## Sequence Diagram`.
 - Use `$docy` `ref/execution-trace` for `## Execution Trace`.
 - Use `$sudocode` for compact logic summaries inside execution-trace steps.
+- Render `$sudocode` blocks with `ts` code fences, never `sudocode` fences.
 
 ## Output Location
 
@@ -29,6 +30,16 @@ important branches, code pointers, log/metric pointers, and related docs.
 - Use concise kebab-case for `{flow-name}`.
 - Prefer the feature or behavior name over the implementation class name.
 - If the repository already uses `core.*`, `topic.*`, or `ref.*` flow names, keep that convention.
+- For PR-scoped flow docs, prefix the title and generated flow name with `pr`. Prefer `# PR <number>: <Feature> Flow` for the H1 and `pr-<number>-<flow-name>` when no repository-specific filename convention exists.
+
+## PR-Scoped Flow Docs
+
+A flow doc is PR-scoped when the user asks for a PR flow doc, provides a PR URL/number, or asks to document behavior changed by a specific pull request rather than a stable subsystem flow.
+
+- Add `pr: <number-or-url>` to YAML frontmatter. Prefer the PR number when the doc lives in the same repository; use the full URL for cross-repo or ambiguous references.
+- Prefix the H1 title with `PR <number>:`. If the PR number is not available yet, resolve it before finalizing the doc.
+- Keep `created`, `updated`, and `last_updated_session` in frontmatter alongside `pr`.
+- Link the PR again in `## Related docs` when useful for source navigation.
 
 ## Authoring Requirements
 
@@ -42,7 +53,7 @@ important branches, code pointers, log/metric pointers, and related docs.
 - Identify important behavior-changing branches while reading source. Add important branches to the general-flow diagram, including meaningful fallback, retry, permission-denied, validation-failure, timeout, disabled-gate, and terminal-error outcomes when they materially change the flow.
 - Do not force branch detail into the execution trace. The execution trace should follow the happy path end to end, with branch callouts only when needed to explain the next happy-path handoff.
 - Use `$docy` `ref/execution-trace` before writing `## Execution Trace`; keep phases runtime-ordered.
-- Use `$sudocode` inside execution-trace steps when summarizing code logic.
+- Use `$sudocode` inside execution-trace steps when summarizing code logic. Render those blocks as `ts` code fences.
 - Keep each step concise. Put behavior-changing conditions, state writes, side effects, and external boundaries in the sudocode or nearby notes.
 - Fill `## Notes` with quirks, important constraints, important branch details, edge cases, and extra details that do not belong in the happy-path trace.
 - Fill `## Observability` with concrete metrics and logs. If none are found, write `None identified`.
@@ -52,11 +63,12 @@ important branches, code pointers, log/metric pointers, and related docs.
 
 1. Review existing architecture, flow, design, and debugging docs relevant to the target logic.
 2. Read the source code for the target flow before drafting. Identify the external trigger, happy-path runtime phases, important branch points, state changes, external calls, and terminal effects.
-3. Choose `{flow-name}` and copy `./references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`.
+3. Choose `{flow-name}` and copy `./references/flow-doc/template.md` to `$DOCS_ROOT/flows/{flow-name}.md`. For PR-scoped docs, include the `pr` prefix in the title and generated flow name.
 4. Fill frontmatter:
    - `created`: current date for new docs.
    - `updated`: current date.
    - `last_updated_session`: `{agent}/{session-id}` after resolving the current session id via `$dev.llm-session`.
+   - `pr`: PR number or URL, only for PR-scoped docs.
 5. Fill `## Overview` with 1-3 sentences describing what the flow covers, what questions it answers, and why the doc exists.
 6. Fill `## Entry Points` with how the flow starts and 1-3 code pointers.
 7. Draft `## Sequence Diagram` with `$dev.diagram mermaid general-flow`. Keep it as a Mermaid general-flow diagram, not a full call graph. Show the happy path plus important branches that materially change behavior; omit trivial guards and implementation-only conditionals.
@@ -66,7 +78,7 @@ important branches, code pointers, log/metric pointers, and related docs.
    - Add 1-2 sentences describing the phase.
    - Add only the steps needed to understand the logic.
    - Include concrete file/function pointers.
-   - Add compact `$sudocode` for behavior-critical code.
+   - Add compact `$sudocode` for behavior-critical code using a `ts` code fence.
 10. Fill `## Notes` with quirks, important branch details, additional detail, and important behavior not covered by the happy-path trace.
 11. Fill `## Observability` with metrics and logs, or `None identified`.
 12. Fill `## Related docs` with related flow docs, architecture docs, specs, design docs, PR docs, and debugging notes.
@@ -93,7 +105,8 @@ important branches, code pointers, log/metric pointers, and related docs.
 - [ ] `## Sequence Diagram` appears before `## Execution Trace`, uses Mermaid general-flow syntax, and includes important behavior-changing branches when they exist.
 - [ ] `## Execution Trace` is phase-based, runtime-ordered, and focused on the happy path.
 - [ ] Execution-trace steps include concrete file/function pointers.
-- [ ] Sudocode uses exact source identifiers for behavior-critical logic.
+- [ ] Sudocode uses exact source identifiers for behavior-critical logic and is rendered in `ts` code fences.
+- [ ] PR-scoped docs have a `PR <number>:` H1 prefix and non-empty `pr:` frontmatter.
 - [ ] `## Notes` captures quirks or explicitly says `None identified`.
 - [ ] `## Observability` includes metrics/logs or `None identified`.
 - [ ] Repo-internal markdown links are repo-relative.

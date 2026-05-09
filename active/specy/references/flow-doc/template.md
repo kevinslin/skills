@@ -2,6 +2,8 @@
 created: {{date}}
 updated: {{date}}
 last_updated_session: {{agent}}/{{session-id}}
+# PR-scoped flow docs only:
+# pr: {{pr-number-or-url}}
 ---
 
 # [Feature] Flow
@@ -34,7 +36,7 @@ last_updated_session: {{agent}}/{{session-id}}
 
 - path/to/file.ts:{{functionName}}
 
-```
+```ts
 [$sudocode describing]
 ```
 

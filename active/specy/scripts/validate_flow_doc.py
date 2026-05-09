@@ -16,6 +16,10 @@ from pathlib import Path
 
 
 CODE_BLOCK_RE = re.compile(r"```[A-Za-z0-9_-]*\n.*?```", re.S)
+SUDOCODE_FENCE_RE = re.compile(r"```sudocode\b")
+TS_CODE_BLOCK_RE = re.compile(r"```ts\n.*?```", re.S)
+FIRST_H1_RE = re.compile(r"(?m)^#\s+(.+?)\s*$")
+PR_TITLE_RE = re.compile(r"(?i)^PR(?:\s+[#A-Za-z0-9][^:\n]*)?:\s+\S")
 LOCAL_ABSOLUTE_MARKDOWN_LINK_RE = re.compile(
     r"\[[^\]]+\]\(((?:/Users/|/home/)[^)]+)\)"
 )
@@ -48,6 +52,22 @@ def _extract_h2_section(text: str, heading: str) -> str | None:
     next_h2 = re.compile(r"(?im)^##\s+").search(text, start)
     end = next_h2.start() if next_h2 else len(text)
     return text[start:end]
+
+
+def _extract_frontmatter(text: str) -> str | None:
+    if not text.startswith("---\n"):
+        return None
+
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return None
+
+    return text[4:end]
+
+
+def _extract_first_h1(text: str) -> str | None:
+    match = FIRST_H1_RE.search(text)
+    return match.group(1).strip() if match else None
 
 
 def _extract_segments_by_heading(section: str, heading_pattern: str) -> list[tuple[str, str]]:
@@ -83,6 +103,24 @@ def _validate_frontmatter(text: str, result: ValidationResult) -> None:
     for key in ("created", "updated", "last_updated_session"):
         if not re.search(rf"(?m)^{key}:\s*\S+", frontmatter):
             result.errors.append(f"Missing required frontmatter key: '{key}'")
+
+
+def _validate_pr_scope_metadata(text: str, result: ValidationResult) -> None:
+    frontmatter = _extract_frontmatter(text)
+    title = _extract_first_h1(text)
+    has_pr_frontmatter = bool(
+        frontmatter and re.search(r"(?m)^pr:\s*\S+", frontmatter)
+    )
+    has_pr_title = bool(title and PR_TITLE_RE.match(title))
+
+    if has_pr_frontmatter and not has_pr_title:
+        result.errors.append(
+            "PR-scoped flow docs must prefix the H1 with 'PR <number>:'"
+        )
+    if has_pr_title and not has_pr_frontmatter:
+        result.errors.append(
+            "PR-scoped flow docs must include non-empty frontmatter key: 'pr'"
+        )
 
 
 def _validate_entry_points(text: str, result: ValidationResult) -> None:
@@ -122,8 +160,14 @@ def _validate_execution_trace(text: str, result: ValidationResult) -> None:
                 result.errors.append(
                     f"{step_heading.strip()} must include a file/function pointer bullet"
                 )
-            if CODE_BLOCK_RE.search(step_segment) is None:
-                result.errors.append(f"{step_heading.strip()} must include a fenced sudocode block")
+            if SUDOCODE_FENCE_RE.search(step_segment) is not None:
+                result.errors.append(
+                    f"{step_heading.strip()} must use a fenced 'ts' block for $sudocode, not 'sudocode'"
+                )
+            if TS_CODE_BLOCK_RE.search(step_segment) is None:
+                result.errors.append(
+                    f"{step_heading.strip()} must include a fenced 'ts' $sudocode block"
+                )
 
 
 def _validate_manual_notes_and_changelog_order(text: str, result: ValidationResult) -> None:
@@ -148,6 +192,7 @@ def _validate_flow_doc(text: str, result: ValidationResult) -> None:
         "Changelog",
     ]
     _validate_frontmatter(text, result)
+    _validate_pr_scope_metadata(text, result)
     _validate_required_h2(text, required_h2, result)
 
     sequence_pos = _h2_position(text, "Sequence Diagram")
