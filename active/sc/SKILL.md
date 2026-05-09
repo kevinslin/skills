@@ -360,6 +360,10 @@ Consult these helpful guides based on your skill's needs:
 
 These files contain established best practices for effective skill design.
 
+#### Updating Documentation Workflow Instructions
+
+When a user asks to update a documentation workflow such as flow docs, edit the owning skill's source `./references/.../workflow.md`, `./references/.../template.md`, and any validator/tests that enforce the workflow. Keep the main `SKILL.md` as a lean router, and do not copy detailed workflow policy into runtime-installed skill mirrors.
+
 #### Start with Reusable Skill Contents
 
 To begin implementation, start with the reusable resources identified above: `scripts/`, `references/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `references/`.
