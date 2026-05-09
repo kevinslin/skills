@@ -1,0 +1,65 @@
+version: 1.0
+output:
+  path_style: directory
+  file_extension: md
+variables:
+  proof:
+    values: ["*"]
+    default: proof
+    description: Proof slug used as the root directory name.
+  scenario:
+    values: ["*"]
+    description: Scenario slug for a live behavior scenario.
+schema:
+  "{{proof}}":
+    description: Integration behavior proof directory.
+    materialize: false
+    children:
+      proof:
+        description: Root behavior proof for one claim, target, status, and scenario result summary.
+        template: proof
+        insertion_policy:
+          use_when:
+            - The proof has one top-level claim, status, and scenario result summary.
+            - The proof is based on live behavior against the surface under test.
+          avoid_when:
+            - General specs, implementation plans, and unstructured test logs belong elsewhere.
+            - Unit-test-only validation should be recorded as supporting evidence, not a sufficient proof.
+      scenario:
+        description: Live behavior scenarios with embedded config, observations, and raw artifact links.
+        materialize: false
+        children:
+          "{{scenario}}":
+            description: One live behavior scenario with purpose, preconditions, action, expectation, observation, related raw artifacts, and notes.
+            template: scenario
+            dynamic_child: true
+            insertion_policy:
+              use_when:
+                - The entry proves one expected behavior path.
+                - The entry includes relevant config and observed gateway, TUI, CLI, API, UI, plugin, connector, or external-system behavior.
+              avoid_when:
+                - Raw logs and transcripts belong in raw.
+                - Cross-scenario status and result summaries belong in proof.
+      scripts:
+        description: Proof-local helper scripts for collecting, normalizing, summarizing, or validating proof artifacts.
+        materialize: false
+        dynamic_child: true
+        insertion_policy:
+          use_when:
+            - Executable helper code is needed to produce proof summaries.
+            - The script reads raw artifacts and emits scenario or proof summaries.
+            - Proof reproduction needs a stable local command.
+          avoid_when:
+            - Captured command output belongs in raw.
+            - Human-readable behavior summaries belong in scenario.
+      raw:
+        description: Arbitrary raw proof artifacts, logs, transcripts, command outputs, screenshots, JSON, and generated files.
+        materialize: false
+        dynamic_child: true
+        insertion_policy:
+          use_when:
+            - Nondeterministic or bulky source artifacts need to be preserved.
+            - Generated logs, raw transcripts, screenshots, JSON, stdout, stderr, or binary artifacts back the proof.
+          avoid_when:
+            - Concise human-readable scenario summaries belong in scenario.
+            - Helper scripts belong in scripts.

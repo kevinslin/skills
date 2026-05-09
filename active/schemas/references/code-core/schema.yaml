@@ -25,6 +25,22 @@ schema:
         description: flow doc for a specific execution path
         template: flow-doc
         dynamic_child: true
+  arch:
+    description: architecture documentation for a named system, subsystem, workflow, or service boundary
+    materialize: false
+    children:
+      "{{arch}}":
+        description: architecture doc for a specific system, subsystem, workflow, or service boundary
+        template: architecture
+        dynamic_child: true
+  pr:
+    description: PR code-change flow docs. Use `pr/{{num}}-{{slug}}.md`, where `num` is the pull request number and `slug` is the lowercase hyphenated PR title; the document should describe the execution or behavior flow changed by the PR, not the pull request lifecycle.
+    materialize: false
+    children:
+      "{{num}}-{{slug}}":
+        description: flow doc for the code changes in a specific pull request
+        template: flow-doc
+        dynamic_child: true
   api:
     description: api reference
     materialize: false

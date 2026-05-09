@@ -1,0 +1,85 @@
+version: 1.0
+output:
+  path_style: directory
+  file_extension: md
+variables:
+  spec_number:
+    values: ["*"]
+    default: "1"
+    description: Spec number, incrementing from 1.
+  spec_slug:
+    values: ["*"]
+    default: bootstrap
+    description: Kebab-case spec slug.
+  flow:
+    values: ["*"]
+    description: Concise kebab-case flow name.
+  subspec:
+    values: ["*"]
+    default: "1.1"
+    description: Milestone subspec number, using 1.N numbering.
+  subspec_slug:
+    values: ["*"]
+    description: Kebab-case milestone slug.
+  report:
+    values: ["*"]
+    description: Kebab-case report slug.
+  proof:
+    values: ["*"]
+    default: proof
+    description: Integration proof slug.
+  scenario:
+    values: ["*"]
+    description: Integration proof scenario slug.
+schema:
+  specs:
+    description: Numbered specs, incrementing from 1.
+    materialize: false
+    children:
+      "{{spec_number}}-{{spec_slug}}":
+        description: One numbered spec directory.
+        materialize: false
+        dynamic_child: true
+        children:
+          spec:
+            description: Main spec document.
+            template: spec
+          flows:
+            description: Flow docs for this spec. Use concise kebab-case flow names, following the specy flow-doc naming contract.
+            materialize: false
+            children:
+              "{{flow}}":
+                description: Flow doc for a specific spec behavior or execution path.
+                template: flow-doc
+                dynamic_child: true
+                insertion_policy:
+                  use_when:
+                    - The document explains how a startup, request, job, command, UI action, feature, or behavior flow works.
+                    - The flow name is concise kebab-case and names the feature or behavior rather than the implementation class.
+                  avoid_when:
+                    - The document is the main feature spec or milestone plan.
+                    - The content is a raw integration artifact or proof summary.
+          milestones:
+            description: Optional milestone subspecs, numbered as 1.N where N increments from 1.
+            materialize: false
+            children:
+              "{{subspec}}-{{subspec_slug}}":
+                description: Milestone subspec document.
+                template: milestone
+                dynamic_child: true
+          proofs:
+            description: Integration behavior proofs for this spec.
+            materialize: false
+            children_from:
+              - schema: integ-proof
+                vars:
+                  proof: "{{proof}}"
+                  scenario: "{{scenario}}"
+          reports:
+            description: Optional custom reports relevant to this spec.
+            materialize: false
+            children:
+              "{{report}}":
+                description: Custom report relevant to this spec.
+                template: report
+                dynamic_child: true

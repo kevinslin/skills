@@ -56,6 +56,8 @@ schema:
           "spec-{{archived_spec_num}}-{{archived_spec_name}}":
             description: Archived feature spec.
             template: spec-archive
+      "research":
+        description: "Research briefs"
   ".agents":
     description: Runtime and local-only artifacts for this project.
     materialize: false
