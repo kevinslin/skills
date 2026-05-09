@@ -48,17 +48,23 @@ Keep bulky logs, transcripts, screenshots, JSON, and nondeterministic command ou
 uvx showboat --help
 ```
 
-7. Use Showboat to capture a stable, replayable proof summary under `raw/`, usually `raw/showboat-summary.md`:
+7. Initialize the stable Showboat proof summary under `raw/`, usually `raw/showboat-summary.md`:
 
 ```bash
 uvx showboat init <proof-root>/raw/showboat-summary.md "<Proof Title>"
 uvx showboat note <proof-root>/raw/showboat-summary.md "<short context>"
-uvx showboat exec <proof-root>/raw/showboat-summary.md bash "<deterministic command>"
+```
+
+8. Run the real live actions needed for the scenario and capture enough raw material to audit the behavior.
+9. Add at least one Showboat `exec` command that summarizes or validates the captured raw artifact with deterministic output, so the verified Showboat document is tied to the observed live behavior:
+
+```bash
+uvx showboat exec <proof-root>/raw/showboat-summary.md bash "<deterministic summary-or-validation command>"
 uvx showboat verify <proof-root>/raw/showboat-summary.md
 ```
 
-8. Run the real live actions needed for the scenario. Capture enough raw material to audit the behavior, then summarize the stable observed result in `scenario/<scenario>.md`.
-9. Fill `proof.md` last with the claim, expected behavior, target, status, scenario result table or bullets, relevant scripts, and raw artifact index.
+10. Summarize the stable observed result in `scenario/<scenario>.md`.
+11. Fill `proof.md` last with the claim, expected behavior, target, status, scenario result table or bullets, relevant scripts, and raw artifact index.
 
 ## Scenario Template
 
