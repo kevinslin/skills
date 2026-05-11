@@ -90,14 +90,13 @@ class SchemaNode(BaseModel):
     template: str | None = None
     children: dict[str, "SchemaNode"] = Field(default_factory=dict)
     children_from: list[ChildSchemaRef] = Field(default_factory=list)
-    materialize: bool = True
     dynamic_child: bool = False
 
     @model_validator(mode="before")
     @classmethod
     def coerce_shorthand(cls, value: Any) -> Any:
         if isinstance(value, str):
-            return {"description": value}
+            return {"description": value, "template": DEFAULT_TEMPLATE}
         if isinstance(value, dict):
             children_from = value.get("children_from")
             if isinstance(children_from, (str, dict)):
@@ -136,6 +135,12 @@ class MaterializedFile:
     relative_path: Path
     template_path: Path
     context: dict[str, Any]
+
+
+def should_materialize(node: SchemaNode) -> bool:
+    if node.template is not None:
+        return True
+    return not node.children and not node.children_from
 
 
 def load_schema(schema_name: str) -> tuple[Path, SchemaDocument]:
@@ -324,7 +329,7 @@ def collect_files(
         if not include_exact and not include_descendant:
             continue
 
-        if node.materialize and include_exact:
+        if should_materialize(node) and include_exact:
             template_name = node.template or DEFAULT_TEMPLATE
             template_path = find_template(schema_dir, template_name)
             file_context = dict(context)
@@ -597,7 +602,7 @@ def list_schemas() -> int:
 
 def tree_label(segment: str, node: SchemaNode) -> str:
     flags: list[str] = []
-    if node.materialize:
+    if should_materialize(node):
         flags.append(f"template={node.template or DEFAULT_TEMPLATE}")
     else:
         flags.append("path-only")

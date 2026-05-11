@@ -13,7 +13,6 @@ variables:
 schema:
   "{{proof}}":
     description: Integration behavior proof directory.
-    materialize: false
     children:
       proof:
         description: Root behavior proof for one claim, target, status, and scenario result summary.
@@ -27,7 +26,6 @@ schema:
             - Unit-test-only validation should be recorded as supporting evidence, not a sufficient proof.
       scenario:
         description: Live behavior scenarios with embedded config, observations, and raw artifact links.
-        materialize: false
         children:
           "{{scenario}}":
             description: One live behavior scenario with purpose, preconditions, action, expectation, observation, related raw artifacts, and notes.
@@ -42,7 +40,6 @@ schema:
                 - Cross-scenario status and result summaries belong in proof.
       scripts:
         description: Proof-local helper scripts for collecting, normalizing, summarizing, or validating proof artifacts.
-        materialize: false
         dynamic_child: true
         insertion_policy:
           use_when:
@@ -54,7 +51,6 @@ schema:
             - Human-readable behavior summaries belong in scenario.
       raw:
         description: Arbitrary raw proof artifacts, logs, transcripts, command outputs, screenshots, JSON, and generated files.
-        materialize: false
         dynamic_child: true
         insertion_policy:
           use_when:

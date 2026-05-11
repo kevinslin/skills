@@ -62,7 +62,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               file_extension: md
             schema:
               root:
-                materialize: false
                 children:
                   "{{slug}}":
                     template: page
@@ -192,7 +191,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               name: ["*"]
             schema:
               "{{name}}":
-                materialize: false
                 children_from:
                   - schema: child
             """,
@@ -237,7 +235,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               name: ["*"]
             schema:
               "{{name}}":
-                materialize: false
                 children_from:
                   - schema: child
                     vars:
@@ -286,7 +283,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               file_extension: md
             schema:
               root:
-                materialize: false
                 children_from:
                   - schema: child
                     vars:
@@ -302,7 +298,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               static:
                 template: static
               optional:
-                materialize: false
                 children:
                   "{{optional_slug}}":
                     template: optional
@@ -348,7 +343,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               file_extension: md
             schema:
               root:
-                materialize: false
                 children:
                   shared:
                     template: parent-shared
@@ -399,7 +393,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
               file_extension: md
             schema:
               root:
-                materialize: false
                 children_from:
                   - path: ../child/schema.yaml
             """,

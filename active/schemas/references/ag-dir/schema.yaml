@@ -44,14 +44,12 @@ schema:
     template: progress
   docs:
     description: Active feature specs grouped by spec number.
-    materialize: false
     children:
       "spec-{{spec_num}}-{{spec_name}}":
         description: Initial active feature spec.
         template: spec
       ".archive":
         description: Archived specs kept for reference after landing.
-        materialize: false
         children:
           "spec-{{archived_spec_num}}-{{archived_spec_name}}":
             description: Archived feature spec.
@@ -60,15 +58,12 @@ schema:
         description: "Research briefs"
   ".agents":
     description: Runtime and local-only artifacts for this project.
-    materialize: false
     children:
       runs:
         description: Per-spec working notes and execution artifacts.
-        materialize: false
         children:
           "spec-{{spec_num}}":
             description: Per-spec run directory.
-            materialize: false
             children:
               progress:
                 description: Per-spec progress log.

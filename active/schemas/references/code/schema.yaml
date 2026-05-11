@@ -86,11 +86,9 @@ variables:
 schema:
   packages:
     description: Package-level code documentation root.
-    materialize: false
     children:
       "{{module}}":
         description: Root module, service, package, or docs area containing code documentation.
-        materialize: false
         children_from:
           - schema: code-core
         children:
@@ -125,7 +123,6 @@ schema:
             template: architecture
           architecture:
             description: Dated architecture docs for subsystem or service-level architecture.
-            materialize: false
             children:
               "{{date}}-architecture-{{system}}":
                 description: System or subsystem architecture doc.
@@ -137,14 +134,12 @@ schema:
                 template: architecture
           research:
             description: Research briefs comparing technologies, approaches, or implementation options.
-            materialize: false
             children:
               "{{date}}-research-{{research_topic}}":
                 description: Dated research brief for a specific topic.
                 template: research-brief
           design:
             description: Service design docs for staff-level service or system proposals.
-            materialize: false
             children:
               "{{date}}-design-{{service_design_topic}}":
                 description: Service design doc.
@@ -156,7 +151,6 @@ schema:
                 template: service-design-doc
           specs:
             description: Active feature specs, feature designs, investigation specs, and validation specs.
-            materialize: false
             children:
               "{{spec_num}}-{{spec_topic}}":
                 description: Active feature spec with a monotonic two-digit prefix.
@@ -192,14 +186,12 @@ schema:
                 template: validation-spec
               ".archive":
                 description: Completed specs moved here without renaming.
-                materialize: false
                 children:
                   "{{archived_spec_num}}-{{archived_spec_topic}}":
                     description: Archived completed spec.
                     template: archived-spec
           flows:
             description: Execution-flow documentation for lifecycle, topic, and reference flows.
-            materialize: false
             children:
               core.init:
                 description: Core initialization flow.
@@ -215,32 +207,27 @@ schema:
                 template: flow-doc
           state:
             description: Terminal-output and state-derivation docs.
-            materialize: false
             children:
               "{{state_name}}":
                 description: State doc for a target symbol or output surface.
                 template: state-doc
           recipes:
             description: Reproducible change recipes derived from a conversation or PR.
-            materialize: false
             children:
               "{{recipe_name}}":
                 description: Step-by-step change recipe.
                 template: recipe
           faq:
             description: Standalone FAQ docs; FAQ specs update target research docs in place and do not create files here.
-            materialize: false
             children:
               "{{date}}-{{faq_topic}}":
                 description: Standalone FAQ doc.
                 template: faq-doc
           vendor:
             description: Project-focused third-party library documentation.
-            materialize: false
             children:
               "{{library}}":
                 description: Vendor documentation root for one library.
-                materialize: false
                 dynamic_child: true
                 children:
                   README:
@@ -248,7 +235,6 @@ schema:
                     template: vendor-doc
                   reference:
                     description: Optional API reference docs for vendor APIs used by the project.
-                    materialize: false
                     children:
                       "{{vendor_reference}}":
                         description: Vendor API reference doc.
@@ -256,7 +242,6 @@ schema:
                         template: vendor-reference
                   topics:
                     description: Optional vendor topic deep-dives.
-                    materialize: false
                     children:
                       "{{vendor_topic}}":
                         description: Vendor topic doc.

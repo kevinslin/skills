@@ -31,7 +31,7 @@ references/
     default.md.jinja
 ```
 
-Use `schema.yaml` for structure and keep templates next to it. Template files may use any output extension before `.jinja`; for example, `root.md.jinja` creates Markdown content and `module.py.jinja` creates Python content. A node's `template` field selects the template basename. If `template` is omitted, use `default`.
+Use `schema.yaml` for structure and keep templates next to it. Template files may use any output extension before `.jinja`; for example, `root.md.jinja` creates Markdown content and `module.py.jinja` creates Python content. A node's `template` field selects the template basename. If `template` is omitted from a leaf node, use `default`.
 
 ## Schema Fields
 
@@ -59,7 +59,6 @@ schema:
           template: cli
         docs:
           description: mounted documentation subtree
-          materialize: false
           children_from:
             - schema: code-core
               vars:
@@ -75,10 +74,9 @@ schema:
 - `insertion_policy`: Optional routing hints for deciding whether new information belongs in this node. Use it only when `description` is not enough, such as when two nodes are easy to confuse or a common wrong insertion should be avoided. Supported keys:
   - `use_when`: Short phrases describing evidence that belongs in this node.
   - `avoid_when`: Short phrases describing evidence that should go somewhere else.
-- `template`: Template basename in the schema directory. Omit it to use `default`.
+- `template`: Template basename in the schema directory. Omit it on a leaf node to use `default`. Nodes with children or mounted child schemas and no `template` are path-only namespace nodes.
 - `children`: Child nodes below the current path segment.
 - `children_from`: Mounted child schemas to add below this node. Use a scalar such as `children_from: code-core` for a bundled schema with no variable mapping, or a list of entries that each set exactly one of `schema` (a bundled `./references/<schema>/schema.yaml`) or `path` (a schema file or directory relative to the parent schema directory). Parent variables are not inherited by default; use `vars` to explicitly pass rendered values into the child schema. If a `vars` value references a parent value that was not provided, that child var is omitted so unselected child branches can remain skipped. Child variable restrictions and defaults apply only while traversing the child tree. If a mounted child root conflicts with an explicit parent `children` entry, the parent entry wins for its own fields while non-conflicting child descendants remain available.
-- `materialize`: Set to `false` for path-only namespace nodes that should not create a file.
 - `dynamic_child`: Set to `true` when the node represents a namespace that can grow arbitrary named children.
 
 ## Commands

@@ -7,7 +7,6 @@ variables:
   name: ["*"]
 schema:
   "{{prefix}}":
-    materialize: false
     children:
       "{{name}}":
         description: general description
@@ -32,7 +31,6 @@ schema:
                 description: how to test changes
           t:
             description: domain-specific topic namespace
-            materialize: false
             children:
               "{{topic}}":
                 description: domain-specific topic note
@@ -40,14 +38,12 @@ schema:
                 dynamic_child: true
           ref:
             description: self-contained functionality references
-            materialize: false
             children:
               "{{reference}}":
                 description: self-contained functionality reference
                 dynamic_child: true
           api:
             description: public module API namespace
-            materialize: false
             children:
               "{{api}}":
                 description: public interfaces for a module
