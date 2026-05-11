@@ -34,11 +34,9 @@ variables:
 schema:
   specs:
     description: Numbered specs, incrementing from 1.
-    materialize: false
     children:
       "{{spec_number}}-{{spec_slug}}":
         description: One numbered spec directory.
-        materialize: false
         dynamic_child: true
         children:
           spec:
@@ -46,7 +44,6 @@ schema:
             template: spec
           flows:
             description: Flow docs for this spec. Use concise kebab-case flow names, following the specy flow-doc naming contract.
-            materialize: false
             children:
               "{{flow}}":
                 description: Flow doc for a specific spec behavior or execution path.
@@ -61,7 +58,6 @@ schema:
                     - The content is a raw integration artifact or proof summary.
           milestones:
             description: Optional milestone subspecs, numbered as 1.N where N increments from 1.
-            materialize: false
             children:
               "{{subspec}}-{{subspec_slug}}":
                 description: Milestone subspec document.
@@ -69,7 +65,6 @@ schema:
                 dynamic_child: true
           proofs:
             description: Integration behavior proofs for this spec.
-            materialize: false
             children_from:
               - schema: integ-proof
                 vars:
@@ -77,7 +72,6 @@ schema:
                   scenario: "{{scenario}}"
           reports:
             description: Optional custom reports relevant to this spec.
-            materialize: false
             children:
               "{{report}}":
                 description: Custom report relevant to this spec.
