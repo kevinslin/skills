@@ -1,6 +1,6 @@
 ---
 name: dev.bootstrap.typescript
-description: Bootstrap TypeScript projects or add TypeScript pre-commit checks.
+description: Use when creating TypeScript projects or add TypeScript pre-commit checks.
 ---
 
 # Dev.bootstrap.typescript

@@ -109,6 +109,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
   planning/review only or explicitly said not to push.
 - Include the PR URL in the final handoff. If push or PR creation fails, report
   the exact failure and treat the swarm run as incomplete.
+- Kick of $babysit-pr after the PR is pushed
 
 ## Manager Rules
 

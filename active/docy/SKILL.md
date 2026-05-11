@@ -1,6 +1,6 @@
 ---
 name: docy
-description: Load reusable reference docs for coding-related agent work.
+description: Load reusable reference docs for coding-related agent work. Always load in context at beginning of session.
 dependencies: []
 ---
 
