@@ -40,7 +40,6 @@ Use this shape:
 ```yaml
 version: 1.0
 output:
-  path_style: dotted
   file_extension: md
 variables:
   prefix: [pkg, vpkg]
@@ -66,7 +65,6 @@ schema:
 ```
 
 - `variables`: Optional restrictions, defaults, and descriptions for path placeholders such as `{{name}}`. Omit unrestricted placeholders; callers can still pass undeclared values with `--var name=value`.
-- `output.path_style`: Use `dotted` for Dendron-style files such as `pkg.test.cli.md`; use `directory` for directory paths such as `pkg/test/cli.md`.
 - `output.file_extension`: Append this extension to generated paths unless the caller overrides output behavior.
 - `schema`: A tree of path segments. Segments can be literal strings or `{{variable}}` placeholders.
 - `description`: Human-readable navigation help for a node. Prefer improving this before adding insertion policy.
@@ -101,6 +99,7 @@ Materialize a schema node:
 ```bash
 ./scripts/schema.py materialize tool \
   --out /tmp/schema-output \
+  --path-style dotted \
   --var prefix=pkg \
   --var name=test \
   --include pkg.test \
@@ -112,6 +111,7 @@ Materialize another node by including its full rendered path:
 ```bash
 ./scripts/schema.py materialize tool \
   --out /tmp/schema-output \
+  --path-style dotted \
   --var prefix=pkg \
   --var name=test \
   --var topic=config \
@@ -124,12 +124,15 @@ For directory-style schemas, pass `--include` using slash-separated rendered pat
 ```bash
 ./scripts/schema.py materialize ag-dir \
   --out /tmp/ag-dir-output \
+  --path-style directory \
   --var project_title="Example Project" \
   --var archived_spec_num=00 \
   --var archived_spec_name=landed-work \
   --include docs/.archive/spec-00-landed-work \
   --skip-existing
 ```
+
+Use `--path-style dotted` for Dendron-style files such as `pkg.test.cli.md`; use `--path-style directory` for directory paths such as `pkg/test/cli.md`. When omitted, `materialize` infers path style from the include syntax or existing output-root convention: slash-separated includes imply `directory`, dotted includes imply `dotted`, and an existing output root with nested Markdown files or top-level dotted Markdown files is used as a fallback.
 
 The `schema.py materialize` subcommand validates `schema.yaml` with Pydantic, renders path placeholders with provided declared or undeclared variables, renders each selected Jinja template, and uses Copier to initialize the output files.
 
@@ -139,6 +142,7 @@ The `schema.py materialize` subcommand validates `schema.yaml` with Pydantic, re
 - Use `description` as the primary guide for choosing where new information belongs.
 - Use `insertion_policy` only as a tie-breaker or guardrail when the description alone is ambiguous. Do not duplicate section headings or restate the description; templates already define document sections.
 - Materialize only explicitly requested nodes by passing `--include <full.rendered.path>`.
+- Pass `--path-style` from the caller's directive, selected `$mem` base config, or observed output-root convention. Do not define path style inside `schema.yaml`.
 - Use `--skip-existing` when initializing into a directory that may already contain hand-edited files.
 - Treat `dynamic_child: true` as an instruction that more children may be added later; do not invent dynamic children without user intent.
 - Treat `children_from` as schema composition, not inheritance. Plumb parent values into a mounted child only through that mount's `vars` mapping.

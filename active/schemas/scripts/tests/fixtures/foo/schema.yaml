@@ -1,6 +1,5 @@
 version: 1.0
 output:
-  path_style: directory
   file_extension: md
 variables:
   name: ["*"]

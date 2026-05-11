@@ -58,7 +58,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             schema:
               root:
@@ -90,7 +89,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             schema:
               root:
@@ -104,13 +102,64 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("schema 'explicit' produced no files", result.stderr)
 
+    def test_path_style_flag_controls_output_path(self) -> None:
+        self.write_schema(
+            "pages",
+            """
+            version: 1.0
+            output:
+              file_extension: md
+            schema:
+              root:
+                children:
+                  page:
+                    template: page
+            """,
+            {"page.md.jinja": "page"},
+        )
+
+        out = self.root / "out"
+        result = self.run_schema(
+            "materialize",
+            "pages",
+            "--out",
+            str(out),
+            "--include",
+            "root/page",
+            "--path-style",
+            "dotted",
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual((out / "root.page.md").read_text(encoding="utf-8").strip(), "page")
+        self.assertFalse((out / "root" / "page.md").exists())
+
+    def test_schema_output_path_style_is_rejected(self) -> None:
+        self.write_schema(
+            "legacy",
+            """
+            version: 1.0
+            output:
+              path_style: dotted
+              file_extension: md
+            schema:
+              root:
+                template: page
+            """,
+            {"page.md.jinja": "root"},
+        )
+
+        result = self.run_schema("show", "legacy")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("path_style", result.stderr)
+
     def test_children_from_uses_explicit_vars_and_child_defaults_without_parent_inheritance(self) -> None:
         self.write_schema(
             "parent",
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             variables:
               name: ["*"]
@@ -185,7 +234,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             variables:
               name: ["*"]
@@ -229,7 +277,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             variables:
               name: ["*"]
@@ -279,7 +326,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             schema:
               root:
@@ -339,7 +385,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             schema:
               root:
@@ -389,7 +434,6 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             """
             version: 1.0
             output:
-              path_style: directory
               file_extension: md
             schema:
               root:

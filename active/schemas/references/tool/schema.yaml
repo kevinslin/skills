@@ -1,6 +1,5 @@
 version: 1.0
 output:
-  path_style: dotted
   file_extension: md
 variables:
   prefix: [pkg, vpkg]

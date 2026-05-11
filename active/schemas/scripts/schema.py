@@ -28,6 +28,9 @@ SKILL_DIR = Path(__file__).resolve().parents[1]
 REFERENCES_DIR = SKILL_DIR / "references"
 DEFAULT_TEMPLATE = "default"
 PLACEHOLDER_RE = re.compile(r"{{\s*([A-Za-z_][A-Za-z0-9_]*)\s*}}")
+PathStyle = Literal["directory", "dotted"]
+PATH_STYLE_CHOICES: tuple[PathStyle, ...] = ("directory", "dotted")
+DEFAULT_PATH_STYLE: PathStyle = "directory"
 
 
 class VariableSpec(BaseModel):
@@ -50,7 +53,6 @@ class VariableSpec(BaseModel):
 class OutputConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    path_style: Literal["directory", "dotted"] = "directory"
     file_extension: str | None = None
 
 
@@ -185,18 +187,63 @@ def parse_assignments(assignments: list[str]) -> dict[str, str]:
     return parsed
 
 
-def parse_include_paths(includes: list[str]) -> list[tuple[str, ...]]:
+def parse_include_paths(includes: list[str], path_style: PathStyle) -> list[tuple[str, ...]]:
     paths: list[tuple[str, ...]] = []
     for include in includes:
         normalized = include.strip()
         if "/" in normalized:
             parts = tuple(part for part in normalized.split("/") if part)
-        else:
+        elif path_style == "dotted":
             parts = tuple(part for part in normalized.split(".") if part)
+        else:
+            parts = (normalized,)
         if not parts:
             raise ValueError(f"--include has an empty path: {include}")
         paths.append(parts)
     return paths
+
+
+def normalized_file_extension(file_extension: str | None) -> str | None:
+    if not file_extension:
+        return None
+    return file_extension if file_extension.startswith(".") else f".{file_extension}"
+
+
+def inspect_existing_path_style(destination: Path, file_extension: str | None = None) -> PathStyle | None:
+    if not destination.is_dir():
+        return None
+
+    expected_suffix = normalized_file_extension(file_extension)
+    dotted_signals = 0
+    directory_signals = 0
+    scanned = 0
+    for path in destination.rglob("*"):
+        if not path.is_file():
+            continue
+        if expected_suffix and path.suffix != expected_suffix:
+            continue
+        scanned += 1
+        if path.parent == destination and "." in path.stem:
+            dotted_signals += 1
+        elif path.parent != destination:
+            directory_signals += 1
+        if scanned >= 500:
+            break
+
+    if dotted_signals > directory_signals:
+        return "dotted"
+    if directory_signals > dotted_signals:
+        return "directory"
+    return None
+
+
+def infer_path_style(destination: Path, includes: list[str], file_extension: str | None = None) -> PathStyle:
+    normalized_includes = [include.strip() for include in includes if include.strip()]
+    if any("/" in include for include in normalized_includes):
+        return "directory"
+    if any("." in include for include in normalized_includes):
+        return "dotted"
+    return inspect_existing_path_style(destination, file_extension) or DEFAULT_PATH_STYLE
 
 
 def include_state(segments: tuple[str, ...], include_paths: list[tuple[str, ...]]) -> tuple[bool, bool]:
@@ -292,9 +339,14 @@ def title_for(segments: list[str]) -> str:
     return last.replace("-", " ").replace("_", " ").title()
 
 
-def relative_output_path(document: SchemaDocument, segments: list[str], template_path: Path) -> Path:
+def relative_output_path(
+    document: SchemaDocument,
+    segments: list[str],
+    template_path: Path,
+    path_style: PathStyle,
+) -> Path:
     extension = output_extension(document, template_path)
-    if document.output.path_style == "dotted":
+    if path_style == "dotted":
         return Path(".".join(segments) + extension)
     return Path(*segments[:-1], segments[-1] + extension)
 
@@ -309,6 +361,7 @@ def collect_files(
     rendered_segments: tuple[str, ...] = (),
     include_paths: list[tuple[str, ...]] | None = None,
     output_document: SchemaDocument | None = None,
+    path_style: PathStyle = DEFAULT_PATH_STYLE,
     schema_stack: tuple[Path, ...] = (),
     blocked_segments: set[str] | None = None,
 ) -> list[MaterializedFile]:
@@ -345,7 +398,12 @@ def collect_files(
             )
             files.append(
                 MaterializedFile(
-                    relative_path=relative_output_path(output_document, list(next_segments), template_path),
+                    relative_path=relative_output_path(
+                        output_document,
+                        list(next_segments),
+                        template_path,
+                        path_style,
+                    ),
                     template_path=template_path,
                     context=file_context,
                 )
@@ -361,6 +419,7 @@ def collect_files(
                 rendered_segments=next_segments,
                 include_paths=include_paths,
                 output_document=output_document,
+                path_style=path_style,
                 schema_stack=schema_stack,
             )
         )
@@ -373,6 +432,7 @@ def collect_files(
                 next_raw_path,
                 next_segments,
                 include_paths=include_paths,
+                path_style=path_style,
                 schema_stack=schema_stack,
                 existing_paths={item.relative_path for item in files},
             )
@@ -399,6 +459,7 @@ def collect_mounted_child_files(
     rendered_segments: tuple[str, ...],
     *,
     include_paths: list[tuple[str, ...]],
+    path_style: PathStyle,
     schema_stack: tuple[Path, ...],
     existing_paths: set[Path],
 ) -> list[MaterializedFile]:
@@ -423,6 +484,7 @@ def collect_mounted_child_files(
             rendered_segments,
             include_paths=include_paths,
             output_document=output_document,
+            path_style=path_style,
             schema_stack=(*schema_stack, child_schema_path),
             explicit_children=explicit_children,
         )
@@ -445,6 +507,7 @@ def collect_mounted_document_files(
     *,
     include_paths: list[tuple[str, ...]],
     output_document: SchemaDocument,
+    path_style: PathStyle,
     schema_stack: tuple[Path, ...],
     explicit_children: dict[str, tuple[str, SchemaNode]],
 ) -> list[MaterializedFile]:
@@ -474,6 +537,7 @@ def collect_mounted_document_files(
                     rendered_segments=next_segments,
                     include_paths=include_paths,
                     output_document=output_document,
+                    path_style=path_style,
                     schema_stack=schema_stack,
                     blocked_segments=blocked_segments,
                 )
@@ -487,6 +551,7 @@ def collect_mounted_document_files(
                     next_raw_path,
                     next_segments,
                     include_paths=include_paths,
+                    path_style=path_style,
                     schema_stack=schema_stack,
                     existing_paths={item.relative_path for item in files},
                 )
@@ -503,6 +568,7 @@ def collect_mounted_document_files(
                 rendered_segments=rendered_segments,
                 include_paths=include_paths,
                 output_document=output_document,
+                path_style=path_style,
                 schema_stack=schema_stack,
             )
         )
@@ -545,10 +611,13 @@ def materialize(
     *,
     overwrite: bool,
     skip_existing: bool,
-    include_paths: list[tuple[str, ...]],
+    includes: list[str],
+    path_style: PathStyle | None,
 ) -> list[Path]:
     schema_path = schema_path_for_name(schema_name)
     schema_dir, document = load_schema_file(schema_path)
+    resolved_path_style = path_style or infer_path_style(destination, includes, document.output.file_extension)
+    include_paths = parse_include_paths(includes, resolved_path_style)
     context = validate_variables(document, values)
     files = collect_files(
         schema_dir,
@@ -556,6 +625,7 @@ def materialize(
         document.tree,
         context,
         include_paths=include_paths,
+        path_style=resolved_path_style,
         schema_stack=(schema_path,),
     )
     if not files:
@@ -677,7 +747,7 @@ def show_schema(schema_name: str) -> int:
     schema_path = schema_path_for_name(schema_name)
     schema_dir, document = load_schema_file(schema_path)
     extension = document.output.file_extension or "<template>"
-    print(f"{schema_name} [version={document.version} output={document.output.path_style} extension={extension}]")
+    print(f"{schema_name} [version={document.version} extension={extension}]")
     if document.variables:
         print("|-- variables")
         variables = list(document.variables.items())
@@ -713,7 +783,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--include",
         action="append",
         default=[],
-        help="Optional full rendered path to materialize. Use dotted paths for dotted schemas and slash paths for directory schemas.",
+        help="Optional full rendered schema path to materialize.",
+    )
+    materialize_parser.add_argument(
+        "--path-style",
+        choices=PATH_STYLE_CHOICES,
+        help="Output path style. Defaults to include/output-root convention when omitted.",
     )
     materialize_parser.add_argument("--overwrite", action="store_true", help="Overwrite existing generated files.")
     materialize_parser.add_argument("--skip-existing", action="store_true", help="Leave existing files untouched.")
@@ -733,14 +808,14 @@ def main(argv: list[str] | None = None) -> int:
             if args.overwrite and args.skip_existing:
                 raise ValueError("use either --overwrite or --skip-existing, not both")
             values = parse_assignments(args.var)
-            include_paths = parse_include_paths(args.include)
             written = materialize(
                 args.schema,
                 args.out.resolve(),
                 values,
                 overwrite=args.overwrite,
                 skip_existing=args.skip_existing,
-                include_paths=include_paths,
+                includes=args.include,
+                path_style=args.path_style,
             )
             for path in written:
                 print(path)
