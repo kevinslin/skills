@@ -1,219 +1,63 @@
 ---
 name: ag-learn
-description: Learn from sessions or merged PRs to improve agent workflows.
+description: Improve skills from observed agent friction in sessions, PRs, or audits.
 dependencies:
 - ag-ledger
 - dev.llm-session
 - dev.shortcuts
+- sc
 version: 0.0.0
 ---
 
-# Learn
+# ag-learn
 
-Learn from the current session, or run a multi-session review over a time interval.
-
-## Capabilities
-
-- consolidate learnings from conversation and persist it in learnings log
-- identify mistakes or uncertainty points in the current conversation
-- identify areas of optimization that could improve the speed or quality of this task in the future
-- identify desires you have to make things better next time
-- synthesize recurring patterns across multiple sessions
-- route learnings toward existing skill improvements, new skill proposals, AGENTS.md, repo docs, or personal workflow updates
+Use this skill to turn agent mistakes, repeated friction, or useful workflow discoveries into better skills.
 
 ## Constants
 
-- %%LEARN_ROOT: $HOME/.llm/skills/learn/
-- %%LEARN_ARCHIVE: %%LEARN_ROOT/.archive
-- %%SKILL_TOKEN: `ag-learn`
+- `LEARN_ROOT`: `$HOME/.llm/skills/learn`
+- `LEARN_ARCHIVE`: `$HOME/.llm/skills/learn/.archive`
+- `SKILL_TOKEN`: `ag-learn`
 
-## General Rules
+## Core Workflow
 
-1. Evidence first. Before writing learnings, inspect the full rollout history for the active session and any parent/forked sessions, then inspect the smallest additional durable artifact set that explains what happened. Good additional artifacts are progress files, logs, generated docs, diffs, test failures, and command output.
-2. Resolve the active session id in this order:
-   - `ag-ledger session-id`
-   - `$CODEX_THREAD_ID`
-   - `dev.llm-session` as fallback
-3. If the active session is forked, also scan the parent session:
-   - Prefer `ag-ledger` `parent_session_id` metadata when it is present.
-   - Otherwise inspect the active session `session_meta` in `~/.codex/sessions/**/rollout-*.jsonl`.
-   - If `payload.forked_from_id` or `source.subagent.thread_spawn.parent_thread_id` is present, include that parent session in the evidence scan.
-   - Pull the smallest durable artifact set for both sessions and label parent-derived findings clearly.
-4. Use the literal `ag-learn` token in output filenames.
-5. Prefer 2-3 high-signal items. Do not pad with weak learnings.
-6. In review mode, separate `catalog evidence` from `invocation evidence`.
-   - `catalog evidence`: skill names listed in `AGENTS.md`, skill inventories, dependency metadata, or generic instructions that enumerate available skills.
-   - `invocation evidence`: `ag-ledger` `invoked_skill` fields, explicit `$skill` or named-skill user requests, transcript/tool output showing the skill workflow was actually used, or durable artifacts produced by that skill.
-   - Do not count catalog-only sessions as skill invocations.
-7. When logging `ag-learn` activity to `ag-ledger`, always set structured fields:
-   - `--invoked-skill ag-learn`
-   - `--mode default|review|code`
-   - `--parent-session-id <session-id>` when the learn run is following a parent/forked/subagent session
-8. When writing or updating files under `%%LEARN_ROOT`, do not use the `apply_patch` tool. Use a direct shell write or move operation instead, then verify the exact saved path exists on disk.
-9. When the session includes `trigger:<shortcut>` or an explicit `$skill` mention, read the controlling shortcut or skill source of truth before classifying the mistake. For bundled shortcuts, resolve them through `../dev.shortcuts/SKILL.md`, then read that skill's `./references/shortcuts/<shortcut>.md`.
-10. When a mistake comes from a mismatch between expected workflow and actual execution, write down both sides explicitly before routing the learning.
-11. Every saved learning note must be auditable later. Before the first finding, include `Evidence inspected`, `Coverage`, and `Known gaps` sections that state which transcript/session/artifact sources were checked, whether parent/forked history was included, and what was not inspected.
-12. Do not let the newest correction automatically become the top learning. Before writing findings, list candidate friction points and prioritize by recurrence risk, user-visible cost, time lost, and likelihood of preventing future errors.
-13. If a recommendation has `promote: yes`, it must name a concrete `apply target` and `proposed change`. Use `promote: no` when the recommendation is useful context but not ready to turn into an edit.
-14. Use a two-pass scan for every session-specific learning run:
-   - Pass 1: read the full rollout JSONL for the active session and any parent/forked sessions. Identify where the agent made mistakes, encountered friction, or spent the most time. Write those raw findings to `%%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task]-findings.md`.
-   - Pass 2: write the regular learning report from the Pass 1 findings plus the relevant durable artifacts.
+1. Identify the learning source: current session, named session, merged PR, pasted evidence, or review window.
+2. Inspect enough durable evidence to understand the friction.
+   - Good evidence: transcript excerpts, rollout JSONL, PR comments, diffs, logs, generated artifacts, command output, saved learn notes.
+   - If transcript forensics are needed, read `./references/session-forensics.md`.
+3. Decide whether the issue should change a skill.
+   - Optimize an existing skill when the workflow already has a clear home.
+   - Propose a new skill when repeated work has no clean home.
+   - Use `none` when the lesson is too situational or not skill-shaped.
+4. Read the target skill or shortcut source before judging the gap.
+   - For skill changes, follow `../sc/SKILL.md` and edit only the canonical source tree.
+   - For `trigger:<shortcut>` cases, resolve the shortcut through `../dev.shortcuts/SKILL.md` before classifying the mistake.
+5. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
+6. Save a learn note only when the user asks for persistence, the finding should be reused, or the run is review/code/formal mode.
 
-## Workflow
-### Default (current session)
-1. Resolve the current session id using the canonical lookup order above.
-2. Resolve parent or forked sessions using all available parent signals:
-   - Prefer `ag-ledger` `parent_session_id` metadata when it is present.
-   - Read active session `session_meta.payload.forked_from_id` from `~/.codex/sessions/**/rollout-*.jsonl`.
-   - Search the active rollout for `source.subagent.thread_spawn.parent_thread_id`.
-3. If any parent signal is found, include every resolved parent session in the evidence scan.
-4. Scan the user request and relevant parent session context for `trigger:<shortcut>` tokens and explicit `$skill` mentions.
-   - For each `trigger:<shortcut>`, read the resolved shortcut definition before judging the behavior.
-   - For each explicit `$skill` mention that materially shaped the task, read the skill body or confirm it was already loaded in the current session.
-   - If a shortcut wraps a skill, compare the shortcut contract and the wrapped skill contract together.
-5. Pass 1 full-history scan:
-   - Read the active session rollout JSONL and every parent/forked session rollout JSONL discovered above.
-   - Scan the full history, not only the current context window or final messages.
-   - Identify candidate areas where the agent made mistakes, encountered friction, or spent the most time.
-   - Write these raw findings to `%%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task]-findings.md`.
-6. Pass 2 learning report:
-   - Use the Pass 1 findings as the input set.
-   - Inspect the smallest additional durable artifact set needed to explain the selected findings.
-7. Write the saved-note evidence header before findings:
-   - `Evidence inspected`: transcripts, parent sessions, logs, diffs, docs, generated files, or other durable artifacts actually checked.
-   - `Coverage`: whether the active session, parent/forked session, PR/review context, and relevant artifacts were covered.
-   - `Known gaps`: intentionally skipped sources, unavailable logs, blocked reads, stale data, or areas not inspected.
-8. Build a candidate friction list before selecting findings:
-   - Capture the latest correction, repeated tool/process failures, user-visible rework, missing proof, and high-risk workflow mismatches.
-   - Rank candidates by recurrence risk, user-visible cost, time lost, and prevention value.
-   - Prefer the top 2-3 high-signal candidates unless the user asks for exhaustive coverage.
-9. For each selected mistake, uncertainty, or reusable optimization opportunity, write an expected-vs-actual note:
-   - Expected: what the controlling skill, shortcut, AGENTS.md, repo doc, or user instruction required.
-   - Actual: what the agent did, with transcript/tool/artifact evidence.
-   - Gap: the specific missed read, wrong assumption, workflow mismatch, or execution failure.
-10. List the points where you made a mistake, were uncertain, or found a reusable optimization opportunity.
-11. For each item, write a short analysis using the required template.
-12. Write the regular learning note using the required template.
-13. If there are no mistakes or uncertainties, state that explicitly.
+## Modes
 
-### Review mode: `review [time interval] [path]`
-Use this mode when the user asks to "review [time interval] [path]".
-1. Convert the requested interval into an exact date/time window and report it back in absolute terms.
-2. Discover candidate sessions in this order:
-   - `ag-ledger` entries in the requested window
-   - persisted learn files in `%%LEARN_ROOT` (including legacy `meta-learn-*` files)
-   - `dev.llm-session` / transcript inspection to fill gaps
-3. Classify skill evidence before counting invocations.
-   - Prefer `ag-ledger` `invoked_skill`, `mode`, and `parent_session_id` fields when they exist.
-   - Treat AGENTS catalogs, skill lists, dependency blocks, and other static enumerations as weak signals only.
-   - Count a skill invocation only when at least one direct signal exists; otherwise keep the session in coverage counts but exclude it from skill-frequency analysis.
-4. Report coverage before analysis: how many candidates came from each source, which exact sessions matched, and how many had direct invocation evidence versus weak/catalog-only evidence.
-5. If `[path]` is provided, filter to sessions whose working directory is within that path (prefix match on absolute paths). If the interval or path is ambiguous, ask a clarifying question before proceeding.
-6. Prioritize inspection order before opening transcripts in depth.
-   - Group repetitive sessions by workflow or workspace when the ledger shows they are materially identical no-op runs.
-   - Use ledger summaries as sufficient evidence for repetitive no-op clusters unless a run shows an anomaly such as an error, a missing ledger counterpart, a surprising artifact change, or a large token outlier.
-   - When you must inspect transcripts, scan first for direct invocation signals and skip AGENTS/skill-catalog sections unless they are needed to disprove a false positive.
-   - If a matched session already has a persisted learn file and it still matches the durable evidence, treat that learn file as primary evidence instead of re-deriving the same learning.
-7. For each matching session or cluster, inspect the relevant artifacts and repeat the Default workflow, including the Pass 1 findings file for every session-specific learning report. Produce a separate output file per session when needed. For repetitive clusters, one grouped note is acceptable if anomalies are broken out separately.
-   - When a recommendation routes to `skill`, explicitly decide whether the optimization is best served by improving an existing skill or by proposing a new skill.
-   - Prefer `skill action: create` when repeated work lacks a clean home in the current skill set or would otherwise overload an unrelated skill.
-   - When the session includes `trigger:<shortcut>`, read the shortcut definition before counting the run as compliant or non-compliant.
-8. After the per-session notes, write one rollup file for the current review session that includes:
-   - the exact review window
-   - the matched session list
-   - coverage split between direct invocation evidence and catalog-only evidence
-   - recurring patterns with frequency counts
-   - the top 3-5 recommendations across sessions
-   - skill opportunities grouped into `create new` versus `optimize existing`
-   - likely targets for follow-up changes
-9. If no sessions match, state that explicitly.
+- Default/current session: use the Core Workflow.
+- `review [time interval] [path]`: read `./references/review-mode.md`.
+- `code`: read `./references/code-mode.md`.
+- Formal saved note or durable routing: read `./references/templates.md`.
+- Session lookup, parent/fork tracing, or ledger logging: read `./references/session-forensics.md` and `./references/ledger.md`; use `../ag-ledger/SKILL.md` and `../dev.llm-session/SKILL.md` as needed.
 
-### Code mode: `code`
-Use this mode when the user asks to learn from the current coding session
-1. Resolve the current session id using the canonical lookup order above.
-2. Resolve parent or forked sessions using `ag-ledger` `parent_session_id`, `session_meta.payload.forked_from_id`, and `source.subagent.thread_spawn.parent_thread_id`.
-3. Review the current coding session plus every resolved parent session, and if a PR was submitted, any review comments that were addressed.
-4. Run the Pass 1 full-history scan from Default mode and write the findings file before inspecting code.
-5. Read each changed file in the current codebase (post-merge state), plus the smallest relevant test/log/review artifacts.
-6. For each file, reflect with hindsight: knowing the full implementation now, what would you do differently to make the code simpler and more maintainable? Consider:
-   - Duplicated patterns that could be consolidated
-   - Abstractions that are too complex or too shallow
-   - State management issues (stale state, missing resets, race conditions)
-   - API surface problems (leaky internals, unnecessary casts, inconsistent naming)
-   - Redundant logic (duplicate checks, dead code paths)
-   - Missing edge cases discovered during or after implementation
-7. For each finding, write an analysis using the Required Output Template.
+## Output
 
-### Archive Learning
-A learning is archived when it has already been used. When the user archives a learning, move it to %%LEARN_ARCHIVE 
+For each improvement, keep the user-facing summary compact:
 
-## Required Output Template
-
-Start every saved learning note with this auditability block before the first numbered item:
-
-```
-## Evidence Inspected
-
-- [durable source inspected: transcript path, parent session id, PR/review artifact, log, diff, generated file, or command output]
-
-## Coverage
-
-- active session: [covered|not covered|n/a] - [brief detail]
-- parent/forked session: [covered|not covered|n/a] - [brief detail]
-- durable artifacts: [covered|not covered|n/a] - [brief detail]
-- candidate friction ranking: [brief list of considered candidates and why the selected findings won]
-
-## Known Gaps
-
-- [source not inspected, unavailable evidence, blocked read, stale data, or `none`]
+```markdown
+1. [short title]
+Evidence: [durable evidence checked]
+Skill gap: [what the skill should have made easier or prevented]
+Target: [existing skill, proposed skill, or none]
+Proposed change: [implementation-ready change, or n/a]
+Promote: [yes|no]
 ```
 
-Use this exact structure for each item to create a numbered list:
+When saving a note, write it under `LEARN_ROOT` with a filename containing the literal `ag-learn` token. Verify the saved path exists before reporting it.
 
-```
-## [number] Improvement Opportunity
+## Archive Learning
 
-[describe the mistake or optimization opportunity]
-
-### Why
-[describe why]
-
-### Learning
-[what you learned]
-
-### Recommendations
-[what to remember to not make this mistake again]
-
-### Expected vs Actual
-- expected: [what the controlling instruction, skill, shortcut, doc, or user request required]
-- actual: [what happened, citing the durable evidence type]
-- gap: [the missed read, wrong assumption, workflow mismatch, or execution failure]
-
-### Routing
-- target: [skill|AGENTS.md|repo docs|workflow|none]
-- skill action: [create|optimize|none]
-- skill name: [existing-skill-name|proposed-skill-name|n/a]
-- apply target: [exact file path, shortcut file, AGENTS.md path, repo doc path, workflow name, or n/a]
-- proposed change: [one-sentence change to make in the apply target, or n/a]
-- scope: [local|repo|cross-session]
-- promote: [yes|no]
-```
-
-For `promote: yes`, `apply target` must be an exact editable file path, shortcut file, AGENTS.md path, repo doc path, workflow name, or new-skill proposal target, and `proposed change` must be implementation-ready. If either field is `n/a`, set `promote: no`.
-
-Write learnings to %%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task].md.
-
-- Use `ag-ledger session-id` or `$CODEX_THREAD_ID` for the active session when possible; use `dev.llm-session` only as fallback.
-- If `$HOME/.llm/skills/learn` does not exist, create it.
-- Do not use `apply_patch` for files under `%%LEARN_ROOT`; write them with a direct shell operation and then verify the target path exists.
-- Write the Pass 1 findings file before the regular report, using `%%LEARN_ROOT/%%SKILL_TOKEN-{YYYY-MM-DD}-[agent-session-id]-[kebab-description-of-task]-findings.md`.
-- In review mode, write one file per reviewed session when needed, plus one rollup file for the current review session.
-
-### Learning Summaries
-
-When summarizing learnings for the user, present the high-signal learnings as a numbered list using `1.`, `2.`, `3.`, and so on. Keep each item self-contained so the user can reference a specific learning number later, including from `ag-ledger`.
-After each numbered summary item, include a compact `Routing:` line that carries the routing decision from the learning (`target`, `skill action`, `skill name`, `apply target`, `scope`, `promote`). Keep this routing line terse and stable so the user can see immediately where the follow-up belongs without reopening the saved note.
-After saving a learning note, also state the exact follow-up apply targets and whether the change must be made through another skill such as `$sc`.
-For promoted recommendations, call out any missing apply target or proposed change as a defect in the learning note rather than treating the learning as ready to apply.
-When describing where learnings were saved, format the sentence as `Saved the learning note to <absolute-filepath> - <status/details>` with a space before and after the hyphen.
-Do not end the filepath with a period before the trailing status/details text.
+When the user archives a learning, move it to `LEARN_ARCHIVE`.
