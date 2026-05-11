@@ -110,6 +110,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
 - Include the PR URL in the final handoff. If push or PR creation fails, report
   the exact failure and treat the swarm run as incomplete.
 - Kick of $babysit-pr after the PR is pushed
+- $slack-notify me with alert once pr is green
 
 ## Manager Rules
 
