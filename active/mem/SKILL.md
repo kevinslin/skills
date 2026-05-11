@@ -31,6 +31,7 @@ version: 1
 bases:
   - name: {{string}}
     root: {{path}}
+    path_style: {{directory|dotted}} # optional; inferred from existing files when omitted
     skill: {{skill_name}} # optional
     schemas: [{{schema_name}}, ...]
 ```
@@ -49,12 +50,14 @@ The parser enforces:
 - `bases` must be a non-empty list.
 - Each base must include non-empty `name`, `root`, and `schemas` fields.
 - `schemas` must be a non-empty list of schema names.
+- `path_style` is optional; when present, it must be `directory` or `dotted`. When omitted, the parser infers it from existing Markdown files under `root` and falls back to `directory` if no convention is visible.
 - `skill` is optional; when present, it must be non-empty.
 
 Each base has:
 
 - `name`: short base identifier users can mention.
 - `root`: filesystem root for that knowledge base.
+- `path_style`: how schema paths map to files for this base. Use `dotted` for files such as `pkg.test.cli.md`; use `directory` for paths such as `pkg/test/cli.md`.
 - `skill`: optional skill name to load for base-specific navigation and file operations under `root`.
 - `schemas`: ordered schema names to resolve into `$schema` definitions; use them to understand the expected structure, placement, naming, frontmatter, and section format of knowledge bases in this base.
 
@@ -88,6 +91,7 @@ The selected base `root` is the authoritative filesystem root for that operation
    - Otherwise, use resolved schema node descriptions to choose candidate nodes.
    - Use `insertion_policy` only as a tie-breaker or guardrail when descriptions leave ambiguity.
    - Before writing, render or derive the expected file path for the chosen schema node under the selected base `root`, including required slug, name, and template conventions.
+   - Use the selected base's normalized `path_style` when deriving paths or invoking schema materialization. If using `../schemas/scripts/schema.py materialize`, pass `--path-style {{path_style}}`.
    - Create only the chosen target file and its parent directories. Do not materialize a whole schema tree, required sibling nodes, or placeholder/default nodes just to create one knowledge file.
    - If using a schema helper command, use it only when it can render exactly the selected node. Do not run broad schema materialization commands that also create required siblings under the base root.
    - Compare the expected path with any existing candidate file and schema-owned route or index metadata. If they disagree, treat the candidate as schema drift, not path authority.

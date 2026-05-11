@@ -19,6 +19,10 @@ except ImportError:  # pragma: no cover - environment issue
     yaml = None
 
 
+PATH_STYLES = {"directory", "dotted"}
+DEFAULT_PATH_STYLE = "directory"
+
+
 def fail(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
@@ -28,6 +32,14 @@ def non_empty_string(value: Any, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         fail(f"{field} must be a non-empty string")
     return value.strip()
+
+
+def normalize_path_style(value: Any, field: str) -> str:
+    path_style = non_empty_string(value, field)
+    if path_style not in PATH_STYLES:
+        allowed = ", ".join(sorted(PATH_STYLES))
+        fail(f"{field} must be one of: {allowed}")
+    return path_style
 
 
 def find_config(cwd: Path, home: Path) -> Path:
@@ -48,6 +60,31 @@ def resolve_root(raw_root: str, config_dir: Path) -> Path:
     if not path.is_absolute():
         path = config_dir / path
     return path.resolve(strict=False)
+
+
+def infer_path_style(root: Path) -> str:
+    if not root.is_dir():
+        return DEFAULT_PATH_STYLE
+
+    dotted_signals = 0
+    directory_signals = 0
+    scanned = 0
+    for path in root.rglob("*.md"):
+        if not path.is_file():
+            continue
+        scanned += 1
+        if path.parent == root and "." in path.stem:
+            dotted_signals += 1
+        elif path.parent != root:
+            directory_signals += 1
+        if scanned >= 500:
+            break
+
+    if dotted_signals > directory_signals:
+        return "dotted"
+    if directory_signals > dotted_signals:
+        return "directory"
+    return DEFAULT_PATH_STYLE
 
 
 def load_yaml(path: Path) -> Any:
@@ -99,10 +136,15 @@ def normalize_config(path: Path, require_roots: bool) -> dict[str, Any]:
             non_empty_string(schema, f"{label}.schemas[{schema_index}]")
             for schema_index, schema in enumerate(schemas)
         ]
+        if "path_style" in base:
+            path_style = normalize_path_style(base["path_style"], f"{label}.path_style")
+        else:
+            path_style = infer_path_style(root)
 
         normalized: dict[str, Any] = {
             "name": name,
             "root": str(root),
+            "path_style": path_style,
             "schemas": normalized_schemas,
         }
         if "skill" in base:
