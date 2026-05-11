@@ -94,12 +94,14 @@ The selected base `root` is the authoritative filesystem root for that operation
    - Use the selected base's normalized `path_style` when deriving paths or invoking schema materialization. If using `../schemas/scripts/schema.py materialize`, pass `--path-style {{path_style}}`.
    - Create only the chosen target file and its parent directories. Do not materialize a whole schema tree, required sibling nodes, or placeholder/default nodes just to create one knowledge file.
    - If using a schema helper command, use it only when it can render exactly the selected node. Do not run broad schema materialization commands that also create required siblings under the base root.
+   - Do not invent schema metadata fields such as `schema_route`, `schema`, `route`, or `node`. Add or update route-like metadata only when the resolved schema template or the existing file explicitly defines that field, and then use the concrete materialized route for the selected root and `path_style`, not an unresolved template route.
    - Compare the expected path with any existing candidate file and schema-owned route or index metadata. If they disagree, treat the candidate as schema drift, not path authority.
    - Do not silently write to a drifted file just because it already exists. If the user's intent is clear and the drift is mechanical, repair the path, slug, and metadata first; otherwise ask.
    - Read the target file's existing headings before inserting; use its headings and the resolved template shape for section placement.
    - If candidate nodes still conflict, ask the user before writing.
+   - After any schema-derived rename, numbering update, or move, rerun the same path invariant checks: expected file exists, old candidate paths have no files, empty old directories are removed or explicitly reported, and any route or index metadata still points at the concrete expected slug or path.
 8. Use the optional base skill's rules for all domain-specific navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`. The selected base `root` and resolved schemas remain the source of truth for paths and structure.
-9. Keep the final response concise: name the base, the knowledge base, what changed or what was found, and cite touched files when local-file citations are required.
+9. Keep the final response concise: name the base, the knowledge base, what changed or what was found, and cite touched files when local-file citations are required. For nontrivial schema routing, root-correctness questions, or any path repair, report the selected base root, the concrete written file, and the schema node separately so base-root selection is auditable.
 
 ## Finding Knowledge Bases
 
@@ -118,7 +120,7 @@ When adding a finding:
 - Preserve the knowledge base's existing format and organization.
 - Choose the schema node before writing, then shape new or updated content according to the resolved `$schema` definitions.
 - When the selected file does not exist, create that file directly from the selected node's expected template/sections. Do not initialize the rest of the schema around it.
-- After writing, verify the schema-path invariants: the expected file exists, any wrong-path sibling is absent or intentionally left alone, and route or index metadata points at the expected slug or path.
+- After writing, verify the schema-path invariants: the expected file exists, any wrong-path sibling is absent or intentionally left alone, empty wrong-path directories from this operation are removed or reported, and route or index metadata points at the expected concrete slug or path.
 - Add the smallest durable note that will be useful later.
 - Include source context when available: originating file, command, log, PR, conversation, date, or rationale.
 - Avoid duplicating existing knowledge; merge with or refine the existing entry when the same point is already present.
