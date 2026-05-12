@@ -5,6 +5,7 @@ dependencies:
 - dev.loop
 - dev.review
 - dev.shortcuts
+- schemas
 - specy
 - sw-ctrl
 ---
@@ -30,6 +31,17 @@ changes.
    - the user asked to review the plan before coding
 4. Prefer `$dev.loop` alone for simple single-threaded work. Use this skill only
    when multiple agents materially help.
+
+## Checklist Gate
+
+- Create a swarm checklist before starting the loop.
+- Store the checklist in the active spec folder when using `schemas` `ag-dir-v2`.
+- Store the checklist in a temporary folder for all other workflows.
+- Include every required gate: spec, spec review, implementation, review swarm,
+  review fixes, verification, PR push, and any user-requested stopping condition.
+- Check off items one by one as each gate is actually complete. Do not bulk-check
+  items at the end.
+- Do not consider the loop done until every checklist item is checked off.
 
 ## Swarm Layout
 
@@ -61,8 +73,8 @@ changes.
 
 ### 2. Plan and Gate
 
-- Use `$specy` to create a feature spec first.
-- Run one `$dev.review` pass against the spec and incorporate straightforward fixes.
+- Use `$specy` to create a feature spec first unless one already exists.
+- Run trigger:loop `$dev.review` against the spec
 - Stop and return the spec to the user when ambiguity remains or the user asked
   to review the plan before implementation.
 
