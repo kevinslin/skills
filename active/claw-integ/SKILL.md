@@ -78,6 +78,59 @@ OPENCLAW_PROFILE=<profile> pnpm openclaw tui
 
 If the test needs Codex plugins, ensure the selected profile has the required `allow_destructive_actions` or equivalent policy before the live invocation, and record the redacted setting in the proof.
 
+## Video Proof
+
+Capture video proof with `ffmpeg` for every live `$claw-integ` run when feasible.
+
+Store video artifacts under `<proof-root>/raw/`:
+
+- `<scenario-slug>.mp4`: the proof video
+- `<scenario-slug>.ffprobe.txt`: `ffprobe` metadata for the MP4
+- `<scenario-slug>.video-notes.md`: capture method, command, duration, and any cropping/redaction notes
+
+Start recording before the live action and stop only after the expected result is visible. Include the video and `ffprobe` files in the Showboat raw artifact index and scenario result.
+
+For terminal, prompt, menu, or TUI behavior, prefer privacy-safe tmux-pane video over full desktop capture:
+
+1. Drive the interaction through `tmux`.
+2. Capture pane snapshots during the run into `raw/<scenario-slug>.frames/` or an equivalent temporary frame directory.
+3. Render those snapshots to images if needed.
+4. Encode the frames with `ffmpeg`:
+
+```sh
+ffmpeg -hide_banner -y -framerate 1 \
+  -i "<frames-dir>/frame_%04d.png" \
+  -c:v libx264 -pix_fmt yuv420p -r 30 -movflags +faststart \
+  "<proof-root>/raw/<scenario-slug>.mp4"
+```
+
+For browser or graphical UI behavior that cannot be proven from tmux output, use `ffmpeg` screen capture with the narrowest feasible capture area. Avoid recording unrelated private windows. On macOS, first list devices:
+
+```sh
+ffmpeg -hide_banner -f avfoundation -list_devices true -i ""
+```
+
+Then capture the intended screen only, adding crop filters when needed:
+
+```sh
+ffmpeg -hide_banner -y -f avfoundation -framerate 30 \
+  -i "<screen-index>:none" \
+  -c:v libx264 -pix_fmt yuv420p -movflags +faststart \
+  "<proof-root>/raw/<scenario-slug>.mp4"
+```
+
+Verify every produced video:
+
+```sh
+ffprobe -v error -select_streams v:0 \
+  -show_entries stream=codec_name,width,height,duration,nb_frames \
+  -of default=noprint_wrappers=1 \
+  "<proof-root>/raw/<scenario-slug>.mp4" \
+  > "<proof-root>/raw/<scenario-slug>.ffprobe.txt"
+```
+
+If `ffmpeg` is unavailable, screen-recording permission is blocked, or recording would expose unrelated private content, save blocker evidence under `raw/`, keep the non-video Showboat proof intact, and report the gap directly.
+
 ## Showboat Proof
 
 Use `../showboat-v2/SKILL.md` for every `$claw-integ` run.
@@ -110,8 +163,9 @@ The proof must include:
 3. The exact setup or migration command used for required live apps/plugins.
 4. The live gateway/TUI invocation or gateway request that exercises the behavior.
 5. A deterministic summary of the observed result.
-6. Raw nondeterministic output under `raw/`, not embedded directly in a way that breaks `showboat verify`.
-7. A final `uvx showboat verify <proof-root>/raw/showboat-summary.md` pass.
+6. Video proof and `ffprobe` metadata under `raw/`, or explicit blocker evidence if video capture was not feasible.
+7. Raw nondeterministic output under `raw/`, not embedded directly in a way that breaks `showboat verify`.
+8. A final `uvx showboat verify <proof-root>/raw/showboat-summary.md` pass.
 
 When the output includes timestamps, temp paths, session ids, event ids, or stochastic model text, save raw output under `raw/` and capture a stable summary command in the verified Showboat summary.
 
@@ -140,6 +194,7 @@ The run is complete only when:
 - the requested profile was selected or created from `dev`
 - the claw gateway for that profile was used
 - the requested behavior was exercised live
+- ffmpeg video proof was captured under `raw/`, or a video-capture blocker was saved there
 - the `showboat-v2` proof directory was materialized and filled
 - `uvx showboat verify <proof-root>/raw/showboat-summary.md` passed
 - the final answer reports the proof directory, profile used, observed result, and any untested gaps
