@@ -227,7 +227,8 @@ $DOCS_ROOT/
         {name}.md
 ```
 
-Active feature specs live directly under `$DOCS_ROOT/specs/` with a monotonic two-digit integer prefix starting at `01`; choose the next prefix by scanning active and archived specs and do not reuse gaps. When a spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
+Active feature specs live directly under `$DOCS_ROOT/specs/` with a monotonic two-digit integer prefix starting at `01`; choose the next prefix by scanning active and archived specs and do not reuse gaps. When a single-file spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
+When a workspace explicitly uses a folder-based schema such as `ag-dir-v2`, each active spec folder lives directly under `$DOCS_ROOT/specs/{NN}-{topic}/` and contains `spec.md` plus optional sidecars such as `checklist.md` or `data/`. Treat the folder as the spec unit: update `spec.md`, preserve sidecars, and archive the whole folder to `$DOCS_ROOT/specs/.archive/{NN}-{topic}/` when complete.
 If multiple spec types exist for the same topic, keep the filename format and distinguish them in the `{topic}` slug, for example `01-payments-design.md` or `02-payments-validation.md`.
 
 FAQ Specs do not create standalone files. They update the target research document in place.

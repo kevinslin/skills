@@ -86,6 +86,10 @@
 | --- | --- | --- |
 | [risk] | High/Med/Low | [mitigation] |
 
+## Implementation Handoff (Optional)
+
+[If implementation will follow, link the feature spec or summarize the smallest target contract. Use the feature-spec workflow when changing data/API/CLI/config/migration output.]
+
 ---
 
 ## Validation Plan
