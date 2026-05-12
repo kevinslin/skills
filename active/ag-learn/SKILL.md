@@ -38,6 +38,9 @@ Use this skill to turn agent mistakes, repeated friction, or useful workflow dis
    - For `trigger:<shortcut>` cases, resolve the shortcut through `../dev.shortcuts/SKILL.md` before classifying the mistake.
 6. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
 7. Save a learn note only when the user asks for persistence, the finding should be reused, or the run is review/code/formal mode.
+   - Before creating or updating any saved note under `LEARN_ROOT`, read `./references/templates.md`.
+   - Saved notes must follow the durable note template from `templates.md`; the compact output format below is only for the user-facing summary.
+   - Before reporting the saved path, verify the note contains `## Evidence Inspected`, `## Coverage`, `## Known Gaps`, at least one `## [number] Improvement Opportunity`, and `### Routing`.
 
 ## Modes
 
@@ -48,6 +51,8 @@ Use this skill to turn agent mistakes, repeated friction, or useful workflow dis
 - Session lookup, parent/fork tracing, or ledger logging: read `./references/session-forensics.md` and `./references/ledger.md`; use `../ag-ledger/SKILL.md` and `../dev.llm-session/SKILL.md` as needed.
 
 ## Output
+
+The compact numbered format below is for chat summaries only. Do not use it as the saved-note file format.
 
 For each improvement, keep the user-facing summary compact:
 
