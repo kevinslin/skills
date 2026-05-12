@@ -22,22 +22,26 @@ Use this skill to turn agent mistakes, repeated friction, or useful workflow dis
 ## Core Workflow
 
 1. Identify the learning source: current session, named session, merged PR, pasted evidence, or review window.
-2. Inspect enough durable evidence to understand the friction.
+2. For default/current-session learning, read `./references/session-forensics.md` and scan the active rollout JSONL before choosing the final learning focus.
+   - Treat the user's immediate complaint as a seed, not the whole evidence boundary.
+   - Include earlier same-session mistakes, interruptions, corrections, and explicit skill invocations when they are related or explain why the immediate complaint happened.
+   - If the user names a narrower source such as a PR, pasted evidence, or review window, scan that source and any current-session turns that led to the request.
+3. Inspect enough durable evidence to understand the friction.
    - Good evidence: transcript excerpts, rollout JSONL, PR comments, diffs, logs, generated artifacts, command output, saved learn notes.
    - If transcript forensics are needed, read `./references/session-forensics.md`.
-3. Decide whether the issue should change a skill.
+4. Decide whether the issue should change a skill.
    - Optimize an existing skill when the workflow already has a clear home.
    - Propose a new skill when repeated work has no clean home.
    - Use `none` when the lesson is too situational or not skill-shaped.
-4. Read the target skill or shortcut source before judging the gap.
+5. Read the target skill or shortcut source before judging the gap.
    - For skill changes, follow `../sc/SKILL.md` and edit only the canonical source tree.
    - For `trigger:<shortcut>` cases, resolve the shortcut through `../dev.shortcuts/SKILL.md` before classifying the mistake.
-5. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
-6. Save a learn note only when the user asks for persistence, the finding should be reused, or the run is review/code/formal mode.
+6. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
+7. Save a learn note only when the user asks for persistence, the finding should be reused, or the run is review/code/formal mode.
 
 ## Modes
 
-- Default/current session: use the Core Workflow.
+- Default/current session: use the Core Workflow, including the active rollout scan in `./references/session-forensics.md`.
 - `review [time interval] [path]`: read `./references/review-mode.md`.
 - `code`: read `./references/code-mode.md`.
 - Formal saved note or durable routing: read `./references/templates.md`.

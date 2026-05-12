@@ -27,14 +27,14 @@ Label parent-derived findings clearly.
 
 ## Evidence Scan
 
-For lightweight default learning, inspect the smallest evidence set that explains the friction.
+For default/current-session learning, always scan the active rollout JSONL before narrowing to a specific learning. The current user complaint is a seed for search terms, not a boundary.
 
-For formal session-specific learning, use a two-pass scan:
+Use a two-pass scan for default and formal session-specific learning:
 
-1. Read the active rollout JSONL and any parent/forked rollout JSONL. Identify mistakes, uncertainty, repeated friction, and time sinks.
+1. Read or search the active rollout JSONL and any parent/forked rollout JSONL. Identify mistakes, uncertainty, repeated friction, user corrections, explicit skill invocations, interruptions, and time sinks.
 2. Inspect only the extra artifacts needed to explain the selected findings, such as progress files, logs, diffs, tests, PR comments, generated docs, or command output.
 
-Do not rely only on the current context window when writing formal learn notes.
+Do not rely only on the current context window when writing learn notes. If a first pass finds only the most recent friction, run a quick keyword sweep over the same rollout for adjacent skill names, user corrections, and prior "why"/"not working"/"wrong" messages before finalizing.
 
 ## Skill And Shortcut Evidence
 
