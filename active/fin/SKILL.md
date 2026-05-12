@@ -54,14 +54,15 @@ Run `fin [context]`.
 - Respect `DOCS_ROOT` when it is configured; otherwise default to `./docs`.
 - Follow `specy`'s layout rule: active specs live directly under `$DOCS_ROOT/specs/`.
 - Only treat files directly under `$DOCS_ROOT/specs/` as active specs. Ignore files already under `$DOCS_ROOT/specs/.archive/`.
+- Also support folder specs when the workspace uses a folder schema such as `ag-dir-v2`: an active spec folder lives directly under `$DOCS_ROOT/specs/<spec-slug>/` and contains `spec.md`, with optional sidecars such as `checklist.md` or `data/`. Treat the folder as the active spec unit, not only `spec.md`.
 - If multiple active specs exist, archive only the one that directly matches the completed task and leave unrelated active specs untouched.
 - If no active spec exists for this task, state that explicitly and continue.
 
 3. Mark the spec complete and archive it
-- Update the active spec so its status clearly reflects completion before moving it.
-- Preserve the existing filename.
-- Move the completed spec to `$DOCS_ROOT/specs/.archive/`, creating the directory if needed.
-- Follow `specy`'s convention exactly: when a spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
+- Update the active spec so its status clearly reflects completion before moving it. For folder specs, update the folder's `spec.md`.
+- Preserve the existing filename for single-file specs and the existing folder name for folder specs.
+- Move the completed spec to `$DOCS_ROOT/specs/.archive/`, creating the directory if needed. For folder specs, move the whole folder so sidecars such as `checklist.md` and `data/` stay with the completed spec.
+- Follow `specy`'s convention exactly: when a single-file spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
 - Do not delete completed specs.
 
 ## `gh` Context Workflow
@@ -77,6 +78,11 @@ Run `fin [context]`.
 5. Remove the merged worktree
 - Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
 - If the merged branch lives in a linked git worktree, remove that worktree after the PR merge succeeds or after confirming the PR was already merged.
+- Cleanup classification:
+  - Delete only the local branch that matches the PR head branch, after merge proof and after confirming no worktree still checks it out.
+  - Remove linked worktrees that check out the PR head branch.
+  - Remove detached temporary PR review worktrees only when they can be tied to the same PR, such as a path containing the PR number or a recorded head SHA from the PR review task. Reset and clean them before removal.
+  - Leave unrelated named branches and worktrees untouched, even when their names, commits, or paths look adjacent to the finalized task.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
 - If `gh pr merge --delete-branch` already deleted the remote branch but failed local deletion because the branch was still attached to the worktree, finish the cleanup explicitly instead of retrying the merge.
@@ -111,6 +117,10 @@ Run `fin [context]`.
 5. Remove the merged worktree and branch
 - Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
 - If the merged branch lives in a linked git worktree, remove that worktree after the local merge succeeds.
+- Cleanup classification:
+  - Delete only the completed local branch being landed, after merge proof and after confirming no worktree still checks it out.
+  - Remove linked worktrees that check out that completed branch.
+  - Leave unrelated named branches and worktrees untouched, even when their names, commits, or paths look adjacent to the finalized task.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
 - Fully remove the worktree, then run `git worktree prune`.
@@ -169,6 +179,7 @@ Run `fin [context]`.
 - Do not require a PR in `local` mode.
 - Do not treat `gh pr merge --delete-branch` local branch-deletion failures caused only by linked worktree attachment as a failed merge when the remote PR already landed.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
+- Do not remove unrelated named worktrees or branches during cleanup. A worktree is cleanup-eligible only when it checks out the landed branch, or, in `gh` mode, when it is a detached temporary PR review worktree tied to the finalized PR by PR number/path or recorded head SHA.
 - Do not leave a PR babysit/watch automation active after its PR has merged. Delete or cancel it during finalization, and report any deletion blocker.
 - Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state. Verify local `main` contains the PR merge commit first, and verify no worktree still checks out the branch.
 - If local `main` cannot be refreshed because it has unrelated dirty changes, do not use that dirty checkout as a reason to delete a squash/rebase-merged local branch. Leave the branch, report the dirty-main blocker, and let cleanup resume after local `main` can be safely fast-forwarded.
@@ -181,6 +192,7 @@ Run `fin [context]`.
 - Do not try to remove the current live worktree from inside itself; switch to another checkout first.
 - Do not report final success while local `main` still points behind the landed result unless the user explicitly says not to refresh or verify it.
 - Do not invent a parallel spec layout; use the `specy` convention already present in the workspace.
+- Do not archive only `spec.md` when the active spec uses a folder schema. Move the entire spec folder so checklist, data, and other sidecars remain attached.
 - Do not suppress `ag-learn` output just because the task was straightforward; run it and report either the proposals or the explicit no-learning result.
 
 ## Done Checklist
@@ -189,13 +201,13 @@ Run `fin [context]`.
 - If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
 - The chosen or detected context was locked once and respected throughout the flow.
 - Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, unless the matching PR was already merged; any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
-- Matching active spec, if any, is marked complete and moved to `$DOCS_ROOT/specs/.archive/`.
+- Matching active spec, if any, is marked complete and moved to `$DOCS_ROOT/specs/.archive/`; folder specs were moved as whole folders.
 - Unrelated active specs remain untouched.
 - `~/.fin.yaml` was checked, parsed or explicitly handled as malformed, and any workspace entry matching the non-worktree checkout root was applied before linked-worktree removal.
 - In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
 - In `local` mode, the completed branch has been merged into local `main` or verified as already landed there.
 - If a linked worktree was about to be removed, remaining tracked, untracked, and ignored changes in that worktree were discarded with `git reset --hard` and `git clean -fdx` after final hooks ran and before `git worktree remove`.
-- Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere.
+- Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere; unrelated named worktrees and branches were left untouched.
 - Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
 - For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
 - The local `main` checkout was refreshed or verified to include the landed work before the task was reported complete.
