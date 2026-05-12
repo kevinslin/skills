@@ -121,6 +121,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
   planning/review only or explicitly said not to push.
 - Include the PR URL in the final handoff. If push or PR creation fails, report
   the exact failure and treat the swarm run as incomplete.
+- Write a flow doc for the implementation.  Store it in the active spec folder when using `schemas` `ag-dir-v2`.
 - Kick of $babysit-pr after the PR is pushed
 - $slack-notify me with alert once pr is green
 
