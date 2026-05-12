@@ -30,14 +30,18 @@ At each poll:
    - Other blocked merge states.
 2. Poll CI for the current head SHA:
    - Start with `gh pr checks <pr>` or `gh pr view <pr> --json statusCheckRollup`.
+   - Treat GitHub check data as time-series data, not one row per check name. For the current `headRefOid`, group runs by stable check identity: prefer `workflowName + name` when both exist, otherwise use the provider check name plus provider/source as the identity.
+   - For each check identity, classify only the latest run by `startedAt`/`completedAt`/provider timestamp. Older failed, errored, cancelled, neutral, or pending runs for the same check identity are superseded once a newer run exists for the same PR head.
+   - When repeated check names disagree, use the latest run as the current state and include the older run only as history in the evidence summary. This covers reruns caused by new commits, manual reruns, and PR-metadata edits such as body, label, or title updates.
    - Use repo-specific CI links or provider CLIs when the PR exposes them.
    - Use `trigger:check-ci` from `../dev.shortcuts/SKILL.md` when checks need deeper Buildkite/provider classification.
    - For failed, errored, cancelled, or clearly stuck rollup checks, inspect the leaf check/job log before classifying relatedness. Prefer the check details URL or job id; use `gh run view <run-id> --job <job-id> --log` or the provider CI equivalent when available. If `gh` cannot write to its default cache location, set `XDG_CACHE_HOME` to a writable temp directory for the log fetch. Treat rollup status names as pointers, not evidence.
 3. Classify issues:
    - New actionable comments, requested changes, or unresolved review threads are GitHub issues.
    - PR branch conflicts are conflict issues.
-   - Failed, errored, cancelled, or clearly stuck checks are build issues only after leaf log evidence shows a concrete failure. If the leaf job is still running or logs are unavailable because CI has not produced them yet, keep the check pending/running and continue polling.
-   - Pending/running checks are not build issues, but they do not count toward the quiet-green window.
+   - Failed, errored, cancelled, or clearly stuck latest checks are build issues only after leaf log evidence shows a concrete failure. If the latest leaf job is still running or logs are unavailable because CI has not produced them yet, keep the check pending/running and continue polling.
+   - Pending/running latest checks are not build issues, but they do not count toward the quiet-green window.
+   - Superseded older check failures do not block the quiet-green window unless the current latest run for the same check identity is also failing, missing, or stale.
 
 ## Fix Cycle
 
