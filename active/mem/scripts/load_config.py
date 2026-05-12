@@ -124,6 +124,7 @@ def normalize_config(path: Path, require_roots: bool) -> dict[str, Any]:
             fail(f"duplicate base name: {name}")
         seen_names.add(name)
 
+        description = non_empty_string(base.get("description"), f"{label}.description")
         raw_root = non_empty_string(base.get("root"), f"{label}.root")
         root = resolve_root(raw_root, path.parent)
         if require_roots and not root.is_dir():
@@ -143,6 +144,7 @@ def normalize_config(path: Path, require_roots: bool) -> dict[str, Any]:
 
         normalized: dict[str, Any] = {
             "name": name,
+            "description": description,
             "root": str(root),
             "path_style": path_style,
             "schemas": normalized_schemas,

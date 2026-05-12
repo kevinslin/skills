@@ -1,6 +1,6 @@
 ---
 name: mem
-description: Manage user-defined knowledge bases when `$mem` is invoked or durable knowledge is being saved. 
+description: Manage user-defined knowledge bases when `$mem` is invoked or durable knowledge is being saved.
 dependencies: []
 ---
 
@@ -22,7 +22,7 @@ Resolve configuration in this order:
 2. `$HOME/.mem.yaml`
 
 If neither file exists, stop and ask where the memory configuration should live. Do not guess a root.
-If user does not specify name, match to the base where `root` equals the working directory. If there is no exact match, stop and ask the user. Do not guess.
+If the user does not specify a base name, route by the configured base `description`. If no description clearly matches, prefer an exact `root` match with the working directory. If neither signal is decisive, stop and ask the user. Do not guess.
 
 Expected shape:
 
@@ -30,6 +30,7 @@ Expected shape:
 version: 1
 bases:
   - name: {{string}}
+    description: {{string}} # what this base is used for; used for routing
     root: {{path}}
     path_style: {{directory|dotted}} # optional; inferred from existing files when omitted
     skill: {{skill_name}} # optional
@@ -48,7 +49,7 @@ The parser enforces:
 
 - `version` must be `1`.
 - `bases` must be a non-empty list.
-- Each base must include non-empty `name`, `root`, and `schemas` fields.
+- Each base must include non-empty `name`, `description`, `root`, and `schemas` fields.
 - `schemas` must be a non-empty list of schema names.
 - `path_style` is optional; when present, it must be `directory` or `dotted`. When omitted, the parser infers it from existing Markdown files under `root` and falls back to `directory` if no convention is visible.
 - `skill` is optional; when present, it must be non-empty.
@@ -56,6 +57,7 @@ The parser enforces:
 Each base has:
 
 - `name`: short base identifier users can mention.
+- `description`: what the base is used for. Use this as the primary routing signal when the user does not name a base explicitly.
 - `root`: filesystem root for that knowledge base.
 - `path_style`: how schema paths map to files for this base. Use `dotted` for files such as `pkg.test.cli.md`; use `directory` for paths such as `pkg/test/cli.md`.
 - `skill`: optional skill name to load for base-specific navigation and file operations under `root`.
@@ -73,6 +75,8 @@ The selected base `root` is the authoritative filesystem root for that operation
 3. Select a base:
    - If the knowledge-base target starts with `{{base.name}}/`, select that base and treat the remainder as the knowledge-base path or query.
    - If the knowledge-base target exactly matches a base name, select that base and operate at the base root.
+   - If the user does not name a base, compare the request intent with each base's `description`; select the base only when one description clearly matches the operation.
+   - If no description is decisive and one base has `root` equal to the working directory, select that base.
    - If only one base exists, select it.
    - If multiple bases match or none can be inferred, ask which base to use.
 4. Normalize and constrain any file-like knowledge-base target:

@@ -43,6 +43,7 @@ class LoadConfigTests(unittest.TestCase):
             version: 1
             bases:
               - name: docs
+                description: Durable documentation notes.
                 root: {self.base}
                 path_style: dotted
                 schemas: [tool]
@@ -53,7 +54,24 @@ class LoadConfigTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         data = json.loads(result.stdout)
+        self.assertEqual(data["bases"][0]["description"], "Durable documentation notes.")
         self.assertEqual(data["bases"][0]["path_style"], "dotted")
+
+    def test_missing_description_is_rejected(self) -> None:
+        self.write_config(
+            f"""
+            version: 1
+            bases:
+              - name: docs
+                root: {self.base}
+                schemas: [tool]
+            """
+        )
+
+        result = self.run_loader()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("bases[0].description must be a non-empty string", result.stderr)
 
     def test_invalid_path_style_is_rejected(self) -> None:
         self.write_config(
@@ -61,6 +79,7 @@ class LoadConfigTests(unittest.TestCase):
             version: 1
             bases:
               - name: docs
+                description: Durable documentation notes.
                 root: {self.base}
                 path_style: flat
                 schemas: [tool]
@@ -79,6 +98,7 @@ class LoadConfigTests(unittest.TestCase):
             version: 1
             bases:
               - name: docs
+                description: Durable documentation notes.
                 root: {self.base}
                 schemas: [tool]
             """
@@ -99,6 +119,7 @@ class LoadConfigTests(unittest.TestCase):
             version: 1
             bases:
               - name: docs
+                description: Durable documentation notes.
                 root: {self.base}
                 schemas: [code]
             """
