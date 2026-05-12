@@ -53,6 +53,25 @@
 ### Important Implementation Notes (Optional)
 - [Critical facts, invariants, or temporary compromises]
 
+### Existing Contract Snapshot (Required when changing data/API/CLI/config/migration output)
+
+| Surface | Current owner / source of truth | Current fields, states, or shape | Current consumers |
+| --- | --- | --- | --- |
+| [surface] | [module/schema/command] | [current contract] | [who reads it] |
+
+### Target Decision Table (Required when behavior depends on multiple states or source facts)
+
+| Input facts / state | Target output | Notes |
+| --- | --- | --- |
+| [condition] | [observable result or stored shape] | [why this is the smallest sufficient behavior] |
+
+### Minimal Model Check (Required when adding new fields, types, statuses, reasons, or config)
+- New fields/types/states:
+- Existing fields/types reused:
+- Derived values intentionally not stored:
+- Consumers for each new field/type/state:
+- Simpler alternative considered:
+
 ---
 
 ## Acceptance Criteria
