@@ -45,7 +45,7 @@ changes.
 
 ## Swarm Layout
 
-- Manager track: use `$sw-ctrl` to own intake, decomposition, delegation, monitoring,
+- Manager track: use `$sw-ctrl spec` to own intake, decomposition, delegation, monitoring,
   and integration.
 - Spec track: use `$specy` to create a feature spec with milestones, risks, and
   explicit verification targets.
