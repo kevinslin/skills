@@ -78,10 +78,12 @@ Run `fin [context]`.
 - Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
 - If the merged branch lives in a linked git worktree, remove that worktree after the PR merge succeeds or after confirming the PR was already merged.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
+- After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
 - If `gh pr merge --delete-branch` already deleted the remote branch but failed local deletion because the branch was still attached to the worktree, finish the cleanup explicitly instead of retrying the merge.
 - Fully remove the worktree, then run `git worktree prune`.
 - If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete the merged branch too.
 - If local branch deletion reports that the branch is not merged into current `HEAD`, do not use ancestry alone as the safety check. For squash or rebase merges, verify the GitHub PR is `MERGED`, record the PR head SHA and merge commit, refresh local `main`, confirm local `main` contains the merge commit, and only then delete the local branch when no worktree checks it out.
+- If the PR used a squash or rebase merge and local `main` cannot be refreshed because the non-worktree checkout has unrelated dirty changes, treat the remote PR landing and linked-worktree removal as complete but defer local branch deletion. Report the dirty-main refresh blocker exactly, keep the local branch until local `main` can safely contain the merge commit, and do not force-delete it from GitHub state alone.
 - If there is no linked worktree for the task branch, state that explicitly and continue.
 
 6. Update the local `main` checkout
@@ -92,7 +94,8 @@ Run `fin [context]`.
 - Confirm the local `main` HEAD includes the merge commit for the landed PR before continuing.
 - If branch cleanup was deferred because the PR used a squash/rebase merge or `git branch -d` rejected ancestry, finish that branch deletion now after local `main` contains the PR merge commit and the branch is no longer checked out anywhere.
 - Delete or cancel any active PR babysit/watch automation that was tracking the now-merged PR. If the automation cannot be deleted, report the exact blocker instead of leaving silent stale state behind.
-- If the local `main` refresh fails, stop and report the exact git error instead of claiming the task is fully finalized.
+- If the local `main` refresh fails because the non-worktree checkout has unrelated dirty changes, stop local-main refresh and report a partial terminal state instead of overwriting or stashing user work: PR landed, any linked worktree cleanup completed, automation cleanup completed if it was safe to do, local `main` not refreshed, and local branch deletion deferred when squash/rebase containment proof is unavailable.
+- If the local `main` refresh fails for any other reason, stop and report the exact git error instead of claiming the task is fully finalized.
 
 ## `local` Context Workflow
 
@@ -109,6 +112,7 @@ Run `fin [context]`.
 - Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
 - If the merged branch lives in a linked git worktree, remove that worktree after the local merge succeeds.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
+- After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
 - Fully remove the worktree, then run `git worktree prune`.
 - If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete the merged branch too.
 - If a corresponding remote branch still exists and repo policy allows cleanup, delete it explicitly after the local merge is safely on `main`.
@@ -142,6 +146,7 @@ Run `fin [context]`.
 - For `gh`, state whether any PR babysit/watch automation was found and whether it was deleted, already absent, or blocked.
 - If branch deletion required squash/rebase merge proof, state the PR head SHA, merge commit, and local `main` containment check used as the cleanup proof.
 - State whether the local `main` checkout was updated or verified successfully and identify the resulting `main` tip when relevant.
+- If the remote PR landed but local `main` refresh was blocked by unrelated dirty changes, call that out as `partial local cleanup`: include the merge commit, the dirty-main error, which cleanup steps did complete, and which local branch or verification step was intentionally deferred.
 - State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
 - If `local` pushed `main`, state whether the push succeeded. If it intentionally remained local-only, say that explicitly.
 - Summarize the proposed learnings as a numbered list so each item can be referenced later.
@@ -166,7 +171,10 @@ Run `fin [context]`.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
 - Do not leave a PR babysit/watch automation active after its PR has merged. Delete or cancel it during finalization, and report any deletion blocker.
 - Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state. Verify local `main` contains the PR merge commit first, and verify no worktree still checks out the branch.
+- If local `main` cannot be refreshed because it has unrelated dirty changes, do not use that dirty checkout as a reason to delete a squash/rebase-merged local branch. Leave the branch, report the dirty-main blocker, and let cleanup resume after local `main` can be safely fast-forwarded.
 - Do not remove a linked worktree before running any matching repo-specific final hooks from `~/.fin.yaml`.
+- Do not preserve dirty tracked, untracked, or ignored files in a linked worktree that has already passed final hooks and is about to be deleted. Reset and clean that linked worktree first so `git worktree remove` cannot be blocked by disposable local changes.
+- Do not run the linked-worktree reset/clean step against the non-worktree `main` checkout or any checkout that will remain after finalization.
 - Do not match `~/.fin.yaml` workspace paths against temporary linked worktree roots; match the non-worktree checkout root for the branch's repository.
 - Do not ignore a matching `~/.fin.yaml` workspace entry. If the additional instructions are ambiguous, destructive, or cannot be verified, stop and report the blocker before cleanup.
 - Do not silently ignore malformed `~/.fin.yaml`; a parse failure is a finalization preflight issue unless raw content is clearly non-executable and unambiguous. Never delete a linked worktree while malformed fin config might contain unrun hooks or cleanup instructions.
@@ -186,6 +194,7 @@ Run `fin [context]`.
 - `~/.fin.yaml` was checked, parsed or explicitly handled as malformed, and any workspace entry matching the non-worktree checkout root was applied before linked-worktree removal.
 - In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
 - In `local` mode, the completed branch has been merged into local `main` or verified as already landed there.
+- If a linked worktree was about to be removed, remaining tracked, untracked, and ignored changes in that worktree were discarded with `git reset --hard` and `git clean -fdx` after final hooks ran and before `git worktree remove`.
 - Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere.
 - Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
 - For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
