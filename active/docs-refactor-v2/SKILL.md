@@ -1,6 +1,10 @@
 ---
 name: openclaw-refactor-docs
-description: Refactor an existing OpenClaw docs page with source-audited preservation, restructuring, and verification.
+description: Refactor an existing OpenClaw docs page with source-audited preservation,
+  restructuring, and verification.
+dependencies:
+- docs-audit-v2
+- docs-write-v2
 ---
 
 # OpenClaw Refactor Docs
@@ -14,6 +18,13 @@ This skill builds on `docs-write-v2`: use that skill for style, page types,
 structure, examples, discoverability, and verification. This skill adds the
 rewrite workflow needed to avoid losing accurate behavior during a major docs
 refactor.
+
+For major rewrites, moved-section audits, migration maps, or line-by-line
+preservation requests, use `docs-audit-v2` as the audit engine. Read
+`../docs-audit-v2/references/refactor-integration.md` for the generic contract:
+this skill owns the rewrite and semantic mapping decisions; `docs-audit-v2`
+owns the schema, CLI implementation, hydration, validation, report rendering,
+and viewer.
 
 ## Inputs
 
@@ -74,7 +85,9 @@ the other material belongs:
 
 ### 3. Preserve and audit existing facts
 
-Create a working inventory from the old page before rewriting. Include:
+Create a working inventory from the old page before rewriting. For major
+refactors, materialize this inventory with `docs-audit-v2 scaffold` so it can
+become `audit.json` and `mapping-patch.json`, not just informal notes. Include:
 
 - Config fields, flags, commands, slash commands, env vars, defaults, enums,
   nullable values, and constraints.
@@ -129,7 +142,37 @@ editing:
 Avoid duplicate truth. If the same contract appears in multiple places, choose
 one canonical page and link to it.
 
-### 6. Rewrite
+### 6. Preserve with docs-audit-v2 for major refactors
+
+Use `docs-audit-v2` when the refactor needs audit-grade preservation proof.
+This skill owns the refactor-side work:
+
+1. Resolve the pre-refactor source ref.
+2. Choose explicit source docs and destination docs from the refactor plan.
+3. Run `scaffold` before rewriting when possible.
+4. Maintain `mapping-patch.json` while editing.
+5. Add one mapping object per source block.
+6. Add one `mapping[]` row per material source line.
+7. Use exact destination lines whenever possible.
+8. Record intentional removals as rows, not omissions.
+9. Run `add-dest` when destination pages are created after scaffold.
+10. Run `reindex-dest` when destination pages are edited.
+11. Run `map` to produce `audit.mapped.json`.
+
+Do not map one source line to a broad destination section as
+`semantic-confirmed`. If exact destination lines are not selected yet, use
+`block-fallback` and keep the row non-final until tightened.
+
+After `audit.mapped.json` exists, hand off to the audit phase:
+
+- `hydrate` produces `audit.hydrated.json`.
+- `validate --out` produces `audit.validated.json`.
+- `render` produces the Markdown report and HTML viewer.
+
+Do not claim the preservation audit is complete while `validate` reports
+errors.
+
+### 7. Rewrite
 
 Rewrite in this order:
 
@@ -151,7 +194,7 @@ marker instead of hand-editing generated output.
 Do not leave placeholders such as "TODO", "TBD", or "see docs" unless the user
 explicitly asks for a draft.
 
-### 7. Compare old and new
+### 8. Compare old and new
 
 After editing, compare the old and new page:
 
@@ -165,7 +208,7 @@ After editing, compare the old and new page:
 If the refactor deliberately removes relevant material, say where it went or why
 it was removed in the final report.
 
-### 8. Verify
+### 9. Verify
 
 Run the smallest reliable docs checks for the touched surface:
 
@@ -189,6 +232,8 @@ Report:
 
 - What changed in the target page.
 - What details moved and their destination pages.
+- For audit-grade refactors, the `mapping-patch.json` and `audit.mapped.json`
+  artifacts produced by the refactor phase.
 - What source-of-truth checks backed behavior-sensitive claims.
 - What validation ran and what failed for unrelated reasons.
 

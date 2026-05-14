@@ -2,8 +2,9 @@
 
 This reference defines how docs refactor skills should call `docs-audit-v2`
 while they rewrite documentation. The audit skill owns the generic data model,
-validation, report rendering, and viewer. The refactor skill owns source
-selection, destination planning, docs edits, and mapping decisions.
+CLI implementation, validation, report rendering, and viewer. The refactor
+skill owns source selection, destination planning, docs edits, and semantic
+mapping decisions.
 
 ## Invoke For
 
@@ -41,17 +42,29 @@ During editing:
 5. Reconcile changed Markdown files against the explicit destination list after
    editing. Add a changed doc only when it plausibly contains moved or retained
    source content.
-6. Run `reindex-dest` for edited destination docs before final validation.
+6. Do not map one source line to a broad destination section as
+   `semantic-confirmed`. If exact destination lines are not selected yet, use
+   `block-fallback` and keep the row non-final until tightened.
+7. Run `reindex-dest` for edited destination docs before producing the mapped
+   audit.
 
-After editing:
+Refactor-owned closeout:
 
-1. Run `map`, `hydrate`, and `validate --out`.
-2. Fix missing, stale, weak, and over-broad mappings until validation has no
+1. Run `reindex-dest` for edited destination docs.
+2. Run `map` to merge `mapping-patch.json` and produce `audit.mapped.json`.
+3. Treat `mapping-patch.json` as the semantic source of mapping decisions.
+4. Include the mapped audit artifact in the refactor handoff.
+
+Audit-owned closeout:
+
+1. Run `hydrate` to produce `audit.hydrated.json`.
+2. Run `validate --out` to produce `audit.validated.json`.
+3. Fix missing, stale, weak, and over-broad mappings until validation has no
    errors.
-3. Resolve warnings or accept them with reviewer-facing justification when they
+4. Resolve warnings or accept them with reviewer-facing justification when they
    are not preservation gaps.
-4. Run `render` against the validated JSON.
-5. Include audit artifacts and validation output in the refactor handoff.
+5. Run `render` against the validated JSON.
+6. Include validated audit artifacts and validation output in the audit handoff.
 
 ## Mapping Patch States
 
@@ -85,6 +98,7 @@ Final refactor handoff must list:
 
 - Draft audit JSON if useful for review.
 - Mapping patch JSON.
+- Mapped audit JSON.
 - Hydrated audit JSON.
 - Validated audit JSON.
 - Detailed Markdown report.
