@@ -1,0 +1,26 @@
+{
+  "name": "docs-audit-v2-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "docs-audit-v2": "./dist/docs-audit-v2.mjs"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc --noEmit && esbuild src/docs-audit-v2.ts --bundle --platform=node --format=esm --outfile=dist/docs-audit-v2.mjs",
+    "cli": "node dist/docs-audit-v2.mjs",
+    "test": "npm run build && node --test tests/run-tests.mjs"
+  },
+  "dependencies": {
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "esbuild": "^0.25.4",
+    "typescript": "^5.8.3"
+  }
+}

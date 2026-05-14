@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Docs Audit V2</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070b12;
+        --panel: #111722;
+        --line: #253142;
+        --text: #e7edf8;
+        --muted: #9aa8ba;
+        --accent: #70b7ff;
+        --green: #78e08f;
+        --yellow: #ffd33d;
+        --red: #ff8585;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top left, #111c2b, var(--bg) 38rem);
+        color: var(--text);
+        font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      button,
+      input,
+      select {
+        color: inherit;
+        font: inherit;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: minmax(22rem, 34rem) minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      aside {
+        border-right: 1px solid var(--line);
+        background: rgba(9, 14, 22, 0.92);
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      main {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+      header {
+        padding: 1.35rem 1.5rem 1.25rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .eyebrow {
+        color: var(--yellow);
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+      }
+      h1,
+      h2 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+      h1 {
+        font-size: 1.55rem;
+        line-height: 1.1;
+        margin-top: 0.25rem;
+      }
+      h2 {
+        font-size: 1.7rem;
+        line-height: 1.12;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .controls {
+        display: flex;
+        gap: 0.55rem;
+        margin-top: 0.9rem;
+        flex-wrap: wrap;
+      }
+      .segmented,
+      .pill,
+      select,
+      input {
+        border: 1px solid var(--line);
+        border-radius: 0.65rem;
+        background: #0b111b;
+      }
+      .segmented {
+        display: inline-flex;
+        overflow: hidden;
+      }
+      .segmented button {
+        border: 0;
+        background: transparent;
+        padding: 0.45rem 0.7rem;
+        cursor: pointer;
+      }
+      .segmented button.active,
+      .pill.active {
+        background: #15375d;
+        color: #d7ebff;
+      }
+      .pill {
+        padding: 0.35rem 0.65rem;
+      }
+      select,
+      input {
+        padding: 0.55rem 0.75rem;
+      }
+      .search {
+        padding: 1rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .search input {
+        width: 100%;
+      }
+      .counts {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.18rem 0.48rem;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.035);
+        white-space: nowrap;
+      }
+      .badge.covered,
+      .badge.high {
+        color: var(--green);
+        border-color: rgba(120, 224, 143, 0.45);
+      }
+      .badge.missing,
+      .badge.partially-covered,
+      .badge.needs-source-check {
+        color: var(--red);
+        border-color: rgba(255, 133, 133, 0.5);
+      }
+      .badge.action {
+        color: var(--accent);
+        border-color: rgba(112, 183, 255, 0.45);
+      }
+      .sidebar-list {
+        overflow: auto;
+        min-height: 0;
+        padding: 0.75rem;
+      }
+      .card,
+      .doc-view,
+      .pane {
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
+        border-radius: 0.55rem;
+      }
+      .card {
+        padding: 0.85rem;
+        margin-bottom: 0.65rem;
+        cursor: pointer;
+      }
+      .card.active {
+        outline: 2px solid rgba(112, 183, 255, 0.65);
+        background: rgba(35, 83, 133, 0.24);
+      }
+      .card-title {
+        font-weight: 750;
+        margin-bottom: 0.35rem;
+      }
+      .doc-view {
+        overflow: auto;
+      }
+      .doc-line {
+        display: grid;
+        grid-template-columns: 4rem minmax(0, 1fr);
+        gap: 0.75rem;
+        padding: 0.22rem 0.7rem;
+        cursor: pointer;
+      }
+      .doc-line:hover,
+      .doc-line.active {
+        background: rgba(112, 183, 255, 0.18);
+      }
+      .doc-line.uncovered {
+        background: rgba(255, 133, 133, 0.16);
+      }
+      .lineno {
+        color: #718198;
+        text-align: right;
+        user-select: none;
+      }
+      .code,
+      pre {
+        font: 0.92rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      }
+      .content {
+        min-width: 0;
+        overflow: auto;
+        padding: 1rem;
+      }
+      .summary {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .summary .badges {
+        margin-left: auto;
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .panes {
+        display: grid;
+        grid-template-columns: minmax(22rem, 0.95fr) minmax(24rem, 1.35fr);
+        gap: 0.85rem;
+        height: 100%;
+        min-height: 0;
+      }
+      .pane {
+        min-width: 0;
+        min-height: 0;
+        overflow: auto;
+      }
+      .pane-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.035);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .range {
+        border-bottom: 1px solid rgba(37, 49, 66, 0.7);
+      }
+      .range-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.7rem 1rem;
+        color: var(--muted);
+      }
+      pre {
+        margin: 0;
+        padding: 0.75rem 1rem 1rem;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      body.nowrap pre,
+      body.nowrap .code {
+        white-space: pre;
+      }
+      .line {
+        display: grid;
+        grid-template-columns: 4.5rem minmax(0, 1fr);
+        gap: 0.7rem;
+        min-width: max-content;
+      }
+      body:not(.nowrap) .line {
+        min-width: 0;
+      }
+      .line.bad {
+        background: rgba(255, 133, 133, 0.18);
+      }
+      .diff-del {
+        background: rgba(180, 50, 70, 0.28);
+        color: #ffc7cf;
+      }
+      .diff-add {
+        background: rgba(45, 132, 74, 0.28);
+        color: #bcf8c6;
+      }
+      .diff-meta {
+        color: var(--muted);
+        padding: 0.65rem 1rem 0.3rem;
+      }
+      mark {
+        background: #755f00;
+        color: white;
+        padding: 0 0.1rem;
+      }
+      .validation-panel {
+        margin-top: 0.85rem;
+        display: grid;
+        gap: 0.45rem;
+      }
+      .notice {
+        border: 1px solid var(--line);
+        border-radius: 0.55rem;
+        padding: 0.5rem 0.65rem;
+        background: rgba(255, 255, 255, 0.035);
+      }
+      .notice.error,
+      .stale {
+        border-color: rgba(255, 133, 133, 0.5);
+        background: rgba(255, 133, 133, 0.12);
+      }
+      .notice.warning,
+      .fallback {
+        border-color: rgba(255, 211, 61, 0.45);
+        background: rgba(255, 211, 61, 0.1);
+      }
+      @media (max-width: 980px) {
+        .app,
+        .panes {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          min-height: 42vh;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      window.__AUDIT_DATA__ = __AUDIT_JSON__;
+    </script>
+    <div class="app">
+      <aside>
+        <header>
+          <div class="eyebrow">Docs Audit V2</div>
+          <div class="row">
+            <h1 id="title">Docs Audit</h1>
+            <span class="spacer"></span>
+            <select id="pageSelect" aria-label="Source page"></select>
+          </div>
+          <div class="controls">
+            <span class="segmented" aria-label="View mode">
+              <button id="blockMode" type="button">Block mode</button>
+              <button id="docMode" type="button">Doc mode</button>
+            </span>
+            <button id="wrapToggle" class="pill active" type="button">Wrap on</button>
+          </div>
+          <p id="meta" class="muted"></p>
+        </header>
+        <div class="search">
+          <input id="sidebarSearch" type="search" placeholder="Search source blocks or lines" />
+          <div id="counts" class="counts"></div>
+        </div>
+        <div id="sidebar" class="sidebar-list" tabindex="0"></div>
+      </aside>
+      <main>
+        <header>
+          <div class="summary">
+            <div>
+              <div class="eyebrow" id="selectedId"></div>
+              <h2 id="selectedTitle"></h2>
+              <p id="selectedSummary" class="muted"></p>
+            </div>
+            <div id="selectedBadges" class="badges"></div>
+          </div>
+          <div class="controls">
+            <input id="paneSearch" type="search" placeholder="Search mapped source and destination" />
+          </div>
+          <div id="validationPanel" class="validation-panel"></div>
+        </header>
+        <div class="content">
+          <div class="panes">
+            <section class="pane">
+              <div class="pane-head">
+                <strong>Mapped source ranges</strong>
+                <span id="sourceCount" class="muted"></span>
+              </div>
+              <div id="sourcePane"></div>
+            </section>
+            <section class="pane">
+              <div class="pane-head">
+                <strong>Destination content</strong>
+                <span id="destCount" class="muted"></span>
+              </div>
+              <div id="destPane"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>
+      const audit = window.__AUDIT_DATA__;
+      const state = {
+        docId: audit.sourceDocs[0]?.id,
+        selectedId: resolveFragment(location.hash ? location.hash.slice(1) : "") || audit.mappings[0]?.id,
+        mode: "block",
+        wrap: true,
+        sidebarSearch: "",
+        paneSearch: "",
+      };
+      const els = {
+        title: document.getElementById("title"),
+        meta: document.getElementById("meta"),
+        pageSelect: document.getElementById("pageSelect"),
+        blockMode: document.getElementById("blockMode"),
+        docMode: document.getElementById("docMode"),
+        wrapToggle: document.getElementById("wrapToggle"),
+        sidebarSearch: document.getElementById("sidebarSearch"),
+        paneSearch: document.getElementById("paneSearch"),
+        counts: document.getElementById("counts"),
+        sidebar: document.getElementById("sidebar"),
+        selectedId: document.getElementById("selectedId"),
+        selectedTitle: document.getElementById("selectedTitle"),
+        selectedSummary: document.getElementById("selectedSummary"),
+        selectedBadges: document.getElementById("selectedBadges"),
+        sourceCount: document.getElementById("sourceCount"),
+        destCount: document.getElementById("destCount"),
+        sourcePane: document.getElementById("sourcePane"),
+        destPane: document.getElementById("destPane"),
+        validationPanel: document.getElementById("validationPanel"),
+      };
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+      function mark(value) {
+        const text = escapeHtml(value);
+        const q = state.paneSearch.trim();
+        if (!q) return text;
+        const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return text.replace(new RegExp(escaped, "gi"), (match) => `<mark>${match}</mark>`);
+      }
+      function badge(value, extra = "") {
+        return `<span class="badge ${escapeHtml(value)} ${extra}">${escapeHtml(value)}</span>`;
+      }
+      function selectedMapping() {
+        return audit.mappings.find((mapping) => mapping.id === state.selectedId) || audit.mappings[0];
+      }
+      function resolveFragment(fragment) {
+        if (!fragment) return "";
+        const decoded = decodeURIComponent(fragment);
+        if (audit.mappings.some((mapping) => mapping.id === decoded)) return decoded;
+        const mapping = audit.mappings.find(
+          (candidate) =>
+            candidate.source.blockIds.includes(decoded) ||
+            candidate.source.lineIds.includes(decoded) ||
+            candidate.mapping.some((row) => row.sourceId === decoded),
+        );
+        return mapping?.id || "";
+      }
+      function currentDoc() {
+        return audit.sourceDocs.find((doc) => doc.id === state.docId) || audit.sourceDocs[0];
+      }
+      function mappingsForDoc(doc) {
+        return audit.mappings.filter((mapping) => mapping.source.docId === doc.id);
+      }
+      function rowBySourceId(mapping, sourceId) {
+        return mapping.mapping.find((row) => row.sourceId === sourceId);
+      }
+      function mappingForLine(lineId) {
+        return audit.mappings.find((mapping) => mapping.mapping.some((row) => row.sourceId === lineId));
+      }
+      function lineStatus(lineId) {
+        const mapping = mappingForLine(lineId);
+        const row = mapping?.mapping.find((candidate) => candidate.sourceId === lineId);
+        return row?.status;
+      }
+      function lineForId(doc, lineId) {
+        for (const block of doc.blocks) {
+          const line = block.lines.find((candidate) => candidate.id === lineId);
+          if (line) return line;
+        }
+        return undefined;
+      }
+      function blockForId(doc, blockId) {
+        return doc.blocks.find((block) => block.id === blockId);
+      }
+      function destDoc(docId) {
+        return audit.destDocs.find((doc) => doc.id === docId);
+      }
+      function choose(id) {
+        const resolved = resolveFragment(id) || id;
+        state.selectedId = resolved;
+        history.replaceState(null, "", `#${encodeURIComponent(resolved)}`);
+        render();
+      }
+      function findingsForMapping(mapping) {
+        const sourceIds = new Set(mapping.source.lineIds);
+        const destinationIds = new Set(mapping.mapping.flatMap((row) => row.dest.map((entry) => entry.id)));
+        return [
+          ...(audit.validation.errors || []),
+          ...(audit.validation.warnings || []),
+          ...(audit.validation.acceptedWarnings || []),
+        ].filter(
+          (finding) =>
+            (finding.sourceIds || []).some((id) => sourceIds.has(id)) ||
+            (finding.destinationIds || []).some((id) => destinationIds.has(id)),
+        );
+      }
+      function searchableMapping(mapping) {
+        const findings = findingsForMapping(mapping)
+          .map((finding) => `${finding.code} ${finding.message} ${finding.severity}`)
+          .join(" ");
+        const rows = mapping.mapping
+          .map((row) =>
+            [
+              row.sourceId,
+              row.action,
+              row.reason,
+              row.status,
+              row.confidence,
+              row.justification,
+              ...row.dest.map((entry) =>
+                [
+                  entry.id,
+                  entry.kind,
+                  entry.justification,
+                  entry.mappingKind,
+                  entry.range?.path,
+                  entry.label,
+                  entry.url,
+                  entry.stale?.reason,
+                  entry.stale?.message,
+                ].filter(Boolean).join(" "),
+              ),
+            ].join(" "),
+          )
+          .join(" ");
+        return [
+          mapping.id,
+          mapping.summary,
+          mapping.action,
+          mapping.reason,
+          mapping.status,
+          mapping.confidence,
+          mapping.justification,
+          mapping.source.docId,
+          ...mapping.source.blockIds,
+          ...mapping.source.lineIds,
+          rows,
+          findings,
+        ].join(" ").toLowerCase();
+      }
+      function renderPageSelect() {
+        els.pageSelect.innerHTML = audit.sourceDocs
+          .map((doc) => `<option value="${escapeHtml(doc.id)}">${escapeHtml(doc.path)} (${mappingsForDoc(doc).length})</option>`)
+          .join("");
+        els.pageSelect.value = currentDoc()?.id;
+      }
+      function renderSidebar() {
+        const doc = currentDoc();
+        const mappings = mappingsForDoc(doc);
+        const query = state.sidebarSearch.toLowerCase();
+        els.counts.innerHTML = [
+          badge(`covered: ${audit.mappings.filter((m) => m.status === "covered").length}`, "covered"),
+          badge(`errors: ${audit.validation.errors.length}`, "missing"),
+          badge(`warnings: ${audit.validation.warnings.length}`),
+        ].join("");
+        els.blockMode.classList.toggle("active", state.mode === "block");
+        els.docMode.classList.toggle("active", state.mode === "doc");
+        els.wrapToggle.classList.toggle("active", state.wrap);
+        els.wrapToggle.textContent = state.wrap ? "Wrap on" : "Wrap off";
+        document.body.classList.toggle("nowrap", !state.wrap);
+
+        if (state.mode === "doc") {
+          els.sidebar.innerHTML = `<div class="doc-view">${doc.blocks
+            .flatMap((block) =>
+              block.lines.map((line) => {
+                const mapping = mappingForLine(line.id);
+                const haystack = `${line.text} ${mapping ? searchableMapping(mapping) : ""}`.toLowerCase();
+                if (query && !haystack.includes(query)) return "";
+                const status = lineStatus(line.id);
+                const active = mapping?.id === state.selectedId ? " active" : "";
+                const uncovered = status && status !== "covered" && status !== "intentionally-removed" ? " uncovered" : "";
+                return `<div class="doc-line${active}${uncovered}" data-mapping="${escapeHtml(mapping?.id ?? "")}">
+                  <span class="lineno">${line.line}</span><span class="code">${escapeHtml(line.text || " ")}</span>
+                </div>`;
+              }),
+            )
+            .join("")}</div>`;
+        } else {
+          els.sidebar.innerHTML = mappings
+            .filter((mapping) => searchableMapping(mapping).includes(query))
+            .map(
+              (mapping) => `<article class="card ${mapping.id === state.selectedId ? "active" : ""}" data-mapping="${escapeHtml(mapping.id)}">
+                <div class="card-title">${escapeHtml(mapping.id)} ${escapeHtml(mapping.summary)}</div>
+                <div class="muted">${escapeHtml(mapping.justification)}</div>
+                <div class="counts">${badge(mapping.status)}${badge(mapping.action, "action")}${badge(mapping.reason)}</div>
+              </article>`,
+            )
+            .join("");
+        }
+      }
+      function renderSelected() {
+        const mapping = selectedMapping();
+        if (!mapping) return;
+        els.selectedId.textContent = `${mapping.id} / ${currentDoc()?.path ?? ""}`;
+        els.selectedTitle.textContent = mapping.summary;
+        els.selectedSummary.textContent = mapping.justification;
+        els.selectedBadges.innerHTML = [
+          badge(mapping.status),
+          badge(mapping.action, "action"),
+          badge(mapping.reason),
+          badge(mapping.confidence),
+          badge(`${new Set(mapping.mapping.flatMap((row) => row.dest.map((entry) => entry.id))).size} destinations`),
+        ].join("");
+        renderSourcePane(mapping);
+        renderDestPane(mapping);
+        renderValidationPanel(mapping);
+      }
+      function renderValidationPanel(mapping) {
+        const findings = findingsForMapping(mapping);
+        const globalCounts = [
+          `${audit.validation.errors.length} errors`,
+          `${audit.validation.warnings.length} warnings`,
+          `${audit.validation.acceptedWarnings.length} accepted warnings`,
+        ].join(" / ");
+        if (findings.length === 0) {
+          els.validationPanel.innerHTML = `<div class="notice"><span class="muted">Validation: ${escapeHtml(globalCounts)}. No findings for selected mapping.</span></div>`;
+          return;
+        }
+        els.validationPanel.innerHTML = findings
+          .map((finding) => {
+            const accepted = finding.acceptedJustification ? ` Accepted: ${finding.acceptedJustification}` : "";
+            return `<div class="notice ${escapeHtml(finding.severity)}">
+              <strong>${escapeHtml(finding.severity)} ${escapeHtml(finding.code)}</strong>
+              <div>${escapeHtml(finding.message)}${escapeHtml(accepted)}</div>
+            </div>`;
+          })
+          .join("");
+      }
+      function renderSourcePane(mapping) {
+        const doc = audit.sourceDocs.find((candidate) => candidate.id === mapping.source.docId);
+        const blocks = mapping.source.blockIds.map((blockId) => blockForId(doc, blockId)).filter(Boolean);
+        els.sourceCount.textContent = `${blocks.length} mapped range${blocks.length === 1 ? "" : "s"}`;
+        els.sourcePane.innerHTML = blocks
+          .map((block) => {
+            const rows = block.lines
+              .filter((line) => mapping.source.lineIds.includes(line.id))
+              .map((line) => {
+                const row = rowBySourceId(mapping, line.id);
+                const bad = row && row.status !== "covered" && row.status !== "intentionally-removed";
+                return `<div class="line ${bad ? "bad" : ""}">
+                  <span class="lineno">${line.line}</span><span>${mark(line.text || " ")}</span>
+                </div>`;
+              })
+              .join("");
+            return `<div class="range">
+              <div class="range-title"><span>${escapeHtml(mapping.id)} ${escapeHtml(block.kind)}</span><span>${escapeHtml(block.path)}:${block.startLine}-${block.endLine}</span></div>
+              <pre>${rows}</pre>
+            </div>`;
+          })
+          .join("");
+      }
+      function renderDestPane(mapping) {
+        const entries = [];
+        for (const row of mapping.mapping) {
+          for (const entry of row.dest) entries.push({ row, entry });
+        }
+        els.destCount.textContent = `${entries.length} destination entr${entries.length === 1 ? "y" : "ies"}`;
+        if (entries.length === 0) {
+          els.destPane.innerHTML = `<div class="range"><div class="range-title">No destination</div><pre>${escapeHtml(mapping.justification)}</pre></div>`;
+          return;
+        }
+        els.destPane.innerHTML = entries
+          .map(({ row, entry }) => {
+            if (entry.kind === "external") {
+              return `<div class="range"><div class="range-title"><span>External reference ${badge(row.status)}${badge(row.action, "action")}</span><span>${escapeHtml(entry.label)}</span></div><pre>${mark(entry.justification)}</pre></div>`;
+            }
+            const doc = destDoc(entry.docId);
+            const lines = entry.lineIds.length
+              ? entry.lineIds.map((lineId) => lineForId(doc, lineId)).filter(Boolean)
+              : doc.blocks.filter((block) => entry.blockIds.includes(block.id)).flatMap((block) => block.lines);
+            const sourceLine = audit.sourceDocs.flatMap((d) => d.blocks).flatMap((b) => b.lines).find((line) => line.id === row.sourceId);
+            const changed = entry.changedSinceBase;
+            const entryBadges = `${badge(row.status)}${badge(row.action, "action")}${entry.mappingKind === "block-fallback" ? badge("block-fallback") : ""}${entry.stale ? badge("stale", "missing") : ""}`;
+            const entryNotice = entry.stale
+              ? `<div class="notice error stale"><strong>stale-destination-entry</strong><div>${escapeHtml(entry.stale.message)}</div></div>`
+              : entry.mappingKind === "block-fallback"
+                ? `<div class="notice warning fallback"><strong>block fallback</strong><div>This range is broad fallback evidence, not exact line proof.</div></div>`
+                : "";
+            const body = changed
+              ? `<div class="diff-meta">diff view from ${escapeHtml(row.sourceId)}</div>
+                <pre><div class="line diff-del"><span class="lineno">${sourceLine?.line ?? ""}</span><span>- ${mark(sourceLine?.text ?? "")}</span></div>${lines
+                  .map((line) => `<div class="line diff-add"><span class="lineno">${line.line}</span><span>+ ${mark(line.text || " ")}</span></div>`)
+                  .join("")}</pre>`
+              : `<pre>${lines
+                  .map((line) => `<div class="line"><span class="lineno">${line.line}</span><span>${mark(line.text || " ")}</span></div>`)
+                  .join("")}</pre>`;
+            return `<div class="range">
+              <div class="range-title">
+                <span>${changed ? "Diff view" : "Related reference"} ${entryBadges}</span>
+                <span>${escapeHtml(entry.range.path)}:${entry.range.startLine}-${entry.range.endLine}</span>
+              </div>
+              ${entryNotice}
+              ${body}
+            </div>`;
+          })
+          .join("");
+      }
+      function render() {
+        const doc = currentDoc();
+        els.title.textContent = doc?.path ?? audit.audit.title;
+        els.meta.textContent = `${audit.mappings.length} mappings across ${audit.sourceDocs.length} source page(s).`;
+        renderPageSelect();
+        renderSidebar();
+        renderSelected();
+      }
+      els.pageSelect.addEventListener("change", () => {
+        state.docId = els.pageSelect.value;
+        state.selectedId = mappingsForDoc(currentDoc())[0]?.id || audit.mappings[0]?.id;
+        render();
+      });
+      els.blockMode.addEventListener("click", () => {
+        state.mode = "block";
+        render();
+      });
+      els.docMode.addEventListener("click", () => {
+        state.mode = "doc";
+        render();
+      });
+      els.wrapToggle.addEventListener("click", () => {
+        state.wrap = !state.wrap;
+        render();
+      });
+      els.sidebarSearch.addEventListener("input", () => {
+        state.sidebarSearch = els.sidebarSearch.value;
+        renderSidebar();
+      });
+      els.paneSearch.addEventListener("input", () => {
+        state.paneSearch = els.paneSearch.value;
+        renderSelected();
+      });
+      els.sidebar.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-mapping]");
+        const id = target?.getAttribute("data-mapping");
+        if (id) choose(id);
+      });
+      els.sidebar.addEventListener("keydown", (event) => {
+        if (state.mode !== "block" || !["ArrowDown", "ArrowUp"].includes(event.key)) return;
+        event.preventDefault();
+        const mappings = mappingsForDoc(currentDoc());
+        const index = Math.max(0, mappings.findIndex((mapping) => mapping.id === state.selectedId));
+        const next = event.key === "ArrowDown" ? Math.min(index + 1, mappings.length - 1) : Math.max(index - 1, 0);
+        if (mappings[next]) choose(mappings[next].id);
+      });
+      window.addEventListener("hashchange", () => {
+        state.selectedId = resolveFragment(location.hash.slice(1)) || state.selectedId;
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>

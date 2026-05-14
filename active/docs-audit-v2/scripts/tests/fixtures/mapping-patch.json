@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "status": "final",
+  "mappings": [
+    {
+      "id": "M001",
+      "summary": "Setup heading was retitled.",
+      "source": {
+        "docId": "S1",
+        "blockIds": ["S1.B001"],
+        "lineIds": ["S1.B001.L001"]
+      },
+      "action": "paraphrase",
+      "reason": "same-scope",
+      "status": "covered",
+      "confidence": "high",
+      "justification": "The destination heading keeps the widget setup topic.",
+      "mapping": [
+        {
+          "sourceId": "S1.B001.L001",
+          "action": "paraphrase",
+          "reason": "same-scope",
+          "status": "covered",
+          "confidence": "high",
+          "justification": "The heading changed wording but keeps the setup topic.",
+          "dest": [
+            {
+              "id": "M001:S1.B001.L001:D001",
+              "kind": "local",
+              "docId": "D1",
+              "blockIds": ["D1.B001"],
+              "lineIds": ["D1.B001.L001"],
+              "range": { "path": "active/docs-audit-v2/scripts/tests/fixtures/dest.md", "startLine": 1, "endLine": 1 },
+              "mappingKind": "semantic-confirmed",
+              "changedSinceBase": true,
+              "justification": "The destination heading keeps the setup topic."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M002",
+      "summary": "Setup commands were merged into one destination sentence.",
+      "source": {
+        "docId": "S1",
+        "blockIds": ["S1.B002"],
+        "lineIds": ["S1.B002.L001", "S1.B002.L002"]
+      },
+      "action": "merged",
+      "reason": "same-scope",
+      "status": "covered",
+      "confidence": "high",
+      "justification": "The destination keeps the install instruction and login command in a shorter paragraph.",
+      "mapping": [
+        {
+          "sourceId": "S1.B002.L001",
+          "action": "merged",
+          "reason": "same-scope",
+          "status": "covered",
+          "confidence": "high",
+          "justification": "The package install instruction is preserved in the combined setup sentence.",
+          "dest": [
+            {
+              "id": "M002:S1.B002.L001:D001",
+              "kind": "local",
+              "docId": "D1",
+              "blockIds": ["D1.B002"],
+              "lineIds": ["D1.B002.L001"],
+              "range": { "path": "active/docs-audit-v2/scripts/tests/fixtures/dest.md", "startLine": 2, "endLine": 2 },
+              "mappingKind": "semantic-confirmed",
+              "changedSinceBase": true,
+              "justification": "Line 2 combines the package install command into the setup sentence."
+            }
+          ]
+        },
+        {
+          "sourceId": "S1.B002.L002",
+          "action": "merged",
+          "reason": "same-scope",
+          "status": "covered",
+          "confidence": "high",
+          "justification": "The login command is preserved in the combined setup sentence.",
+          "dest": [
+            {
+              "id": "M002:S1.B002.L002:D001",
+              "kind": "local",
+              "docId": "D1",
+              "blockIds": ["D1.B002"],
+              "lineIds": ["D1.B002.L001"],
+              "range": { "path": "active/docs-audit-v2/scripts/tests/fixtures/dest.md", "startLine": 2, "endLine": 2 },
+              "mappingKind": "semantic-confirmed",
+              "changedSinceBase": true,
+              "justification": "Line 2 combines the login command into the same setup sentence."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M003",
+      "summary": "Troubleshooting heading was narrowed to login failures.",
+      "source": {
+        "docId": "S1",
+        "blockIds": ["S1.B003"],
+        "lineIds": ["S1.B003.L001"]
+      },
+      "action": "paraphrase",
+      "reason": "same-scope",
+      "status": "covered",
+      "confidence": "high",
+      "justification": "The destination heading keeps the troubleshooting scope.",
+      "mapping": [
+        {
+          "sourceId": "S1.B003.L001",
+          "action": "paraphrase",
+          "reason": "same-scope",
+          "status": "covered",
+          "confidence": "high",
+          "justification": "The destination heading keeps the troubleshooting scope.",
+          "dest": [
+            {
+              "id": "M003:S1.B003.L001:D001",
+              "kind": "local",
+              "docId": "D1",
+              "blockIds": ["D1.B003"],
+              "lineIds": ["D1.B003.L001"],
+              "range": { "path": "active/docs-audit-v2/scripts/tests/fixtures/dest.md", "startLine": 4, "endLine": 4 },
+              "mappingKind": "semantic-confirmed",
+              "changedSinceBase": true,
+              "justification": "The destination heading keeps the troubleshooting scope."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M004",
+      "summary": "Troubleshooting recovery steps moved to a narrower login-failure section.",
+      "source": {
+        "docId": "S1",
+        "blockIds": ["S1.B004"],
+        "lineIds": ["S1.B004.L001", "S1.B004.L002"]
+      },
+      "action": "paraphrase",
+      "reason": "same-scope",
+      "status": "covered",
+      "confidence": "high",
+      "justification": "The destination keeps the login-failure symptom, token refresh fix, and doctor command.",
+      "mapping": [
+        {
+          "sourceId": "S1.B004.L001",
+          "action": "paraphrase",
+          "reason": "same-scope",
+          "status": "covered",
+          "confidence": "high",
+          "justification": "The token refresh fix is preserved.",
+          "dest": [
+            {
+              "id": "M004:S1.B004.L001:D001",
+              "kind": "local",
+              "docId": "D1",
+              "blockIds": ["D1.B004"],
+              "lineIds": ["D1.B004.L001"],
+              "range": { "path": "active/docs-audit-v2/scripts/tests/fixtures/dest.md", "startLine": 5, "endLine": 5 },
+              "mappingKind": "semantic-confirmed",
+              "changedSinceBase": true,
+              "justification": "The token refresh fix is preserved."
+            }
+          ]
+        },
+        {
+          "sourceId": "S1.B004.L002",
+          "action": "paraphrase",
+          "reason": "same-scope",
+          "status": "covered",
+          "confidence": "high",
+          "justification": "The doctor command is preserved.",
+          "dest": [
+            {
+              "id": "M004:S1.B004.L002:D001",
+              "kind": "local",
+              "docId": "D1",
+              "blockIds": ["D1.B004"],
+              "lineIds": ["D1.B004.L002"],
+              "range": { "path": "active/docs-audit-v2/scripts/tests/fixtures/dest.md", "startLine": 6, "endLine": 6 },
+              "mappingKind": "semantic-confirmed",
+              "changedSinceBase": true,
+              "justification": "The doctor command is preserved."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "acceptedWarnings": []
+}

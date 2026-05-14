@@ -63,6 +63,7 @@ Example:
 
 ### Docs
 
+- [docs-audit-v2](active/docs-audit-v2/SKILL.md): Audit documentation rewrites with JSON-first block and line mappings, validation, Markdown reports, and a self-contained HTML viewer.
 - [docstyle](active/docstyle/SKILL.md): Write or review Stripe-style developer documentation for APIs, SDKs, CLIs, integrations, quickstarts, guides, references, testing docs, and troubleshooting docs.
 - [docy](active/docy/SKILL.md): Manage reusable reference docs for agent work through a small doc registry and CLI. Use when an agent should inject focused guidance into the current context or install durable rules into AGENTS.md, especially for language rules, core policies, framework/vendor behavior, or special-topic references such as backwards-compatibility policy. Bundled docs currently include `ref/no-back-compat` and `vendor/lerna`.
 - [find-links](active/find-links/SKILL.md): This skill should be used when the user wants to fill in TODO links, placeholder links, or missing links in markdown files. Invoke when the user mentions "fill links", "TODO links", "find links", or asks to add appropriate links to concepts in a document.
