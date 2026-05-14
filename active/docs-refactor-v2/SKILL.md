@@ -1,5 +1,5 @@
 ---
-name: openclaw-refactor-docs
+name: docs-refactor-v2
 description: Refactor an existing OpenClaw docs page with source-audited preservation,
   restructuring, and verification.
 dependencies:
@@ -159,9 +159,22 @@ This skill owns the refactor-side work:
 10. Run `reindex-dest` when destination pages are edited.
 11. Run `map` to produce `audit.mapped.json`.
 
+When continuing a mapped audit after rebasing, first verify that the audit base
+still points at the pre-refactor source snapshot. Relative refs such as
+`HEAD~3` can drift when commits are added, dropped, or squashed. If the base has
+drifted, rerun `scaffold` with the corrected base before `reindex-dest`, keep
+the original source and destination doc order so stable IDs still match
+`mapping-patch.json`, then rerun `map`, `hydrate`, `validate`, and `render`.
+
 Do not map one source line to a broad destination section as
 `semantic-confirmed`. If exact destination lines are not selected yet, use
 `block-fallback` and keep the row non-final until tightened.
+
+A preservation gap does not automatically belong back in the rewritten main
+page. First check whether the fact is already preserved in a canonical
+reference, troubleshooting, or generated page in the destination set. Prefer a
+short retrieval link from the main page over duplicating exhaustive detail,
+unless the fact is required for the 80/20 workflow on that page.
 
 After `audit.mapped.json` exists, hand off to the audit phase:
 

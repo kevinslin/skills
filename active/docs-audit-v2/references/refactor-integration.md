@@ -48,6 +48,13 @@ During editing:
 7. Run `reindex-dest` for edited destination docs before producing the mapped
    audit.
 
+When a source fact is missing from the rewritten main page, first look for a
+canonical destination in the explicit destination set. A reference,
+troubleshooting, or generated page can be the correct preservation target. Only
+restore the fact to the main page when readers need it for that page's primary
+workflow or when the refactor loses the retrieval path to the canonical
+destination.
+
 Refactor-owned closeout:
 
 1. Run `reindex-dest` for edited destination docs.
@@ -65,6 +72,10 @@ Audit-owned closeout:
    are not preservation gaps.
 5. Run `render` against the validated JSON.
 6. Include validated audit artifacts and validation output in the audit handoff.
+
+Validation success means the JSON contract is structurally clean. It does not
+replace manual review of low-confidence, broad, disputed, or surprising
+mappings.
 
 ## Mapping Patch States
 

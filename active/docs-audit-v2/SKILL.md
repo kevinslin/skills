@@ -80,10 +80,16 @@ outputs and must not be parsed back into JSON as source of truth.
 - Use `justification` as the canonical explanation field. Do not invent
   `notes` or `detailed_reason` aliases.
 - Broad block fallback is not final proof for a material `covered` line.
+- Coverage may live in any explicit destination doc in scope, including
+  reference, troubleshooting, or generated pages. Do not mark a source line
+  missing only because it no longer appears on the rewritten main page.
 - Destination entries with stale metadata cannot satisfy final coverage.
 - Accepted warnings never hide errors and must not be used for unmapped source
   material, stale destinations, missing justifications, or line mappings without
   exact destination proof.
+- Clean validation is structural proof, not semantic signoff. Manually review
+  low-confidence, broad, disputed, or surprising mappings before treating a
+  preservation audit as complete.
 
 ## Bundled Files
 
