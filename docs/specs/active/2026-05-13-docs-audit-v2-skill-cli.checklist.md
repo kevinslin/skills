@@ -14,7 +14,7 @@ Implement `active/docs-audit-v2` from the reviewed feature spec.
 - [x] Review fixes integrated.
 - [x] Verification completed.
 - [x] Intended files staged.
-- [ ] Changes committed.
-- [ ] PR pushed.
-- [ ] PR babysitting started.
+- [x] Changes committed.
+- [x] PR pushed.
+- [x] PR babysitting started.
 - [ ] Slack notification sent after PR green.
