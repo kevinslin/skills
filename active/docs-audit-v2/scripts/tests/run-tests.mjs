@@ -135,7 +135,12 @@ test("end-to-end JSON pipeline validates and renders report artifacts", () => {
   assert.deepEqual(validation.errors, []);
 
   run(["render", "--data", validated, "--md-out", mdOut, "--html-out", htmlOut, "--force"]);
-  assert.match(readFileSync(mdOut, "utf8"), /Mapping Summary/);
+  const md = readFileSync(mdOut, "utf8");
+  assert.match(md, /Mapping Summary/);
+  assert.match(md, /Line Mapping Details/);
+  assert.match(md, /S1\.B002\.L001/);
+  assert.match(md, /mappingKind=semantic-confirmed/);
+  assert.match(md, /changedSinceBase=true/);
   const html = readFileSync(htmlOut, "utf8");
   assert.match(html, /Docs Audit V2/);
   assert.match(html, /Block mode/);
@@ -166,6 +171,19 @@ test("validate reports missing line coverage and covered block fallback errors",
   const result = runMaybe(["validate", "--data", fallbackPath, "--json"]);
   assert.equal(result.status, 1);
   assert.match(result.stdout, /covered-block-fallback-only/);
+});
+
+test("map rejects duplicate mapping ids in the patch before overwriting", () => {
+  const dir = tmp();
+  const audit = path.join(dir, "audit.json");
+  const duplicatePatch = path.join(dir, "duplicate-patch.json");
+  run(["scaffold", "--source", `${fixtures}/source.md`, "--dest", `${fixtures}/dest.md`, "--out", audit, "--force"]);
+  const patch = readJson(path.resolve(repoRoot, fixtures, "mapping-patch.json"));
+  patch.mappings = [patch.mappings[0], patch.mappings[0]];
+  writeFileSync(duplicatePatch, `${JSON.stringify(patch, null, 2)}\n`);
+  const result = runMaybe(["map", "--data", audit, "--patch", duplicatePatch, "--out", path.join(dir, "mapped.json"), "--force"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Duplicate mapping id M001 in mapping patch/);
 });
 
 test("reindex-dest preserves destination entry ids and marks changed text stale", () => {

@@ -271,6 +271,14 @@ async function mapPatch(args: ParsedArgs): Promise<void> {
     throw new Error("Mapping patch must contain mappings[]");
   }
 
+  const patchIds = new Set<string>();
+  for (const mapping of patch.mappings) {
+    if (patchIds.has(mapping.id)) {
+      throw new Error(`Duplicate mapping id ${mapping.id} in mapping patch.`);
+    }
+    patchIds.add(mapping.id);
+  }
+
   const byId = new Map(data.mappings.map((mapping) => [mapping.id, mapping]));
   for (const mapping of patch.mappings) {
     byId.set(mapping.id, mapping);
@@ -1072,6 +1080,21 @@ function renderMarkdown(data: AuditData): string {
       `| ${mapping.id} | ${escapeTable(sourceRange)} | ${escapeTable(mapping.summary)} | ${mapping.action} | ${mapping.reason} | ${escapeTable(destination)} | ${mapping.status} | ${escapeTable(mapping.justification)} |`,
     );
   }
+  lines.push("");
+  lines.push("## Line Mapping Details");
+  lines.push("");
+  lines.push("| Mapping | Source line | Source text | Action | Reason | Status | Confidence | Destinations | Justification |");
+  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+  for (const mapping of data.mappings) {
+    for (const row of mapping.mapping) {
+      const sourceLine = findSourceLine(data, row.sourceId);
+      const sourceLabel = sourceLine ? `${sourceLine.path}:${sourceLine.line}` : row.sourceId;
+      const sourceText = sourceLine?.text ?? "";
+      lines.push(
+        `| ${mapping.id} | ${escapeTable(sourceLabel)} | ${escapeTable(sourceText)} | ${row.action} | ${row.reason} | ${row.status} | ${row.confidence} | ${escapeTable(rowDestinationDetails(row))} | ${escapeTable(row.justification)} |`,
+      );
+    }
+  }
   if (data.validation.errors.length > 0) {
     lines.push("");
     lines.push("## Validation Errors");
@@ -1120,6 +1143,45 @@ function destinationLabel(mapping: BlockMapping): string {
     }
   }
   return ranges.size > 0 ? [...ranges].join("<br />") : "none";
+}
+
+function rowDestinationDetails(row: MappingRow): string {
+  if (row.dest.length === 0) {
+    return "none";
+  }
+  return row.dest.map(destinationEntryDetails).join("<br />");
+}
+
+function destinationEntryDetails(entry: DestinationEntry): string {
+  if (entry.kind === "external") {
+    const parts = [`${entry.id} external`, entry.label];
+    if (entry.url) {
+      parts.push(entry.url);
+    }
+    parts.push(`justification=${entry.justification}`);
+    return parts.join("; ");
+  }
+
+  const parts = [
+    `${entry.id} ${entry.kind}`,
+    `${entry.range.path}:${entry.range.startLine}-${entry.range.endLine}`,
+    `mappingKind=${entry.mappingKind}`,
+    `changedSinceBase=${String(entry.changedSinceBase)}`,
+    `justification=${entry.justification}`,
+  ];
+  if (entry.kind === "generated") {
+    const generatorRange =
+      entry.generator.startLine && entry.generator.endLine
+        ? `${entry.generator.path}:${entry.generator.startLine}-${entry.generator.endLine}`
+        : entry.generator.path;
+    parts.push(`generator=${generatorRange}`);
+  }
+  if (entry.stale) {
+    parts.push(
+      `stale=${entry.stale.reason}: ${entry.stale.message}; previous=${entry.stale.previousRange.path}:${entry.stale.previousRange.startLine}-${entry.stale.previousRange.endLine}`,
+    );
+  }
+  return parts.join("; ");
 }
 
 function sourceRangeLabel(data: AuditData, mapping: BlockMapping): string {
