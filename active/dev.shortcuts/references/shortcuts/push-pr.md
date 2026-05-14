@@ -5,9 +5,15 @@ dependencies: [babysit-pr]
 ---
 
 Instructions:
-1. if there are unstaged changes -> invoke:commit-code
-2. push code
-3. verify the PR base branch from repo metadata (do not assume `main`/`master`), then create a PR using a body file (do NOT inline markdown in shell arguments). Keep the one-line summary in `--title` only; start the body at a section header instead of repeating a title-like line. Example:
+1. Before pushing or creating the PR, inspect the current repo for PR body,
+   proof, or format instructions. Read the nearest applicable `AGENTS.md`,
+   `.github/pull_request_template.md`, and any repo-local skill or maintainer
+   guidance that matches `PR body`, `PR create`, `Real behavior proof`, or
+   `proof format`. Treat mandatory PR-format/proof requirements as pre-push
+   blockers, and make the PR body satisfy them before continuing.
+2. if there are unstaged changes -> invoke:commit-code
+3. push code
+4. verify the PR base branch from repo metadata (do not assume `main`/`master`), then create a PR using a body file (do NOT inline markdown in shell arguments). Keep the one-line summary in `--title` only; start the body at a section header instead of repeating a title-like line. Example:
 ```bash
 cat > /tmp/pr_body.md << 'EOF'
 ## Context
@@ -35,5 +41,5 @@ PR_URL_FILE="${LOOPS_PR_ARTIFACT_FILE:-/tmp/${CURRENT_DIR}-devloop-pr}"
 printf '%s\n' "$PR_URL" > "$PR_URL_FILE"
 echo "Wrote PR URL to $PR_URL_FILE"
 ```
-4. invoke $babysit-pr skill
-5. notify if everything passes
+5. invoke $babysit-pr skill
+6. notify if everything passes

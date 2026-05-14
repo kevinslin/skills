@@ -5,6 +5,7 @@ dependencies:
 - dev.loop
 - dev.review
 - dev.shortcuts
+- mem
 - schemas
 - specy
 - sw-ctrl
@@ -35,6 +36,7 @@ changes.
 ## Checklist Gate
 
 - Create a swarm checklist before starting the loop.
+- Before writing any durable spec, checklist, flow doc, proof, review artifact, runbook, or long-lived project note, invoke `$mem` to resolve the intended base, root, schemas, and file rules. Do this by artifact intent, not by path shape: `$mem` roots may be anywhere and may not contain `.mem`.
 - Store the checklist in the active spec folder when using `schemas` `ag-dir-v2`.
 - Store the checklist in a temporary folder for all other workflows.
 - Include every required gate: spec, spec review, implementation, review swarm,
@@ -73,7 +75,7 @@ changes.
 
 ### 2. Plan and Gate
 
-- Use `$specy` to create a feature spec first unless one already exists.
+- Use `$specy` to create a feature spec first unless one already exists. If the spec is durable project memory, route the artifact root through `$mem` before creating or updating the spec folder.
 - Run trigger:loop `$dev.review` against the spec
 - Stop and return the spec to the user when ambiguity remains or the user asked
   to review the plan before implementation.
@@ -121,7 +123,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
   planning/review only or explicitly said not to push.
 - Include the PR URL in the final handoff. If push or PR creation fails, report
   the exact failure and treat the swarm run as incomplete.
-- Write a flow doc for the implementation.  Store it in the active spec folder when using `schemas` `ag-dir-v2`.
+- Write a flow doc for the implementation. Store it in the `$mem`-resolved active spec folder when using `schemas` `ag-dir-v2`, and report the selected base plus concrete path in the handoff.
 - Kick of $babysit-pr after the PR is pushed
 - $slack-notify me with alert once pr is green
 

@@ -2,6 +2,7 @@
 name: showboat-v2
 description: Create schema-backed Showboat integration proofs with scenario summaries, raw artifacts, and replayable verification.
 dependencies:
+  - mem
   - schemas
 ---
 
@@ -13,9 +14,11 @@ Use this skill when the user wants an executable Showboat proof that also has a 
 
 Use `../schemas/SKILL.md` to inspect and materialize the directory structure before writing proof content. Prefer the bundled `integ-proof` schema when the user does not name another schema.
 
+Before writing a durable proof directory or any long-lived proof artifact, invoke `../mem/SKILL.md` to resolve the intended knowledge base, root, schemas, and file rules. Do this because the memory root may be any configured path, not necessarily a directory named `.mem`. Only write outside `$mem` when the artifact is explicitly temporary, repo-owned source/docs, or the user names a concrete non-memory destination.
+
 ## Workflow
 
-1. Resolve the proof target from the user or project convention. Do not assume a specific repository, connector, plugin, app, or artifact root.
+1. Resolve the proof target from the user or project convention. For durable proof storage, resolve `$mem` before choosing `<proofs-root>` and record the selected base name, resolved root, and concrete proof path. Do not assume a specific repository, connector, plugin, app, or artifact root.
 2. Pick a kebab-case proof slug and one kebab-case slug per scenario.
 3. Read the schema before materializing:
 

@@ -148,6 +148,21 @@ test("end-to-end JSON pipeline validates and renders report artifacts", () => {
   assert.match(html, /window.__AUDIT_DATA__/);
 });
 
+test("render embeds audit JSON literally when text contains replacement tokens", () => {
+  const dir = tmp();
+  writeFileSync(path.join(dir, "source.md"), "# Source\nRegex uses `$'` and `$&` replacement tokens.\n");
+  writeFileSync(path.join(dir, "dest.md"), "# Dest\nRegex uses `$'` and `$&` replacement tokens.\n");
+  run(["scaffold", "--source", "source.md", "--dest", "dest.md", "--out", "audit.json", "--force"], { cwd: dir });
+  run(["render", "--data", "audit.json", "--html-out", "audit.html", "--force"], { cwd: dir });
+  const html = readFileSync(path.join(dir, "audit.html"), "utf8");
+  const scriptStart = html.indexOf("window.__AUDIT_DATA__ = ");
+  const scriptEnd = html.indexOf("</script>", scriptStart);
+  assert.notEqual(scriptStart, -1);
+  assert.notEqual(scriptEnd, -1);
+  assert.doesNotThrow(() => new Function(html.slice(scriptStart, scriptEnd)));
+  assert.equal(html.indexOf("<html lang=\"en\">", 100), -1);
+});
+
 test("validate reports missing line coverage and covered block fallback errors", () => {
   const dir = tmp();
   const audit = path.join(dir, "audit.json");

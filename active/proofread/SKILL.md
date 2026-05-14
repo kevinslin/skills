@@ -12,6 +12,8 @@ Review a draft that is about to be published and surface issues before it goes l
 
 Default to critique, not rewriting. Report issues and the smallest correction that would fix them, but do not offer a tightened, revised, or rewritten version unless the user explicitly asks for one.
 
+When the user asks to see the fixed document, provide a corrected draft that only auto-fixes spelling and grammar issues. Preserve the author's style, word choice, structure, sentence order, and emphasis. Do not tighten, polish, rewrite, or improve prose beyond the smallest grammar or spelling correction needed.
+
 ## Review checklist
 
 Check the draft for:
@@ -31,7 +33,8 @@ Check the draft for:
 4. Prefer the smallest correction that fixes the issue.
 5. Mark unverified factual claims as `verify` when the draft makes a claim that may be wrong but cannot be confirmed from the provided context.
 6. Distinguish hard errors from optional improvements.
-7. Do not include a rewritten draft, tightened version, or polished alternative unless the user explicitly asks for a rewrite.
+7. Do not include a rewritten draft, tightened version, or polished alternative unless the user explicitly asks for a rewrite or fixed document.
+8. For a requested fixed document, only correct spelling and grammar; do not change style or word choice unless a grammar fix requires the smallest possible adjustment.
 
 ## Output format
 
@@ -40,5 +43,6 @@ Use these sections when reporting findings:
 - `Errors`: spelling, grammar, broken links, and clear logical or factual problems.
 - `Improvements`: repetitive phrasing or weak arguments that could be stronger.
 - `Clean`: state this explicitly when no issues are found.
+- `Corrected draft`: include this only when the user asks to see the fixed document; apply only spelling and grammar fixes, preserving style and word choice.
 
-Only provide corrected or rewritten copy when the user explicitly asks for it. Otherwise, keep the response to findings plus minimal inline fixes.
+Only provide corrected or rewritten copy when the user explicitly asks for it. Otherwise, keep the response to findings plus minimal inline fixes. When providing corrected copy, label it as grammar and spelling fixes rather than a rewrite.

@@ -2,6 +2,7 @@
 name: claw-integ
 description: Run live OpenClaw integration proof against a named claw gateway profile with showboat-v2.
 dependencies:
+  - mem
   - showboat-v2
 ---
 
@@ -135,20 +136,16 @@ If `ffmpeg` is unavailable, screen-recording permission is blocked, or recording
 
 Use `../showboat-v2/SKILL.md` for every `$claw-integ` run.
 
-The proof directory should live in the OpenClaw memory/proof area when available:
-
-```text
-.mem/main/proofs/demo-{num}-{profile}-{slug}/
-```
-
-If `.mem/main/proofs` is unavailable, place the proof directory in the current workspace and state the fallback path.
+The proof directory is a durable artifact. Before choosing the proof path, invoke `../mem/SKILL.md` and resolve the OpenClaw memory base, root, schemas, and file rules. Do not infer the target from a cwd-relative `.mem` path; `$mem` may resolve to any configured folder. If `$mem` cannot resolve a suitable OpenClaw proof base, ask before falling back to a workspace-local proof directory.
 
 Use these OpenClaw-specific values with `showboat-v2`:
 
-- `<proofs-root>`: `$mem claw/main proofs` when available, otherwise the fallback proof root.
+- `<proofs-root>`: the concrete root/path resolved from `$mem claw/main proofs`, otherwise the explicitly approved fallback proof root.
 - `<proof-slug>`: `demo-{num}-{profile}-{slug}`.
 - `<proof-root>`: `<proofs-root>/<proof-slug>`.
 - `<scenario-slug>`: a short behavior slug; use one scenario file per distinct behavior path.
+
+Report the selected `$mem` base name, resolved root, and final `<proof-root>` in the handoff so wrong-root writes are auditable.
 
 Follow `showboat-v2` to materialize `proof.md` and each `scenario/<scenario-slug>.md`, create `raw/` and `scripts/`, and capture the stable Showboat summary at:
 

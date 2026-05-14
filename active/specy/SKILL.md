@@ -6,6 +6,7 @@ dependencies:
 - dev.diagram
 - dev.llm-session
 - docy
+- mem
 - sudocode
 ---
 
@@ -39,6 +40,8 @@ Only the `flow-doc` doc type is supported for flow docs. Do not route to old pha
 All filepaths in this skill are relative to `$DOCS_ROOT` unless noted otherwise.
 Default `$DOCS_ROOT` is `./docs` (relative to the project root directory).
 
+When creating or updating a durable artifact such as a spec, flow doc, design doc, architecture doc, validation doc, recipe, runbook, or long-lived project note, invoke `../mem/SKILL.md` before choosing `$DOCS_ROOT`. Use the selected `$mem` base root, schemas, optional base skill, and path style when the artifact belongs in persistent knowledge. Do this by artifact intent, not by whether the path contains `.mem`; memory roots may be any configured folder. Only use the default `./docs` root when the artifact is repo-owned documentation or the user names a concrete non-memory destination.
+
 ## Available Document Types
 
 Document types are listed here. Use the parenthesized doc-type key with the common workflow/template paths below.
@@ -59,6 +62,7 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 
 ## Common Instructions (All Doc Types)
 
+0. For durable knowledge artifacts, resolve `$mem` first and report the selected base name, resolved root, and concrete output path. If no `$mem` base clearly matches and the user did not name a concrete non-memory destination, ask instead of guessing.
 1. Find the requested doc type workflow at `./references/[doc-type]/workflow.md`.
 2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `./references/[doc-type]/template.md` to the requested output location before filling in content.
