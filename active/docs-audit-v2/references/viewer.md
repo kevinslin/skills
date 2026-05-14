@@ -20,6 +20,23 @@ Reports should be table-oriented for scanability, but JSON remains canonical.
 
 The self-contained HTML viewer receives the same validated audit JSON used by
 the report. Embed it as inert JSON data, then parse it at runtime.
+When embedding JSON into an HTML template, insert the serialized payload
+literally. In JavaScript, use a replacement callback such as
+`template.replace("__AUDIT_JSON__", () => payload)` instead of passing `payload`
+directly to `String.replace`, because audit text may contain replacement tokens
+such as `$'`, `$&`, or `$1`.
+
+After rendering, run a static parse check before opening the viewer:
+
+```bash
+node - <<'NODE'
+const fs = require("fs");
+const html = fs.readFileSync(".audit/example/audit.html", "utf8");
+const start = html.indexOf("window.__AUDIT_DATA__ = ");
+const end = html.indexOf("</script>", start);
+new Function(html.slice(start, end));
+NODE
+```
 
 Required data consumers:
 
@@ -49,6 +66,8 @@ The viewer must support:
 
 ## Rendering Rules
 
+- If `mappings[]` is empty, render an explicit inventory-only empty state with
+  source/destination counts and validation findings. Do not leave panes blank.
 - Source pane starts with the selected source block in block mode.
 - Doc mode shows the whole source doc while preserving selected block context.
 - Destination entries render in mapping order.

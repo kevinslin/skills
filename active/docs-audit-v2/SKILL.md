@@ -28,14 +28,17 @@ For general codebase quality audits, use the regular `audit` skill instead.
 2. Choose explicit destination docs from the refactor plan; do not audit every
    changed Markdown file by default.
 3. Scaffold or refresh the JSON audit inventory with the CLI.
-4. Author mapping patches with one mapping object per source block and one
+4. Treat scaffolded or reindexed JSON as inventory-only until `mappings.length`
+   is non-zero. Do not render a final viewer/report for a preservation review
+   until mappings have been authored and merged with `map`.
+5. Author mapping patches with one mapping object per source block and one
    `mapping[]` row per material source line.
-5. Reindex destination docs after edits, then hydrate and validate the JSON.
-6. Fix every validation error. Accept warnings only when they are not
+6. Reindex destination docs after edits, then hydrate and validate the JSON.
+7. Fix every validation error. Accept warnings only when they are not
    preservation gaps and have reviewer-facing justification.
-7. Render the Markdown report and self-contained HTML viewer from the validated
+8. Render the Markdown report and self-contained HTML viewer from the validated
    JSON.
-8. Handoff the JSON artifacts, rendered report/viewer, unresolved or accepted
+9. Handoff the JSON artifacts, rendered report/viewer, unresolved or accepted
    warnings, and exact validation output.
 
 ## References
@@ -68,6 +71,10 @@ outputs and must not be parsed back into JSON as source of truth.
 ## Mapping Rules
 
 - Use one stable mapping ID per source block.
+- `scaffold`, `add-dest`, and `reindex-dest` never create semantic mappings;
+  they only inventory source and destination docs.
+- Manual comparison notes, grading notes, or chat summaries are not mappings
+  until they are written to a mapping patch and merged through `map`.
 - Account for every non-formatting source line with a line-level `mapping[]`
   row.
 - Use `justification` as the canonical explanation field. Do not invent

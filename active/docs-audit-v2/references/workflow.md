@@ -132,6 +132,23 @@ Structural mapping checks still run across all mappings.
 7. Re-run `map`, `hydrate`, and `validate`.
 8. Fix every validation error before final handoff.
 
+## Inventory-Only Audits
+
+`scaffold`, `add-dest`, and `reindex-dest` produce doc, block, and line
+inventories. They do not infer semantic coverage and they do not create
+`mappings[]`.
+
+Before rendering a final preservation report or viewer, inspect the JSON:
+
+```bash
+node -e 'const a=require("./.audit/example/audit.validated.json"); console.log(a.mappings.length)'
+```
+
+If the count is `0`, the artifact is still an inventory or validation draft.
+Author `mapping-patch.json`, run `map`, then `hydrate`, `validate`, and `render`.
+Do not treat manual comparison notes, grading notes, or previous-session report
+tables as mapped audit data unless they have been converted into JSON mappings.
+
 ## Warning Policy
 
 Warnings alone do not fail validation. They still need review.

@@ -403,7 +403,7 @@
       const state = {
         docId: audit.sourceDocs[0]?.id,
         selectedId: resolveFragment(location.hash ? location.hash.slice(1) : "") || audit.mappings[0]?.id,
-        mode: "block",
+        mode: audit.mappings.length ? "block" : "doc",
         wrap: true,
         sidebarSearch: "",
         paneSearch: "",
@@ -467,6 +467,18 @@
       }
       function mappingsForDoc(doc) {
         return audit.mappings.filter((mapping) => mapping.source.docId === doc.id);
+      }
+      function sourceLines(doc) {
+        return doc.blocks.flatMap((block) => block.lines);
+      }
+      function sourceLineCount(doc) {
+        return sourceLines(doc).length;
+      }
+      function blockPreview(block) {
+        return block.lines.map((line) => line.text).join(" ").trim().slice(0, 180);
+      }
+      function searchableBlock(block) {
+        return [block.id, block.kind, block.path, block.startLine, block.endLine, blockPreview(block)].join(" ").toLowerCase();
       }
       function rowBySourceId(mapping, sourceId) {
         return mapping.mapping.find((row) => row.sourceId === sourceId);
@@ -593,21 +605,37 @@
             )
             .join("")}</div>`;
         } else {
-          els.sidebar.innerHTML = mappings
-            .filter((mapping) => searchableMapping(mapping).includes(query))
-            .map(
-              (mapping) => `<article class="card ${mapping.id === state.selectedId ? "active" : ""}" data-mapping="${escapeHtml(mapping.id)}">
+          if (mappings.length === 0) {
+            els.sidebar.innerHTML = doc.blocks
+              .filter((block) => searchableBlock(block).includes(query))
+              .map(
+                (block) => `<article class="card">
+                  <div class="card-title">${escapeHtml(block.id)} ${escapeHtml(block.kind)}</div>
+                  <div class="muted">${escapeHtml(block.path)}:${block.startLine}-${block.endLine}</div>
+                  <div>${escapeHtml(blockPreview(block) || "(blank block)")}</div>
+                </article>`,
+              )
+              .join("");
+          } else {
+            els.sidebar.innerHTML = mappings
+              .filter((mapping) => searchableMapping(mapping).includes(query))
+              .map(
+                (mapping) => `<article class="card ${mapping.id === state.selectedId ? "active" : ""}" data-mapping="${escapeHtml(mapping.id)}">
                 <div class="card-title">${escapeHtml(mapping.id)} ${escapeHtml(mapping.summary)}</div>
                 <div class="muted">${escapeHtml(mapping.justification)}</div>
                 <div class="counts">${badge(mapping.status)}${badge(mapping.action, "action")}${badge(mapping.reason)}</div>
               </article>`,
-            )
-            .join("");
+              )
+              .join("");
+          }
         }
       }
       function renderSelected() {
         const mapping = selectedMapping();
-        if (!mapping) return;
+        if (!mapping) {
+          renderNoMappings();
+          return;
+        }
         els.selectedId.textContent = `${mapping.id} / ${currentDoc()?.path ?? ""}`;
         els.selectedTitle.textContent = mapping.summary;
         els.selectedSummary.textContent = mapping.justification;
@@ -621,6 +649,86 @@
         renderSourcePane(mapping);
         renderDestPane(mapping);
         renderValidationPanel(mapping);
+      }
+      function renderNoMappings() {
+        const doc = currentDoc();
+        const blocks = doc?.blocks ?? [];
+        const lines = sourceLineCount(doc);
+        els.selectedId.textContent = `${doc?.id ?? "source"} / ${doc?.path ?? ""}`;
+        els.selectedTitle.textContent = "No mappings authored";
+        els.selectedSummary.textContent =
+          "This audit JSON contains source and destination inventories, but no source-to-destination mapping records yet.";
+        els.selectedBadges.innerHTML = [
+          badge(`${blocks.length} source blocks`),
+          badge(`${lines} source lines`),
+          badge(`${audit.destDocs.length} destination docs`),
+          badge(`${audit.validation.errors.length} errors`, audit.validation.errors.length ? "missing" : ""),
+          badge(`${audit.validation.warnings.length} warnings`),
+        ].join("");
+        renderSourceInventory(doc);
+        renderDestinationInventory();
+        renderValidationSummary();
+      }
+      function renderSourceInventory(doc) {
+        const query = state.paneSearch.trim().toLowerCase();
+        const blocks = (doc?.blocks ?? []).filter((block) => !query || searchableBlock(block).includes(query));
+        els.sourceCount.textContent = `${blocks.length} source block${blocks.length === 1 ? "" : "s"}`;
+        els.sourcePane.innerHTML = blocks
+          .map(
+            (block) => `<div class="range">
+              <div class="range-title"><span>${escapeHtml(block.id)} ${escapeHtml(block.kind)}</span><span>${escapeHtml(block.path)}:${block.startLine}-${block.endLine}</span></div>
+              <pre>${block.lines
+                .map(
+                  (line) => `<div class="line ${audit.validation.errors.some((finding) => (finding.sourceIds || []).includes(line.id)) ? "bad" : ""}">
+                    <span class="lineno">${line.line}</span><span>${mark(line.text || " ")}</span>
+                  </div>`,
+                )
+                .join("")}</pre>
+            </div>`,
+          )
+          .join("");
+      }
+      function renderDestinationInventory() {
+        const query = state.paneSearch.trim().toLowerCase();
+        const docs = audit.destDocs.filter((doc) => {
+          const haystack = [doc.id, doc.path, doc.changedSinceBase ? "changed" : "unchanged", ...doc.blocks.map(blockPreview)].join(" ").toLowerCase();
+          return !query || haystack.includes(query);
+        });
+        els.destCount.textContent = `${docs.length} destination doc${docs.length === 1 ? "" : "s"}`;
+        els.destPane.innerHTML = docs
+          .map((doc) => {
+            const previewBlocks = doc.blocks.slice(0, 8);
+            return `<div class="range">
+              <div class="range-title">
+                <span>${escapeHtml(doc.id)} ${doc.changedSinceBase ? badge("changed", "action") : badge("unchanged")}</span>
+                <span>${escapeHtml(doc.path)}</span>
+              </div>
+              <pre>${previewBlocks
+                .map(
+                  (block) => `<div class="line">
+                    <span class="lineno">${block.startLine}</span><span>${mark(`${block.id} ${block.kind}: ${blockPreview(block) || "(blank block)"}`)}</span>
+                  </div>`,
+                )
+                .join("")}</pre>
+            </div>`;
+          })
+          .join("");
+      }
+      function renderValidationSummary() {
+        const findings = [...(audit.validation.errors || []), ...(audit.validation.warnings || [])];
+        if (findings.length === 0) {
+          els.validationPanel.innerHTML = `<div class="notice"><span class="muted">Validation has no recorded findings. Add mappings, then run validate to check coverage.</span></div>`;
+          return;
+        }
+        const shown = findings.slice(0, 20);
+        els.validationPanel.innerHTML = `${shown
+          .map(
+            (finding) => `<div class="notice ${escapeHtml(finding.severity)}">
+              <strong>${escapeHtml(finding.severity)} ${escapeHtml(finding.code)}</strong>
+              <div>${escapeHtml(finding.message)}</div>
+            </div>`,
+          )
+          .join("")}${findings.length > shown.length ? `<div class="notice"><span class="muted">${findings.length - shown.length} more finding(s) not shown.</span></div>` : ""}`;
       }
       function renderValidationPanel(mapping) {
         const findings = findingsForMapping(mapping);

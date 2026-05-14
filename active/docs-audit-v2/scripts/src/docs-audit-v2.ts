@@ -1128,7 +1128,7 @@ async function renderHtml(data: AuditData): Promise<string> {
   const templatePath = path.resolve(path.dirname(scriptPath), "../../assets/audit-viewer.html");
   const template = await readFile(templatePath, "utf8");
   const payload = JSON.stringify(data).replace(/</g, "\\u003c");
-  return template.replace("__AUDIT_JSON__", payload);
+  return template.replace("__AUDIT_JSON__", () => payload);
 }
 
 function destinationLabel(mapping: BlockMapping): string {
