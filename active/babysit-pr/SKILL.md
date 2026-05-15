@@ -26,6 +26,8 @@ At each poll:
 1. Poll GitHub for new PR activity since the last baseline:
    - Issue comments and reviews from `gh pr view <pr> --json comments,reviews,reviewDecision,mergeStateStatus,mergeable,baseRefName,headRefName,headRefOid`.
    - Inline review threads through GraphQL `pullRequest.reviewThreads`, including unresolved, non-outdated threads and requested changes.
+   - When starting on an existing PR, do not ignore older unresolved bot or reviewer comments just because they predate the loop. Re-evaluate comments with concrete file/line findings against the current head; if the finding still applies, treat it as actionable. If it is fixed by the current head, record it as superseded and continue.
+   - After every new pushed head, re-check prior actionable comments before starting or continuing the quiet-green window. A green CI run is not enough when an older concrete review finding still applies.
    - Branch merge conflicts: treat `mergeStateStatus` of `DIRTY` or `mergeable` of `CONFLICTING` as a PR branch conflict.
    - Other blocked merge states.
 2. Poll CI for the current head SHA:
@@ -37,7 +39,7 @@ At each poll:
    - Use `trigger:check-ci` from `../dev.shortcuts/SKILL.md` when checks need deeper Buildkite/provider classification.
    - For failed, errored, cancelled, or clearly stuck rollup checks, inspect the leaf check/job log before classifying relatedness. Prefer the check details URL or job id; use `gh run view <run-id> --job <job-id> --log` or the provider CI equivalent when available. If `gh` cannot write to its default cache location, set `XDG_CACHE_HOME` to a writable temp directory for the log fetch. Treat rollup status names as pointers, not evidence.
 3. Classify issues:
-   - New actionable comments, requested changes, or unresolved review threads are GitHub issues.
+   - New actionable comments, requested changes, unresolved review threads, or older still-applicable concrete findings are GitHub issues.
    - PR branch conflicts are conflict issues.
    - Failed, errored, cancelled, or clearly stuck latest checks are build issues only after leaf log evidence shows a concrete failure. If the latest leaf job is still running or logs are unavailable because CI has not produced them yet, keep the check pending/running and continue polling.
    - Pending/running latest checks are not build issues, but they do not count toward the quiet-green window.
