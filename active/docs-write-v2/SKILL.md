@@ -1,5 +1,5 @@
 ---
-name: openclaw-docs
+name: docs-write-v2
 description: Write or review high-quality OpenClaw developer documentation.
 dependencies: []
 ---
@@ -99,6 +99,9 @@ Write in a direct, practical voice:
 - Use present tense and active voice.
 - Address the reader as "you" when giving instructions.
 - Prefer short paragraphs and scannable lists.
+- Use tables only when cells stay compact. If a row needs multi-line
+  explanation or would wrap beyond about three rendered lines, use subsections,
+  accordions, or a list instead.
 - Use concrete nouns: "agent profile", "Gateway webhook", "plugin manifest", "session state".
 - Put caveats exactly where they affect the step.
 - Avoid marketing language, hype, generic benefits, and vague claims.
@@ -121,6 +124,8 @@ Use precise modal language:
 - Use "can" for optional capability.
 - Use "recommended" for the default path.
 - Use "avoid" for known footguns.
+- Preserve source emphasis on limiting words such as **only**, **must**, and
+  **not** when the emphasis carries a real constraint.
 - Explain "why" only when it changes a developer decision.
 
 ## Detail Level
@@ -132,6 +137,11 @@ Vary detail by page type:
 - Guides: be complete for one workflow; include decisions, side effects, and failure handling.
 - References: be exhaustive; document every field, default, enum, nullable value, constraint, response, and error.
 - Troubleshooting: be explicit; assume the reader is blocked and needs observable checks.
+
+Troubleshooting rows should diagnose one observable symptom at a time. Keep the
+check and fix tied to that symptom; do not combine unrelated causes or add new
+troubleshooting cases during a slimming pass unless they preserve source
+material or cover a common failure readers need.
 
 Go deep where mistakes are expensive:
 
@@ -232,3 +242,9 @@ Edit in this order:
 6. Check examples for copy-paste accuracy.
 7. Add links between guide, reference, SDK, testing, and troubleshooting surfaces.
 8. Check discoverability, addressability, accessibility, and docs-as-code verification.
+9. Check that tables remain readable; split dense rows into sections, accordions,
+   or lists.
+10. Keep product-limit, detect-only, and diagnostic caveats out of happy-path
+    instructions unless they affect setup success.
+11. Verify important source constraints, rationale, and emphasis survived unless
+    source evidence proves they are obsolete.
