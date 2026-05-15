@@ -7,6 +7,15 @@ Instructions:
 
 Create a to-do list with the following items then perform all of them:
 
+If the user says to keep the current worktree, branch, or checkout for post-merge work, treat that as an explicit cleanup override:
+
+- Merge the remote PR only.
+- Do not switch the current worktree to `main`.
+- Do not remove any local worktree.
+- Do not delete the local branch.
+- Do not use `--delete-branch` unless the user separately asks to delete the remote branch.
+- You may `git fetch origin main` after the merge to refresh `origin/main`, but leave the current checkout in place.
+
 1. Determine whether the current branch has an open remote PR.
    - If a remote PR exists, run `trigger:merge-pr-basic`.
    - If no remote PR exists, merge the current local branch into local `main` instead.
@@ -20,6 +29,7 @@ Create a to-do list with the following items then perform all of them:
    - Push local `main` changes after reconciliation when a remote is configured and pushing is appropriate for the repo.
 
 3. Clean up the merged branch aggressively.
+   - Skip this entire cleanup section when the user explicitly asked to keep the current worktree, branch, or checkout for post-merge work.
    - Treat remote merge and branch cleanup as separate checks for linked-worktree branches; do not assume `gh pr merge --delete-branch` completed every local and remote cleanup step just because the PR merged.
    - If `merge-pr-basic` returns a local branch-deletion failure caused only by `branch ... used by worktree`, verify whether the PR already merged before deciding that step 1 failed.
    - When the PR already merged, continue directly into cleanup instead of retrying the merge command.
