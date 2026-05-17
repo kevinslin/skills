@@ -55,11 +55,19 @@ Run `fin [context]`.
 - Follow `specy`'s layout rule: active specs live directly under `$DOCS_ROOT/specs/`.
 - Only treat files directly under `$DOCS_ROOT/specs/` as active specs. Ignore files already under `$DOCS_ROOT/specs/.archive/`.
 - Also support folder specs when the workspace uses a folder schema such as `ag-dir-v2`: an active spec folder lives directly under `$DOCS_ROOT/specs/<spec-slug>/` and contains `spec.md`, with optional sidecars such as `checklist.md` or `data/`. Treat the folder as the active spec unit, not only `spec.md`.
+- If the completed work is a milestone or sidecar inside an active folder spec,
+  do not archive the parent folder unless the parent spec itself is complete. If
+  sibling milestones remain, record that the milestone landed and leave the
+  parent folder spec active.
 - If multiple active specs exist, archive only the one that directly matches the completed task and leave unrelated active specs untouched.
 - If no active spec exists for this task, state that explicitly and continue.
 
 3. Mark the spec complete and archive it
 - Update the active spec so its status clearly reflects completion before moving it. For folder specs, update the folder's `spec.md`.
+- For a completed milestone or sidecar inside an otherwise active folder spec,
+  mark or report only that milestone as complete when the file has a clear
+  status field or checklist. Do not move the parent folder into `.archive/`
+  until the whole folder spec is complete.
 - Preserve the existing filename for single-file specs and the existing folder name for folder specs.
 - Move the completed spec to `$DOCS_ROOT/specs/.archive/`, creating the directory if needed. For folder specs, move the whole folder so sidecars such as `checklist.md` and `data/` stay with the completed spec.
 - Follow `specy`'s convention exactly: when a single-file spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
@@ -192,6 +200,8 @@ Run `fin [context]`.
 - Do not try to remove the current live worktree from inside itself; switch to another checkout first.
 - Do not report final success while local `main` still points behind the landed result unless the user explicitly says not to refresh or verify it.
 - Do not invent a parallel spec layout; use the `specy` convention already present in the workspace.
+- Do not archive an active parent folder spec just because a milestone sidecar
+  inside it landed; leave the parent active while sibling milestones remain.
 - Do not archive only `spec.md` when the active spec uses a folder schema. Move the entire spec folder so checklist, data, and other sidecars remain attached.
 - Do not suppress `ag-learn` output just because the task was straightforward; run it and report either the proposals or the explicit no-learning result.
 
@@ -201,7 +211,10 @@ Run `fin [context]`.
 - If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
 - The chosen or detected context was locked once and respected throughout the flow.
 - Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, unless the matching PR was already merged; any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
-- Matching active spec, if any, is marked complete and moved to `$DOCS_ROOT/specs/.archive/`; folder specs were moved as whole folders.
+- Matching active spec, if any, is marked complete and moved to
+  `$DOCS_ROOT/specs/.archive/`; folder specs were moved as whole folders only
+  when the parent spec was complete, and milestone or sidecar completions inside
+  still-active parent specs were recorded without archiving the parent.
 - Unrelated active specs remain untouched.
 - `~/.fin.yaml` was checked, parsed or explicitly handled as malformed, and any workspace entry matching the non-worktree checkout root was applied before linked-worktree removal.
 - In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
