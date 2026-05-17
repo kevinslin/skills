@@ -13,16 +13,21 @@ Use this workflow to review code with a bias toward simplicity and correctness.
 3. Check complexity and design.
    - Identify unnecessary abstractions, indirection, or branching.
    - Propose concrete simplifications such as deletion, inlining, or narrower scope.
-4. Check failure modes and risk.
+4. Check for dead code and stale surface.
+   - Look for unreachable branches, obsolete compatibility shims, abandoned helpers, duplicate implementations, unused parameters, stale feature flags, and outdated docs/tests/config left behind by the change.
+   - Verify likely dead code with call-site, import/export, route, config, CLI, migration, or serialization searches before recommending deletion.
+   - Treat public APIs, persisted data shapes, migrations, plugin/tool contracts, and documented CLI behavior as possible compatibility contracts; call out the contract before proposing removal.
+   - Prefer concrete deletion follow-ups: file/symbol to remove, tests to update, and any compatibility note needed.
+5. Check failure modes and risk.
    - Describe how the code could fail in production through inputs, scale, or partial failure.
    - Note regressions or backward-compatibility risks.
-5. Sketch a simpler rewrite when useful.
+6. Sketch a simpler rewrite when useful.
    - Prefer clarity and robustness over flexibility.
-6. Create or update a flow doc when the review needs one.
+7. Create or update a flow doc when the review needs one.
    - Use `$specy` under `$ROOT_DIR/prs/`.
    - Capture PR context, key files touched, execution/data flow, major risks, and open questions.
    - Use a stable PR-based filename when possible, for example `<pr-number>-<slug>.md`.
-7. For PR review loops, verify the remote gate before handoff.
+8. For PR review loops, verify the remote gate before handoff.
    - Confirm the current PR head SHA after every push or amend.
    - Inspect current checks, actionable comments/reviews, and unresolved non-outdated review threads.
    - Do not report the loop as finished while required checks are failed/pending or review items remain.
