@@ -51,6 +51,17 @@ Do not treat a rewrite as permission to discard behavior facts. Preserve,
 verify, move, or explicitly retire existing material. Incorrect docs are worse
 than verbose docs.
 
+Before rewriting, lock the page's reader contract in one sentence:
+
+- Who is this page for?
+- What should the reader be able to do after reading it?
+- Which adjacent audiences or workflows are explicitly out of scope?
+
+Use that contract to reject scope creep. Maintainer-only architecture,
+implementation details, rare debugging, and exhaustive references do not belong
+in a happy-path guide unless the reader needs them to complete the page's stated
+workflow.
+
 Prefer this split:
 
 - Topic or guide pages cover the 80/20 path, decisions readers must make, safe
@@ -68,8 +79,10 @@ that asks for audit-grade preservation:
 1. Capture the directive.
    Record the target docs, source docs, desired page type, rewrite goals,
    non-negotiable constraints, related reference/troubleshooting destinations,
-   and whether details may move out of the target page. Run `pnpm docs:list`
-   when available so the target and related pages are discoverable.
+   whether details may move out of the target page, and the one-sentence reader
+   contract that defines the page's audience, outcome, and out-of-scope
+   workflows. Run `pnpm docs:list` when available so the target and related
+   pages are discoverable.
 2. Start the refactor and audit together.
    Load `docs-write-v2`, then use `docs-audit-v2` to scaffold the source and
    destination set. Record the audit artifact paths, source base ref, source doc
@@ -147,6 +160,8 @@ become `audit.json` and `mapping-patch.json`, not just informal notes. Include:
 - Examples, expected output, command routing tables, and cross-links.
 - Rationale, decision framing, and emphasized modal constraints such as
   **only**, **must**, and **not**.
+- Structured source blocks such as tabs, card groups, checklists, numbered
+  operational lists, comparison tables, and next-step sections.
 
 For each fact, choose one outcome:
 
@@ -154,6 +169,19 @@ For each fact, choose one outcome:
 - Move it to a specific existing page.
 - Move it to a specific new page.
 - Delete it because current source proves it is obsolete or out of scope.
+
+For each structured source block, choose one outcome:
+
+- Preserve the structure and wording because it is already clear.
+- Preserve the structure but update only the facts that source-of-truth checks
+  require.
+- Move the whole block to a specific destination page.
+- Replace the structure only when the reader contract makes the old shape wrong,
+  and record why.
+
+Default to preserving useful source structure. Do not collapse numbered
+operational lists into prose, split paired tabs, rewrite clear checklists, or
+remove guided next-step cards unless there is a concrete reader benefit.
 
 Do not infer defaults, permissions, policy, timeout behavior, or safety posture
 from names or intent. Verify them.
@@ -239,17 +267,22 @@ Rewrite in this order:
 
 1. Make the first screen answer what the reader can do and why this page exists.
 2. Put the recommended path before alternatives.
-3. Keep only decision-making and common operational detail in the main flow.
-4. Move exhaustive tables and rare details to the planned reference pages.
-5. Preserve concise routing tables when they help readers choose commands,
+3. Apply the reader contract before adding or keeping material: keep only the
+   audience, outcome, decisions, and common operational detail needed for this
+   page.
+4. Move maintainer-only architecture, implementation detail, exhaustive tables,
+   and rare details to the planned reference pages.
+5. Preserve source tabs, checklists, numbered operational lists, card groups,
+   and next-step sections when they still serve the reader better than prose.
+6. Preserve concise routing tables when they help readers choose commands,
    config paths, harnesses, plugins, providers, or references.
-6. Add troubleshooting from observable symptoms, not internal guesses.
-7. Link related concepts, guides, references, diagnostics, and adjacent tools.
-8. Move product-limit, detect-only, and diagnostic caveats to troubleshooting or
+7. Add troubleshooting from observable symptoms, not internal guesses.
+8. Link related concepts, guides, references, diagnostics, and adjacent tools.
+9. Move product-limit, detect-only, and diagnostic caveats to troubleshooting or
    diagnostics unless they affect the setup step itself.
-9. Replace dense tables with sections, accordions, or lists when rows need more
+10. Replace dense tables with sections, accordions, or lists when rows need more
    than compact lookup text.
-10. Preserve the source page's reason-for-existence and decision rationale when
+11. Preserve the source page's reason-for-existence and decision rationale when
     they help readers choose the right path.
 
 Add `doc-schema-version: 1` to the YAML frontmatter of every docs page that the
@@ -268,6 +301,11 @@ After editing, compare the old and new page:
 - Confirm all behavior-sensitive facts were kept, moved, or intentionally
   deleted with source-backed reason.
 - Check that the main page still covers the 80/20 scenario end to end.
+- Check that the page still obeys the locked reader contract and has not pulled
+  adjacent maintainer, architecture, reference, or rare-debugging workflows back
+  into the main reader path.
+- Check that source tabs, checklists, numbered operational lists, card groups,
+  and next-step sections were preserved or have an explicit reason for changing.
 - Check that reference pages remain exhaustive for the scope they claim.
 - Check that links from the target page reach moved details.
 - Check that headings are stable, searchable, and action-oriented.

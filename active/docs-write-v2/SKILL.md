@@ -39,18 +39,35 @@ Choose the page type before writing:
 - Testing guide: show sandbox setup, fixtures, test data, simulated failures, and live-mode differences.
 - Troubleshooting guide: map symptoms to checks, causes, and fixes.
 
+Prefer this heading vocabulary across OpenClaw docs unless existing adjacent
+page precedent or the user's explicit instruction says otherwise:
+
+- Overview: give context for what the page is about. This does not need an
+  explicit heading when the opening paragraph already does the job.
+- Requirements: what needs to be done before starting.
+- Quickstart: how to get started.
+- Configuration: common configuration options.
+- Troubleshooting: how to get out of failures.
+- Related: links to guides, references, commands, concepts, and adjacent topics.
+
+Subpages can override these defaults when a narrower workflow, reference, or
+section pattern needs a more specific outline.
+
 Use this default topic page structure:
 
 1. Title: name the major entity or surface.
-2. Overview: explain what it is, what it owns, and what it does not own.
+2. Overview: explain what it is, what it owns, and what it does not own. Use
+   this opening to extract or update the page description; do not add a separate
+   description section.
 3. Requirements: include only when setup needs specific accounts, versions,
    permissions, plugins, operating systems, or credentials.
 4. Quickstart: show the recommended setup path and smallest reliable verification.
 5. Configuration: show the minimum configuration needed to use the surface,
    common variants users must choose between, and where each option is set:
    CLI, config file, environment variable, plugin manifest, dashboard, or API.
-6. Subtopics: organize the entity's major concepts, workflows, and decisions by
-   reader intent.
+6. Major subtopic section: organize the entity's major concepts, workflows, and
+   decisions by reader intent. Use a specific section title instead of
+   "Subtopics" when the subtopic has a clear domain name.
 7. Troubleshooting: diagnose common observable failures.
 8. Related: link to guides, references, commands, concepts, and adjacent topics.
 
@@ -67,14 +84,18 @@ page is itself the reference.
 Use this default guide structure:
 
 1. Title: name the outcome, not the implementation detail.
-2. Opening: state what the reader can accomplish in one or two sentences.
-3. Before you begin: list accounts, keys, permissions, versions, tools, and assumptions.
+2. Overview: state what the reader can accomplish in one or two sentences. This
+   does not need an explicit heading when the opening paragraph is clear.
+3. Requirements: list accounts, keys, permissions, versions, tools, and assumptions.
 4. Choose a path: compare options only when the reader must decide.
-5. Steps: use verb-led headings with code, expected output, and checks.
-6. Test: show the smallest reliable proof that the integration works.
-7. Production readiness: cover security, idempotency, retries, limits, observability, migrations, and cleanup.
+5. Steps: use verb-led headings with code, expected output, and checks. Do not
+   use "Quickstart" as a guide section heading; guides use "Steps" for the
+   workflow procedure.
+6. Tests: show the smallest reliable proof that the integration works.
+7. Production readiness: include when deployment, security, idempotency, retries,
+   limits, observability, migrations, or cleanup affect safe operation.
 8. Troubleshooting: include common errors near the workflow that causes them.
-9. See also: link to concepts, API references, SDK docs, and adjacent guides.
+9. Related: link to concepts, API references, SDK docs, and adjacent guides.
 
 Keep navigation user-intent based. Do not force readers to understand internal product taxonomy before they can pick a task.
 
