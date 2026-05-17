@@ -60,6 +60,52 @@ Prefer this split:
 - Troubleshooting pages start from observable symptoms and map to checks,
   causes, and fixes.
 
+## End-to-End Refactor Loop
+
+Use this loop for major doc rewrites, moved-section refactors, and any request
+that asks for audit-grade preservation:
+
+1. Capture the directive.
+   Record the target docs, source docs, desired page type, rewrite goals,
+   non-negotiable constraints, related reference/troubleshooting destinations,
+   and whether details may move out of the target page. Run `pnpm docs:list`
+   when available so the target and related pages are discoverable.
+2. Start the refactor and audit together.
+   Load `docs-write-v2`, then use `docs-audit-v2` to scaffold the source and
+   destination set. Record the audit artifact paths, source base ref, source doc
+   order, destination doc order, and `mapping-patch.json` location before
+   rewriting.
+3. Rewrite while maintaining mappings.
+   Edit the docs according to the refactor plan and update
+   `mapping-patch.json` as material moves, merges, or becomes intentionally
+   removed. Do not wait until the end to reconstruct preservation from memory.
+4. Run the initial audit.
+   Run the audit CLI through `map`, `hydrate`, `validate`, and `render`. Inspect
+   the Markdown report and viewer, not just the command exit status.
+5. Fix the initial audit issues.
+   For each issue, decide whether it needs a docs edit, a destination add, a
+   destination reindex, a mapping fix, an intentional-removal row, or source
+   evidence proving the old line obsolete. Rerun `map`, `hydrate`, `validate`,
+   and `render` until the mechanical audit is clean.
+6. Run line-by-line semantic review with subagents.
+   For each source page, assign one subagent to account for every source line
+   against the current destination docs and hydrated audit. The subagent must
+   report whether each source line is preserved, moved, redundant, obsolete, or
+   still missing, with exact destination evidence or a concrete justification.
+7. Loop on subagent findings.
+   Integrate every actionable finding into the docs, mappings, or intentional
+   removal rationale. Reindex changed destinations, rerun the audit CLI, and
+   repeat the per-source-page semantic review until no subagent reports
+   remaining preservation, structure, or clarity issues.
+8. Finalize with verification and a preservation report.
+   Run the smallest reliable docs checks, record the final audit artifacts, list
+   moved or intentionally removed material, and report any behavior-sensitive
+   claims that could not be verified.
+
+Do not treat the first clean validation result as final semantic signoff. For a
+major rewrite, the workflow is complete only after the audit validates and the
+per-source-page line review has no actionable findings.
+
 ## Workflow
 
 ### 1. Load the doc standard
@@ -99,6 +145,8 @@ become `audit.json` and `mapping-patch.json`, not just informal notes. Include:
   credentials, and account requirements.
 - Error messages, troubleshooting symptoms, diagnostics, and recovery steps.
 - Examples, expected output, command routing tables, and cross-links.
+- Rationale, decision framing, and emphasized modal constraints such as
+  **only**, **must**, and **not**.
 
 For each fact, choose one outcome:
 
@@ -197,6 +245,12 @@ Rewrite in this order:
    config paths, harnesses, plugins, providers, or references.
 6. Add troubleshooting from observable symptoms, not internal guesses.
 7. Link related concepts, guides, references, diagnostics, and adjacent tools.
+8. Move product-limit, detect-only, and diagnostic caveats to troubleshooting or
+   diagnostics unless they affect the setup step itself.
+9. Replace dense tables with sections, accordions, or lists when rows need more
+   than compact lookup text.
+10. Preserve the source page's reason-for-existence and decision rationale when
+    they help readers choose the right path.
 
 Add `doc-schema-version: 1` to the YAML frontmatter of every docs page that the
 refactor migrates, creates, or materially rewrites. Apply it only to docs page
@@ -217,11 +271,30 @@ After editing, compare the old and new page:
 - Check that reference pages remain exhaustive for the scope they claim.
 - Check that links from the target page reach moved details.
 - Check that headings are stable, searchable, and action-oriented.
+- Check that troubleshooting did not grow beyond the source or common reader
+  failures without a clear reason.
+- Check that dense lookup material still has a readable shape; do not compress
+  multi-paragraph explanations into table cells.
 
 If the refactor deliberately removes relevant material, say where it went or why
 it was removed in the final report.
 
-### 9. Verify
+### 9. Apply reviewer feedback
+
+When reviewer feedback changes the rewrite, update the docs and audit together:
+
+- Do not treat review edits as prose-only. Reindex, remap, and validate affected
+  audit mappings.
+- If feedback asks for less detail, classify removed source detail as redundant,
+  intentionally moved, or intentionally removed instead of marking broad coverage.
+- Keep troubleshooting item count the same or lower during slimming refactors
+  unless source material or common reader failures require more.
+- Preserve source rationale and important modal emphasis unless source evidence
+  proves they are obsolete.
+- Run an independent semantic audit after multiple feedback rounds on a major
+  rewrite. A clean schema validation is not semantic signoff.
+
+### 10. Verify
 
 Run the smallest reliable docs checks for the touched surface:
 
