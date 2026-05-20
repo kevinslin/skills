@@ -17,6 +17,7 @@
         --yellow: #ffd33d;
         --red: #ff8585;
         --audit-page-min-height: 100vh;
+        --topbar-height: 4.25rem;
       }
       * {
         box-sizing: border-box;
@@ -42,17 +43,61 @@
       .app {
         display: grid;
         grid-template-columns: minmax(22rem, 34rem) minmax(0, 1fr);
-        min-height: var(--audit-page-min-height);
+        min-height: calc(var(--audit-page-min-height) - var(--topbar-height));
         min-width: 0;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        min-height: var(--topbar-height);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1.5rem;
+        border-bottom: 1px solid var(--line);
+        background: rgba(7, 11, 18, 0.94);
+        backdrop-filter: blur(18px);
+      }
+      .topbar-title {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
+      }
+      .topbar-title strong {
+        font-size: 1.35rem;
+        line-height: 1;
+      }
+      .version {
+        border: 1px solid rgba(112, 183, 255, 0.16);
+        border-radius: 0.65rem;
+        padding: 0.18rem 0.55rem;
+        color: #d7ebff;
+        background: rgba(112, 183, 255, 0.1);
+        font-weight: 750;
+      }
+      .topbar-controls {
+        margin-left: auto;
+        min-width: min(28rem, 48vw);
+        justify-content: flex-end;
+      }
+      .topbar-controls .segmented {
+        width: min(28rem, 48vw);
+      }
+      .topbar-controls .segmented button {
+        flex: 1;
+        padding: 0.55rem 0.85rem;
+        font-weight: 700;
       }
       aside {
         border-right: 1px solid var(--line);
         background: rgba(9, 14, 22, 0.92);
         min-width: 0;
         min-height: 0;
-        height: 100vh;
+        height: calc(100vh - var(--topbar-height));
         position: sticky;
-        top: 0;
+        top: var(--topbar-height);
         display: flex;
         flex-direction: column;
       }
@@ -283,9 +328,9 @@
         scrollbar-gutter: stable;
       }
       .destination-pane {
-        height: calc(100vh - 2rem);
+        height: calc(100vh - var(--topbar-height) - 2rem);
         position: sticky;
-        top: 1rem;
+        top: calc(var(--topbar-height) + 1rem);
       }
       .range-title {
         display: flex;
@@ -355,6 +400,21 @@
         background: rgba(255, 211, 61, 0.1);
       }
       @media (max-width: 980px) {
+        :root {
+          --topbar-height: 7.25rem;
+        }
+        .topbar {
+          position: sticky;
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .topbar-controls {
+          margin-left: 0;
+          min-width: 0;
+        }
+        .topbar-controls .segmented {
+          width: 100%;
+        }
         .app,
         .panes {
           grid-template-columns: 1fr;
@@ -380,6 +440,18 @@
     <script>
       window.__AUDIT_DATA__ = __AUDIT_JSON__;
     </script>
+    <nav class="topbar" aria-label="Audit viewer display">
+      <div class="topbar-title">
+        <strong>Docs Audit</strong>
+        <span class="version">V2</span>
+      </div>
+      <div class="topbar-controls row">
+        <span class="segmented" aria-label="Mapping display mode">
+          <button id="mappingBlockMode" type="button">Mapping block mode</button>
+          <button id="mappingLineMode" type="button">Mapping line mode</button>
+        </span>
+      </div>
+    </nav>
     <div class="app">
       <aside>
         <header>
@@ -445,6 +517,7 @@
         docId: audit.sourceDocs[0]?.id,
         selectedId: resolveFragment(location.hash ? location.hash.slice(1) : "") || audit.mappings[0]?.id,
         mode: audit.mappings.length ? "block" : "doc",
+        mappingMode: "block",
         wrap: true,
         sidebarSearch: "",
         paneSearch: "",
@@ -453,6 +526,8 @@
         title: document.getElementById("title"),
         meta: document.getElementById("meta"),
         pageSelect: document.getElementById("pageSelect"),
+        mappingBlockMode: document.getElementById("mappingBlockMode"),
+        mappingLineMode: document.getElementById("mappingLineMode"),
         blockMode: document.getElementById("blockMode"),
         docMode: document.getElementById("docMode"),
         wrapToggle: document.getElementById("wrapToggle"),
@@ -524,6 +599,9 @@
       function rowBySourceId(mapping, sourceId) {
         return mapping.mapping.find((row) => row.sourceId === sourceId);
       }
+      function allSourceLines() {
+        return audit.sourceDocs.flatMap((d) => d.blocks).flatMap((b) => b.lines);
+      }
       function mappingForLine(lineId) {
         return audit.mappings.find((mapping) => mapping.mapping.some((row) => row.sourceId === lineId));
       }
@@ -544,6 +622,34 @@
       }
       function destDoc(docId) {
         return audit.destDocs.find((doc) => doc.id === docId);
+      }
+      function destinationLines(entry) {
+        if (entry.kind === "external") return [];
+        const doc = destDoc(entry.docId);
+        if (!doc) return [];
+        if (entry.lineIds.length) {
+          return entry.lineIds.map((lineId) => lineForId(doc, lineId)).filter(Boolean);
+        }
+        return doc.blocks.filter((block) => entry.blockIds.includes(block.id)).flatMap((block) => block.lines);
+      }
+      function destinationEntries(mapping) {
+        const entries = [];
+        for (const row of mapping.mapping) {
+          for (const entry of row.dest) entries.push({ row, entry });
+        }
+        return entries;
+      }
+      function entryStatusBadges(row, entry) {
+        return `${badge(row.status)}${badge(row.action, "action")}${entry.mappingKind === "block-fallback" ? badge("block-fallback") : ""}${entry.stale ? badge("stale", "missing") : ""}`;
+      }
+      function entryNotice(entry) {
+        if (entry.stale) {
+          return `<div class="notice error stale"><strong>stale-destination-entry</strong><div>${escapeHtml(entry.stale.message)}</div></div>`;
+        }
+        if (entry.mappingKind === "block-fallback") {
+          return `<div class="notice warning fallback"><strong>block fallback</strong><div>This range is broad fallback evidence, not exact line proof.</div></div>`;
+        }
+        return "";
       }
       function choose(id) {
         const resolved = resolveFragment(id) || id;
@@ -625,6 +731,8 @@
         ].join("");
         els.blockMode.classList.toggle("active", state.mode === "block");
         els.docMode.classList.toggle("active", state.mode === "doc");
+        els.mappingBlockMode.classList.toggle("active", state.mappingMode === "block");
+        els.mappingLineMode.classList.toggle("active", state.mappingMode === "line");
         els.wrapToggle.classList.toggle("active", state.wrap);
         els.wrapToggle.textContent = state.wrap ? "Wrap on" : "Wrap off";
         document.body.classList.toggle("nowrap", !state.wrap);
@@ -818,10 +926,14 @@
           .join("");
       }
       function renderDestPane(mapping) {
-        const entries = [];
-        for (const row of mapping.mapping) {
-          for (const entry of row.dest) entries.push({ row, entry });
+        const entries = destinationEntries(mapping);
+        if (state.mappingMode === "block") {
+          renderDestPaneGrouped(mapping, entries);
+          return;
         }
+        renderDestPaneByLine(mapping, entries);
+      }
+      function renderDestPaneByLine(mapping, entries) {
         els.destCount.textContent = `${entries.length} destination entr${entries.length === 1 ? "y" : "ies"}`;
         if (entries.length === 0) {
           els.destPane.innerHTML = `<div class="range"><div class="range-title">No destination</div><pre>${escapeHtml(mapping.justification)}</pre></div>`;
@@ -832,18 +944,10 @@
             if (entry.kind === "external") {
               return `<div class="range"><div class="range-title"><span>External reference ${badge(row.status)}${badge(row.action, "action")}</span><span>${escapeHtml(entry.label)}</span></div><pre>${mark(entry.justification)}</pre></div>`;
             }
-            const doc = destDoc(entry.docId);
-            const lines = entry.lineIds.length
-              ? entry.lineIds.map((lineId) => lineForId(doc, lineId)).filter(Boolean)
-              : doc.blocks.filter((block) => entry.blockIds.includes(block.id)).flatMap((block) => block.lines);
-            const sourceLine = audit.sourceDocs.flatMap((d) => d.blocks).flatMap((b) => b.lines).find((line) => line.id === row.sourceId);
+            const lines = destinationLines(entry);
+            const sourceLine = allSourceLines().find((line) => line.id === row.sourceId);
             const changed = entry.changedSinceBase;
-            const entryBadges = `${badge(row.status)}${badge(row.action, "action")}${entry.mappingKind === "block-fallback" ? badge("block-fallback") : ""}${entry.stale ? badge("stale", "missing") : ""}`;
-            const entryNotice = entry.stale
-              ? `<div class="notice error stale"><strong>stale-destination-entry</strong><div>${escapeHtml(entry.stale.message)}</div></div>`
-              : entry.mappingKind === "block-fallback"
-                ? `<div class="notice warning fallback"><strong>block fallback</strong><div>This range is broad fallback evidence, not exact line proof.</div></div>`
-                : "";
+            const entryBadges = entryStatusBadges(row, entry);
             const body = changed
               ? `<div class="diff-meta">diff view from ${escapeHtml(row.sourceId)}</div>
                 <pre><div class="line diff-del"><span class="lineno">${sourceLine?.line ?? ""}</span><span>- ${mark(sourceLine?.text ?? "")}</span></div>${lines
@@ -857,11 +961,86 @@
                 <span>${changed ? "Diff view" : "Related reference"} ${entryBadges}</span>
                 <span>${escapeHtml(entry.range.path)}:${entry.range.startLine}-${entry.range.endLine}</span>
               </div>
-              ${entryNotice}
+              ${entryNotice(entry)}
               ${body}
             </div>`;
           })
           .join("");
+      }
+      function renderDestPaneGrouped(mapping, entries) {
+        if (entries.length === 0) {
+          els.destCount.textContent = "0 destination page groups";
+          els.destPane.innerHTML = `<div class="range"><div class="range-title">No destination</div><pre>${escapeHtml(mapping.justification)}</pre></div>`;
+          return;
+        }
+        const groups = [];
+        const byKey = new Map();
+        for (const item of entries) {
+          const entry = item.entry;
+          const key =
+            entry.kind === "external"
+              ? `external:${entry.id}`
+              : `${entry.kind}:${entry.docId}:${entry.range?.path ?? ""}`;
+          if (!byKey.has(key)) {
+            const group = { key, kind: entry.kind, docId: entry.docId, path: entry.range?.path || entry.label || "external reference", items: [] };
+            byKey.set(key, group);
+            groups.push(group);
+          }
+          byKey.get(key).items.push(item);
+        }
+        els.destCount.textContent = `${groups.length} destination page group${groups.length === 1 ? "" : "s"}`;
+        els.destPane.innerHTML = groups
+          .map((group) => {
+            if (group.kind === "external") {
+              return group.items
+                .map(({ row, entry }) => `<div class="range"><div class="range-title"><span>External reference ${badge(row.status)}${badge(row.action, "action")}</span><span>${escapeHtml(entry.label)}</span></div><pre>${mark(entry.justification)}</pre></div>`)
+                .join("");
+            }
+            const changed = group.items.some(({ entry }) => entry.changedSinceBase);
+            const statuses = [...new Set(group.items.flatMap(({ row }) => [row.status, row.action]))]
+              .map((value) => badge(value, actionsIncludes(value) ? "action" : ""))
+              .join("");
+            const ranges = group.items
+              .map(({ entry }) => entry.range)
+              .filter(Boolean)
+              .reduce(
+                (acc, range) => ({
+                  path: range.path,
+                  startLine: Math.min(acc.startLine, range.startLine),
+                  endLine: Math.max(acc.endLine, range.endLine),
+                }),
+                { path: group.path, startLine: Number.POSITIVE_INFINITY, endLine: 0 },
+              );
+            const notices = group.items.map(({ entry }) => entryNotice(entry)).filter(Boolean).join("");
+            const body = changed
+              ? `<div class="diff-meta">diff view grouped by destination page from ${group.items.length} mapped line${group.items.length === 1 ? "" : "s"}</div>
+                <pre>${group.items
+                  .map(({ row, entry }) => {
+                    const sourceLine = allSourceLines().find((line) => line.id === row.sourceId);
+                    const destLines = destinationLines(entry);
+                    return `<div class="line diff-del"><span class="lineno">${sourceLine?.line ?? ""}</span><span>- ${mark(sourceLine?.text ?? "")}</span></div>${destLines
+                      .map((line) => `<div class="line diff-add"><span class="lineno">${line.line}</span><span>+ ${mark(line.text || " ")}</span></div>`)
+                      .join("")}`;
+                  })
+                  .join("")}</pre>`
+              : `<div class="diff-meta">related references grouped by destination page from ${group.items.length} mapped line${group.items.length === 1 ? "" : "s"}</div>
+                <pre>${group.items
+                  .flatMap(({ entry }) => destinationLines(entry))
+                  .map((line) => `<div class="line"><span class="lineno">${line.line}</span><span>${mark(line.text || " ")}</span></div>`)
+                  .join("")}</pre>`;
+            return `<div class="range">
+              <div class="range-title">
+                <span>${changed ? "Diff view" : "Related reference"} ${statuses}</span>
+                <span>${escapeHtml(ranges.path)}:${Number.isFinite(ranges.startLine) ? ranges.startLine : ""}-${ranges.endLine || ""}</span>
+              </div>
+              ${notices}
+              ${body}
+            </div>`;
+          })
+          .join("");
+      }
+      function actionsIncludes(value) {
+        return ["retained", "moved", "paraphrased", "split", "merged", "generated", "external", "intentionally-removed"].includes(value);
       }
       let pageHeightFrame = 0;
       function updatePageMinHeight() {
@@ -888,6 +1067,16 @@
         state.docId = els.pageSelect.value;
         state.selectedId = mappingsForDoc(currentDoc())[0]?.id || audit.mappings[0]?.id;
         render();
+      });
+      els.mappingBlockMode.addEventListener("click", () => {
+        state.mappingMode = "block";
+        renderSelected();
+        renderSidebar();
+      });
+      els.mappingLineMode.addEventListener("click", () => {
+        state.mappingMode = "line";
+        renderSelected();
+        renderSidebar();
       });
       els.blockMode.addEventListener("click", () => {
         state.mode = "block";

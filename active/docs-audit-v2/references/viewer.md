@@ -53,6 +53,8 @@ The viewer must support:
 
 - Source page selection.
 - Block mode and doc mode.
+- Pinned horizontal mapping display switch with block mode grouped by
+  destination page and line mode grouped by individual mapped line.
 - Mapping/action/status/confidence badges.
 - URL fragment persistence for selected source block or mapping.
 - Copyable source and destination text.
