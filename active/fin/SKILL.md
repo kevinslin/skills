@@ -13,17 +13,22 @@ Use this skill at the end of a task before the final user-facing report.
 
 ## Context Selection
 
-Run `fin [context]`.
+Run `fin [context] [target]`.
 
 - `gh`: finalize from a GitHub PR context. Use this when the task should land by merging the current remote PR or when the matching PR already merged and only cleanup/final verification remains. The original `fin` workflow maps to this context.
 - `local`: finalize from a local checkout. Use this when the task should land directly from local git state without depending on GitHub PR state.
+- `[target]`: optional for `gh` only. Accept a PR number, PR URL, or branch name. Examples: `fin gh 85117`, `fin gh https://github.com/owner/repo/pull/85117`.
 - If the current checkout is detached `HEAD`, treat that as a preflight issue, not a valid finalization state. Create a short-lived local branch from the current commit before auto-detecting context, checking mergeability, or attempting worktree cleanup.
 - If the argument is `gh` or `local`, respect it throughout the flow. Do not silently switch later just because repo state would make the other path easier.
+- If `gh` has an explicit `[target]`, lock that PR target before current-branch detection. Use the target PR as the source of truth for state, mergeability, comments, checks, spec matching, merge, and automation cleanup.
+- If the user omits `[target]` but the immediately preceding active heartbeat or delayed-merge instruction names exactly one PR and the user asks to merge, finalize, ignore a waiting period, or ignore a proof gate, treat that PR as an explicit `gh` target after one live PR-state check. Report the target source as `heartbeat automation`.
+- If an explicit `gh` target does not match the current branch, do not silently fall back to the current branch's PR. Either run the remote-PR finalization path for that explicit target, or stop with a target mismatch before any spec archival, branch cleanup, or merge.
 - If the argument is omitted, detect the context from the current branch before any archival or landing work:
   - Choose `gh` when the current branch has an open or already-merged PR that corresponds to the branch being finalized.
   - Choose `local` when the current branch has no matching PR and the work should land directly from local git state.
 - If the argument is present but not one of `gh` / `local`, stop and ask the user which context to use.
 - Report whether the finalization context was explicitly provided or auto-detected.
+- Before reporting any PR status or blocker, print one target identity line: `Target: PR #<number>, branch <headRefName>, source=<current checkout|explicit user PR|heartbeat automation>`. When multiple PRs have been mentioned in the session, prefix every PR-specific state claim with the PR number.
 
 ## Shared Workflow
 
@@ -35,31 +40,38 @@ Run `fin [context]`.
 - If `~/.fin.yaml` exists but cannot be parsed, do not treat the parse failure as "no hooks". Report the parser error separately and inspect the raw file. Continue only when the raw content is clearly non-executable, unambiguous context; if it might contain commands, hooks, destructive instructions, or ambiguous cleanup requirements, stop before spec archival, landing cleanup, or linked-worktree removal and report the malformed config as the blocker.
 - Match `workspace[].path` against the normalized non-worktree checkout root for the branch's repository, not against a transient linked worktree path. Resolve symlinks and trailing slashes before comparing.
 - If a matching `~/.fin.yaml` workspace entry exists, record its `instructions` and apply them after the PR merge / already-merged confirmation or local landing succeeds, but before removing any linked worktree. This preserves ignored or untracked files that may need to be copied out of the soon-to-be-removed worktree.
+- Also treat matching `~/.fin.yaml` instructions as routing context for active spec discovery. If the instructions mention a `$specy`, `$mem`, or `.mem` artifact root, derive candidate docs roots from that instruction before falling back to the default docs root.
 - If `~/.fin.yaml` is missing or no workspace entry matches the non-worktree checkout root, state that no repo-specific final hooks applied and continue.
 - If the checkout is detached `HEAD`, create a temporary local branch from the current commit first. Prefer the repo's normal task-branch prefix when one exists, otherwise use a short `codex/` branch name derived from the task.
 - After converting detached `HEAD` into a named branch, lock that branch identity for the rest of the run. Do not continue finalization from anonymous detached state.
 - When the user omitted the context, lock the detected context once and use it for the rest of the run. Do not re-detect after archiving or mid-landing.
+- When the user provided, or the heartbeat handoff implied, an explicit PR target, lock that PR number, head branch, and target source once. Do not replace it with the current checkout's PR because the current checkout is different or easier to operate from.
 - Do not silently switch contexts after selection. If the user requested `gh`, do not fall back to local-only landing. If the user requested `local`, do not silently land via PR merge just because a PR exists.
-- For `gh`, identify the current PR and check its state before testing mergeability or attempting any merge command.
-- For `gh`, identify any active PR babysit/watch automation for the same PR or branch when automation state is visible. Record its id so it can be updated or deleted after the PR lands.
-- If the current PR is already merged, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
-- For `gh`, when the current PR is still open, confirm it is mergeable against `main` or its base branch.
+- For `gh` without an explicit target, identify the current PR and check its state before testing mergeability or attempting any merge command.
+- For `gh` with an explicit target, identify that target PR directly with GitHub before consulting current-branch PR state. If the current checkout points at another PR, report the mismatch in the target identity line and ignore the other PR unless it blocks local cleanup.
+- For `gh`, identify any active PR babysit/watch automation for the target PR or branch when automation state is visible. Record its id so it can be updated or deleted after the PR lands.
+- If the target PR is already merged, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
+- For `gh`, when the target PR is still open, confirm it is mergeable against `main` or its base branch.
 - For `local`, confirm the current branch is mergeable into local `main`.
-- If the `gh` flow is blocked only by base-branch conflicts, run `trigger:fix-pr-conflict` and let it try to restore a clean merge state.
-- If the `gh` flow is blocked by broader PR issues, or conflict repair needs a fuller pass, run `trigger:fix-pr`.
+- If the `gh` flow is blocked only by base-branch conflicts, run `trigger:fix-pr-conflict` against the locked target PR and let it try to restore a clean merge state.
+- If the `gh` flow is blocked by broader PR issues, or conflict repair needs a fuller pass, run `trigger:fix-pr` against the locked target PR.
 - If the `local` flow is blocked only by trunk drift, run `trigger:sync-branch` or otherwise rebase the current branch onto the merge target before retrying the check.
 - Continue only after mergeability is confirmed or the matching PR is already merged. If repair cannot restore a mergeable state, stop and report the blockage instead of archiving the spec or landing the change.
 
 2. Resolve the active spec
-- Respect `DOCS_ROOT` when it is configured; otherwise default to `./docs`.
-- Follow `specy`'s layout rule: active specs live directly under `$DOCS_ROOT/specs/`.
-- Only treat files directly under `$DOCS_ROOT/specs/` as active specs. Ignore files already under `$DOCS_ROOT/specs/.archive/`.
-- Also support folder specs when the workspace uses a folder schema such as `ag-dir-v2`: an active spec folder lives directly under `$DOCS_ROOT/specs/<spec-slug>/` and contains `spec.md`, with optional sidecars such as `checklist.md` or `data/`. Treat the folder as the active spec unit, not only `spec.md`.
+- Build an ordered list of candidate docs roots:
+  - First, use `DOCS_ROOT` when it is configured.
+  - Next, if the matching `~/.fin.yaml` instructions mention an absolute `.mem` artifact root for `$specy`, `$mem`, or notes, add `<that-root>/main` when the instruction points at `.mem`, or the path itself when it already points at `.mem/main`.
+  - Finally, default to `./docs`.
+- Only use candidate roots that exist or whose parent exists and is clearly the intended workspace artifact root. Report the selected spec root when a matching spec is found.
+- Follow `specy`'s layout rule for each candidate root: active specs live directly under `$DOCS_ROOT/specs/`.
+- Only treat files directly under a candidate `$DOCS_ROOT/specs/` as active specs. Ignore files already under `$DOCS_ROOT/specs/.archive/`.
+- Also support folder specs when the workspace uses a folder schema such as `ag-dir-v2`: an active spec folder lives directly under a candidate `$DOCS_ROOT/specs/<spec-slug>/` and contains `spec.md`, with optional sidecars such as `checklist.md` or `data/`. Treat the folder as the active spec unit, not only `spec.md`.
 - If the completed work is a milestone or sidecar inside an active folder spec,
   do not archive the parent folder unless the parent spec itself is complete. If
   sibling milestones remain, record that the milestone landed and leave the
   parent folder spec active.
-- If multiple active specs exist, archive only the one that directly matches the completed task and leave unrelated active specs untouched.
+- If multiple active specs exist across candidate roots, archive only the one that directly matches the completed task and leave unrelated active specs untouched.
 - If no active spec exists for this task, state that explicitly and continue.
 
 3. Mark the spec complete and archive it
@@ -76,12 +88,14 @@ Run `fin [context]`.
 ## `gh` Context Workflow
 
 4. Merge the PR
-- Before running a merge command, check the current PR state with GitHub. If the PR is already `MERGED`, do not run `trigger:merge-pr`; record the merge commit or merged-at details when available and proceed as an already-landed PR.
-- If the PR is not already merged, run `trigger:merge-pr` immediately after the matching spec has been marked complete and archived.
+- Before running a merge command, check the target PR state with GitHub. If the PR is already `MERGED`, do not run `trigger:merge-pr`; record the merge commit or merged-at details when available and proceed as an already-landed PR.
+- If the PR is not already merged and the target PR belongs to the current branch, run `trigger:merge-pr` immediately after the matching spec has been marked complete and archived.
+- If the PR is not already merged and the explicit target PR does not belong to the current branch, use a target-aware remote merge for that PR, such as `gh pr merge <target>`, after the matching spec has been marked complete and archived. Do not use current-branch merge shortcuts for a different PR.
 - Treat the merge as part of finalization, not a follow-up option.
 - If the merge command reports that the local branch cannot be deleted because it is still attached to a linked worktree, check whether the remote PR actually merged before treating the step as failed.
 - When the PR merged remotely but local branch deletion failed only because of the linked worktree attachment, treat that as a successful merge followed by incomplete cleanup and continue with worktree removal from another checkout.
 - If there is no matching PR to merge, state that explicitly instead of claiming the task fully landed.
+- For an explicit target PR that is not checked out locally, skip local branch/worktree cleanup unless the target branch is present in a local worktree or the user explicitly requested cleanup. It is acceptable to merge the remote PR, refresh local `main`, delete matching automation, and report that no local target checkout cleanup was applicable.
 
 5. Remove the merged worktree
 - Before removing any linked worktree, run any matching repo-specific final hooks from `~/.fin.yaml`. Treat these hooks as part of finalization; if they fail, stop before deleting the worktree and report the exact blockage.
@@ -156,6 +170,7 @@ Run `fin [context]`.
 8. Report the finished state
 - State which context ran: `gh` or `local`.
 - State whether that context was explicitly requested or auto-detected from current-branch PR state.
+- For `gh`, state the target identity line with PR number, branch, and source before reporting mergeability, checks, blockers, merge, or cleanup. If another PR was also present in the current checkout, explicitly state that it was not the finalization target.
 - State whether the mergeability check passed directly, was skipped because the PR was already merged, or required `fix-pr-conflict` / `fix-pr` / `sync-branch` / manual repair.
 - State whether a spec was archived and include the source and destination paths when applicable.
 - For `gh`, state whether the PR was already merged and `merge-pr` was skipped, or whether `merge-pr` ran successfully, including whether the remote merge succeeded directly or required separate post-merge worktree cleanup because local branch deletion failed.
@@ -208,6 +223,8 @@ Run `fin [context]`.
 ## Done Checklist
 
 - `fin` was run with either an explicit `gh` / `local` argument or no argument and a context auto-detected from current-branch PR state.
+- In `gh` mode, any explicit PR number, PR URL, branch target, or heartbeat-derived PR target was locked before current-branch PR detection and reused for every PR-state, mergeability, merge, automation, and cleanup decision.
+- Every PR status or blocker report included a target identity line with PR number, branch, and source; when multiple PRs were mentioned, every PR-specific claim was labeled with the PR number.
 - If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
 - The chosen or detected context was locked once and respected throughout the flow.
 - Current branch or PR was checked for mergeability against `main` or its base branch before spec archival, unless the matching PR was already merged; any detected conflicts were handled with `trigger:fix-pr-conflict`, `trigger:fix-pr`, `trigger:sync-branch`, or an equivalent local repair flow.
