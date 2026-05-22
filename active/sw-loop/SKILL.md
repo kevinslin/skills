@@ -125,6 +125,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
   the exact failure and treat the swarm run as incomplete.
 - Write a flow doc for the implementation. Store it in the `$mem`-resolved active spec folder when using `schemas` `ag-dir-v2`, and report the selected base plus concrete path in the handoff.
 - Kick of $babysit-pr after the PR is pushed
+- Create a flow doc that goes over the primary logic path that this pr exercises using $specy skill
 - $slack-notify me with alert once pr is green
 
 ## Manager Rules
@@ -140,3 +141,4 @@ or unclear ownership, bubble it up for human review instead of guessing.
 Only finish when the spec, implementation, review follow-up, verify track, and
 PR push are all resolved, or when the ambiguity/plan-review gate explicitly
 requires stopping for user input.
+
