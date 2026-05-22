@@ -11,6 +11,14 @@ Resolve the active session id in this order:
 3. `../ag-ledger/scripts/ag-ledger session-id`, resolved relative to this `SKILL.md` directory
 4. `dev.llm-session`
 
+Use an allowlisted lookup for environment-derived ids:
+
+```bash
+printf '%s\n' "$CODEX_THREAD_ID"
+```
+
+Do not run broad environment dumps such as `env`, `printenv`, or prefix greps for `OPENAI`, `SESSION`, or `TOKEN`; they can expose provider keys or other secrets in tool output.
+
 Use the sibling `ag-ledger` script fallback when `ag-ledger` is not on `PATH`.
 
 ## Parent And Forked Sessions
