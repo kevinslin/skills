@@ -52,7 +52,8 @@ When any conflict issue is found:
 1. Capture a short evidence summary: PR, head SHA, base branch, head branch, `mergeStateStatus`, `mergeable`, and any GitHub merge-conflict URL.
 2. Invoke `trigger:fix-pr-conflict` from `../dev.shortcuts/SKILL.md` with the PR and conflict evidence.
 3. After the conflict fix flow completes, refresh the PR head SHA and reset the quiet-green timer.
-4. Return to the 2-minute polling loop.
+4. If the conflict repair dropped or skipped any commit, scan the PR title/body against the current diff before restarting CI polling. Remove or update stale claims for changes no longer present on the PR branch.
+5. Return to the 2-minute polling loop.
 
 When any GitHub or build issue is found:
 
