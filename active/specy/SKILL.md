@@ -67,8 +67,19 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `./references/[doc-type]/template.md` to the requested output location before filling in content.
 4. For in-place doc types (currently FAQ Specs), use the template as an insertion snippet instead of creating a new file.
-5. Before finalizing any created or revised document, resolve the current agent session id via `$dev.llm-session` and replace the changelog placeholder with the real session id.
+5. Before finalizing any created or revised document, resolve the current agent session id via `$dev.llm-session` and replace the changelog timestamp and session placeholders. Changelog timestamps must include date, hour, and minute in `YYYY-MM-DD HH:MM` format.
 6. For links that point to files inside the current repo, prefer repo-relative markdown targets instead of absolute local checkout or worktree paths. Do not emit `/Users/...` or similar machine-local link targets under `$DOCS_ROOT` unless the document is intentionally pointing outside the repo.
+
+### Manual Notes Preservation
+
+Before editing an existing document, search for a `## Manual Notes` section and any preservation marker such as `[keep this for the user to add notes. do not change between edits]`.
+
+When such a section exists:
+
+1. Treat the entire `## Manual Notes` section body as user-owned content.
+2. Do not modify, reflow, move, remove, or append inside that section.
+3. Keep status, checklist, implementation, review, and changelog edits outside the section.
+4. After editing, verify the `## Manual Notes` heading and preserved marker/body are unchanged. If the diff touches that section, revert that part before handoff unless the user explicitly asked to edit manual notes.
 
 ### Flow Docs in Isolated Scope (Core vs Topic vs Reference)
 
@@ -123,10 +134,10 @@ changelog shape. Keep the Manual Notes content unchanged across edits.
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
-- [date]: [description of update] ([agent session id] - (current git sha))
+- [YYYY-MM-DD HH:MM]: [description of update] ([agent session id] - (current git sha))
 ```
 
-For the session id, use `dev.llm-session` to find the current conversation session id. Choose the lookup strategy that matches the active thread, and do not leave placeholder text such as `[agent session id]` or `[codex session id]` in a completed document.
+For the changelog timestamp, use the current local date and time to the minute. For the session id, use `dev.llm-session` to find the current conversation session id. Choose the lookup strategy that matches the active thread, and do not leave placeholder text such as `[agent session id]` or `[codex session id]` in a completed document.
 
 ## Shortcuts
 

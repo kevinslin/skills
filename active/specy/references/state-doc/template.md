@@ -150,4 +150,4 @@ Terminal output:
 
 ## Changelog
 
-- [date]: [description of update] ([agent session id])
+- [YYYY-MM-DD HH:MM]: [description of update] ([agent session id])

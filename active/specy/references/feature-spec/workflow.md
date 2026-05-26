@@ -35,7 +35,7 @@
 16. Simplify where possible: remove redundant phases, prefer existing contracts and seams, avoid storing derived values without consumers, and use one strong section over many thin ones.
 17. When editing an existing spec, preserve `## Manual Notes` unless the user explicitly asks to change it.
 18. Keep in-progress specs under `$DOCS_ROOT/specs/`. When the spec is complete, move it to `$DOCS_ROOT/specs/.archive/` without renaming it.
-19. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
+19. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff. Use a changelog timestamp with date, hour, and minute in `YYYY-MM-DD HH:MM` format.
 
 ## Authoring Requirements
 

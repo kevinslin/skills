@@ -262,4 +262,4 @@ Use this section to be honest about weak spots.
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
-- [date]: [description of update] ([agent session id] - (current git sha))
+- [YYYY-MM-DD HH:MM]: [description of update] ([agent session id] - (current git sha))

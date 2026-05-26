@@ -23,7 +23,7 @@
 4. Fill in the doc using source-backed details from code and docs (not guesses).
 5. If migration/parity is involved, add a dedicated parity audit section with explicit file-level follow-ups.
 6. Keep in-progress specs under `$DOCS_ROOT/specs/`. When the spec is complete, move it to `$DOCS_ROOT/specs/.archive/` without renaming it.
-7. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
+7. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff. Use a changelog timestamp with date, hour, and minute in `YYYY-MM-DD HH:MM` format.
 
 ## Required for Implementation Handoff
 

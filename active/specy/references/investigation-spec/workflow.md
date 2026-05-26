@@ -34,7 +34,7 @@
 9. If the investigation is turning into implementation work, add an `Implementation Handoff` section or create a linked feature spec. Do not treat diagnostic vocabulary as the implementation contract by default.
 10. When the fix changes data/API/CLI/config/migration output, the handoff feature spec must include `Existing Contract Snapshot`, `Target Decision Table`, and `Minimal Model Check` from the feature-spec workflow.
 11. Keep in-progress specs under `$DOCS_ROOT/specs/`. When the spec is complete, move it to `$DOCS_ROOT/specs/.archive/` without renaming it.
-12. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
+12. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff. Use a changelog timestamp with date, hour, and minute in `YYYY-MM-DD HH:MM` format.
 
 ## Authoring Requirements
 

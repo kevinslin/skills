@@ -83,7 +83,7 @@ A flow doc is PR-scoped when the user asks for a PR flow doc, provides a PR URL/
 11. Fill `## Observability` with metrics and logs, or `None identified`.
 12. Fill `## Related docs` with related flow docs, architecture docs, specs, design docs, PR docs, and debugging notes.
 13. Keep `## Manual Notes` unchanged.
-14. Add a `## Changelog` entry with the current date and resolved session id.
+14. Add a `## Changelog` entry with the current timestamp in `YYYY-MM-DD HH:MM` format and resolved session id.
 15. Scan markdown links and convert repo-internal absolute local paths to repo-relative targets.
 16. Run validator from this skill root:
     - `python3 ./scripts/validate_flow_doc.py --kind flow-doc --doc "$DOCS_ROOT/flows/{flow-name}.md"`
@@ -95,7 +95,7 @@ A flow doc is PR-scoped when the user asks for a PR flow doc, provides a PR URL/
 2. Preserve `## Manual Notes` exactly.
 3. Prefer targeted additive edits unless the existing doc is structurally wrong.
 4. Re-read current source for any code paths being changed or corrected.
-5. Update `updated`, `last_updated_session`, and `## Changelog`.
+5. Update `updated`, `last_updated_session`, and `## Changelog`; changelog entries must use `YYYY-MM-DD HH:MM` timestamps.
 6. Re-run the flow-doc validator before handoff.
 
 ## Pre-Handoff Checklist

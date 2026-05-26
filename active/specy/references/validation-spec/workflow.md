@@ -21,7 +21,7 @@
 3. Copy `./references/validation-spec/template.md` to %%OUTPUT_FILE.
 4. Fill in validation status and remaining manual checks based on current implementation and tests.
 5. Keep in-progress specs under `$DOCS_ROOT/specs/`. When the spec is complete, move it to `$DOCS_ROOT/specs/.archive/` without renaming it.
-6. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff.
+6. Resolve the current agent session id via `dev.llm-session` and include it in the `## Changelog` entry before handoff. Use a changelog timestamp with date, hour, and minute in `YYYY-MM-DD HH:MM` format.
 
 ## Authoring Requirements
 

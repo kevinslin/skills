@@ -132,4 +132,4 @@ Manual checks:
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
-- [date]: [description of update] ([agent session id])
+- [YYYY-MM-DD HH:MM]: [description of update] ([agent session id])
