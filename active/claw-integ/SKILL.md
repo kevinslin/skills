@@ -24,6 +24,25 @@ Run a live integration proof through the requested claw gateway profile and capt
 
 Do not use Showboat to wrap existing unit tests. The proof must exercise the expected behavior through the live gateway/TUI or the closest repo-supported live gateway client path.
 
+When testing exec or plugin approvals, read `./references/approvals.md` before starting the live run.
+
+When testing Signal channel delivery or Signal-backed approvals, read `./references/signal.md` before starting the live run.
+
+## Approval Proof Matrix
+
+When the live run tests exec or plugin approval delivery, create a row-by-row proof matrix before triggering requests. The proof is incomplete until every user-requested row is either observed with artifacts or recorded with a specific blocker.
+
+Include rows for the relevant approval family and channel states:
+
+- delivery enabled: request is delivered to the expected channel surface.
+- reaction or native action: the requested decision resolves as expected.
+- manual `/approve`: `allow-always` or any requested slash-command fallback works when applicable.
+- delivery disabled: no approval request is delivered to that channel and fallback is not suppressed.
+- unauthorized actor: the attempted reaction/action does not resolve the approval.
+- negative reaction/input: unsupported reactions or stale inputs do not resolve the approval when the user asked for that case.
+
+For each row, record the exact command or live action, expected result, observed result, raw artifact path, and screenshot/photo path when the user asks for visual proof. Do not summarize the approval suite as complete from unit tests alone.
+
 ## Profile Selection
 
 1. Resolve the OpenClaw repo root.
@@ -132,6 +151,20 @@ ffprobe -v error -select_streams v:0 \
 
 If `ffmpeg` is unavailable, screen-recording permission is blocked, or recording would expose unrelated private content, save blocker evidence under `raw/`, keep the non-video Showboat proof intact, and report the gap directly.
 
+## Inline Screenshot Proof
+
+For live integration proof, the conversation itself must include image proof, not only a path, PR link, video, or Showboat artifact.
+
+Capture at least one still screenshot of the actual channel surface being tested and store it under `<proof-root>/raw/`:
+
+- TUI or terminal proof: capture the tmux pane or terminal window showing the tested prompt/result.
+- WhatsApp, Telegram, Slack, Discord, Matrix, browser, or app proof: capture the real channel/app surface showing the tested message, approval, reaction, reply, or resolved state.
+- Approval proof: include both the approval request and the visible resolved/denied/allowed state when feasible.
+
+Before final handoff, show that screenshot inline in the thread using the chat surface's supported image mechanism. If a local path will not render inline, upload or attach the redacted screenshot through an approved artifact/image path and embed that image. The final answer must also name the saved raw screenshot path.
+
+If screenshot capture or inline display is blocked, the integration proof is incomplete for user-facing purposes. Save blocker evidence under `raw/`, state the blocker directly, and do not imply that full proof was shown inline.
+
 ## Showboat Proof
 
 Use `../showboat-v2/SKILL.md` for every `$claw-integ` run.
@@ -161,8 +194,9 @@ The proof must include:
 4. The live gateway/TUI invocation or gateway request that exercises the behavior.
 5. A deterministic summary of the observed result.
 6. Video proof and `ffprobe` metadata under `raw/`, or explicit blocker evidence if video capture was not feasible.
-7. Raw nondeterministic output under `raw/`, not embedded directly in a way that breaks `showboat verify`.
-8. A final `uvx showboat verify <proof-root>/raw/showboat-summary.md` pass.
+7. At least one still screenshot of the tested channel surface under `raw/`, plus inline display of that screenshot in the conversation before final handoff.
+8. Raw nondeterministic output under `raw/`, not embedded directly in a way that breaks `showboat verify`.
+9. A final `uvx showboat verify <proof-root>/raw/showboat-summary.md` pass.
 
 When the output includes timestamps, temp paths, session ids, event ids, or stochastic model text, save raw output under `raw/` and capture a stable summary command in the verified Showboat summary.
 
@@ -192,6 +226,7 @@ The run is complete only when:
 - the claw gateway for that profile was used
 - the requested behavior was exercised live
 - ffmpeg video proof was captured under `raw/`, or a video-capture blocker was saved there
+- a still screenshot of the tested channel surface was saved under `raw/` and shown inline in the conversation, or a screenshot/inline-display blocker was saved and reported
 - the `showboat-v2` proof directory was materialized and filled
 - `uvx showboat verify <proof-root>/raw/showboat-summary.md` passed
 - the final answer reports the proof directory, profile used, observed result, and any untested gaps
