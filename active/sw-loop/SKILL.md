@@ -41,6 +41,10 @@ changes.
 - Store the checklist in a temporary folder for all other workflows.
 - Include every required gate: spec, spec review, implementation, review swarm,
   review fixes, verification, PR push, and any user-requested stopping condition.
+- Translate explicit user completion requirements into checklist rows before starting.
+  If the user names a live proof suite, negative cases, inline screenshots, CI green,
+  a PR push, or a "do not stop until" condition, those are required rows, not optional
+  follow-up notes.
 - Check off items one by one as each gate is actually complete. Do not bulk-check
   items at the end.
 - Do not consider the loop done until every checklist item is checked off.
@@ -114,6 +118,11 @@ or unclear ownership, bubble it up for human review instead of guessing.
   of `$dev.loop`.
 - Require that verification covers the plan tests plus any checks added because of
   review findings.
+- For live approval/channel suites, require the verifier to report each requested
+  scenario row separately as passed, blocked, or not run, with the artifact or
+  screenshot path for that row when visual proof was requested.
+- Do not summarize a multi-row suite as complete from one positive scenario, unit
+  tests, or synthetic debug helpers when the user requested live end-to-end proof.
 - Do not treat verification as implicit. It is a dedicated track with its own owner.
 
 ### 6. Push PR
@@ -141,4 +150,3 @@ or unclear ownership, bubble it up for human review instead of guessing.
 Only finish when the spec, implementation, review follow-up, verify track, and
 PR push are all resolved, or when the ambiguity/plan-review gate explicitly
 requires stopping for user input.
-
