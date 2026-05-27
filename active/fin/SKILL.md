@@ -50,8 +50,10 @@ Run `fin [context] [target]`.
 - For `gh` without an explicit target, identify the current PR and check its state before testing mergeability or attempting any merge command.
 - For `gh` with an explicit target, identify that target PR directly with GitHub before consulting current-branch PR state. If the current checkout points at another PR, report the mismatch in the target identity line and ignore the other PR unless it blocks local cleanup.
 - For `gh`, identify any active PR babysit/watch automation for the target PR or branch when automation state is visible. Record its id so it can be updated or deleted after the PR lands.
+- If the task includes a requested external notification after green CI, such as Slack or another chat notice, track that notification as a separate finalization gate from PR mergeability and CI. Check notification prerequisites when feasible, such as required local credential files or configured CLIs, and record any missing prerequisite as a notification blocker, not as a CI failure.
 - If the target PR is already merged, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
 - For `gh`, when the target PR is still open, confirm it is mergeable against `main` or its base branch.
+  - If GraphQL or `gh pr view` reports `UNKNOWN`/indeterminate mergeability while checks and reviews otherwise look green, poll the REST pull-request endpoint once or twice for `mergeable` and `mergeable_state` before invoking conflict repair. Treat REST `mergeable: true` with `mergeable_state: clean` as the mergeability confirmation; treat repeated `null`/unknown as indeterminate and wait or report it.
 - For `local`, confirm the current branch is mergeable into local `main`.
 - If the `gh` flow is blocked only by base-branch conflicts, run `trigger:fix-pr-conflict` against the locked target PR and let it try to restore a clean merge state.
 - If the `gh` flow is blocked by broader PR issues, or conflict repair needs a fuller pass, run `trigger:fix-pr` against the locked target PR.
@@ -179,6 +181,7 @@ Run `fin [context] [target]`.
 - For `gh`, state whether any PR babysit/watch automation was found and whether it was deleted, already absent, or blocked.
 - If branch deletion required squash/rebase merge proof, state the PR head SHA, merge commit, and local `main` containment check used as the cleanup proof.
 - State whether the local `main` checkout was updated or verified successfully and identify the resulting `main` tip when relevant.
+- State any requested external notification result separately from CI and merge state. If notification delivery is blocked by missing credentials, unavailable CLIs, or channel configuration, say that directly without describing the PR as not green.
 - If the remote PR landed but local `main` refresh was blocked by unrelated dirty changes, call that out as `partial local cleanup`: include the merge commit, the dirty-main error, which cleanup steps did complete, and which local branch or verification step was intentionally deferred.
 - State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
 - If `local` pushed `main`, state whether the push succeeded. If it intentionally remained local-only, say that explicitly.
@@ -214,6 +217,7 @@ Run `fin [context] [target]`.
 - Do not silently ignore malformed `~/.fin.yaml`; a parse failure is a finalization preflight issue unless raw content is clearly non-executable and unambiguous. Never delete a linked worktree while malformed fin config might contain unrun hooks or cleanup instructions.
 - Do not try to remove the current live worktree from inside itself; switch to another checkout first.
 - Do not report final success while local `main` still points behind the landed result unless the user explicitly says not to refresh or verify it.
+- Do not reclassify a green PR or passing CI as blocked because a Slack/chat/desktop notification could not be sent. Report notification failures as auxiliary notification blockers with the missing prerequisite.
 - Do not invent a parallel spec layout; use the `specy` convention already present in the workspace.
 - Do not archive an active parent folder spec just because a milestone sidecar
   inside it landed; leave the parent active while sibling milestones remain.
@@ -239,6 +243,7 @@ Run `fin [context] [target]`.
 - If a linked worktree was about to be removed, remaining tracked, untracked, and ignored changes in that worktree were discarded with `git reset --hard` and `git clean -fdx` after final hooks ran and before `git worktree remove`.
 - Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere; unrelated named worktrees and branches were left untouched.
 - Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
+- Requested external notifications, if any, were attempted or explicitly skipped with a separate notification blocker; notification failures were not described as CI failures.
 - For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
 - The local `main` checkout was refreshed or verified to include the landed work before the task was reported complete.
 - `$ag-learn` has been run.
