@@ -29,15 +29,22 @@ Use this skill to turn agent mistakes, repeated friction, or useful workflow dis
 3. Inspect enough durable evidence to understand the friction.
    - Good evidence: transcript excerpts, rollout JSONL, PR comments, diffs, logs, generated artifacts, command output, saved learn notes.
    - If transcript forensics are needed, read `./references/session-forensics.md`.
-4. Decide whether the issue should change a skill.
+4. Rank candidate learnings by prominence before choosing what to save or apply.
+   - Prefer issues that recur across the session, required user correction, caused rework, or crossed skill boundaries.
+   - Do not choose only the most recent failure unless the requested source is explicitly narrow.
+   - Collapse timebound incidents into the durable workflow gap behind them. For example, "one PR had stale mergeability" should become a reusable finalization rule only if the evidence shows a general GitHub-state handling gap.
+   - De-prioritize one-off environmental flakes, temporary CI behavior, and already-fixed implementation details unless they reveal a reusable skill gap.
+5. Decide whether the issue should change a skill.
    - Optimize an existing skill when the workflow already has a clear home.
    - Propose a new skill when repeated work has no clean home.
    - Use `none` when the lesson is too situational or not skill-shaped.
-5. Read the target skill or shortcut source before judging the gap.
+6. Read the target skill or shortcut source before judging the gap.
    - For skill changes, follow `../sc/SKILL.md` and edit only the canonical source tree.
    - For `trigger:<shortcut>` cases, resolve the shortcut through `../dev.shortcuts/SKILL.md` before classifying the mistake.
-6. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
-7. Save a learn note only when the user asks for persistence, the finding should be reused, or the run is review/code/formal mode.
+7. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
+   - When the user asks to scan an entire conversation or session, include a short candidate-friction ranking in the saved note coverage so the selected issues are auditable.
+   - If a selected improvement is already covered by an existing skill, report it as already addressed and do not create a duplicate proposed change.
+8. Save a learn note only when the user asks for persistence, the finding should be reused, or the run is review/code/formal mode.
    - Before creating or updating any saved note under `LEARN_ROOT`, read `./references/templates.md`.
    - Saved notes must follow the durable note template from `templates.md`; the compact output format below is only for the user-facing summary.
    - Before reporting the saved path, verify the note contains `## Evidence Inspected`, `## Coverage`, `## Known Gaps`, at least one `## [number] Improvement Opportunity`, and `### Routing`.
