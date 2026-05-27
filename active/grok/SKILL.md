@@ -42,7 +42,7 @@ Mission:
 Trace the behavior end to end. Start breadth-first across docs, code, tests, config, logs, and prior memory. Then go depth-first on the most promising leads until you can explain the exact mechanism.
 
 Authority:
-- You may add temporary debug statements when useful.
+- You may add temporary debug statements when useful unless explicitly told not to.
 - You may run commands, tests, local repros, and integration checks.
 - You may use available UI/browser/computer-use tools when real product behavior must be observed.
 - You may use relevant integration skills or harnesses when live behavior matters.
