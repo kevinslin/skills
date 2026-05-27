@@ -107,6 +107,17 @@ The selected base `root` is the authoritative filesystem root for that operation
 8. Use the optional base skill's rules for all domain-specific navigation, search, file creation, edits, deletes, and citations when configured; otherwise keep all such operations under `root`. The selected base `root` and resolved schemas remain the source of truth for paths and structure.
 9. Keep the final response concise: name the base, the knowledge base, what changed or what was found, and cite touched files when local-file citations are required. For nontrivial schema routing, root-correctness questions, or any path repair, report the selected base root, the concrete written file, and the schema node separately so base-root selection is auditable.
 
+## Protected Sections
+
+Existing knowledge files may contain user-owned sections. Before editing any existing Markdown file, search for `## Manual Notes` and preservation text such as `[keep this for the user to add notes. do not change between edits]`.
+
+When a protected manual-notes section exists:
+
+- Treat the section body as user-owned content.
+- Do not modify, reflow, move, remove, or append inside it unless the user explicitly asks to edit manual notes.
+- Put status, checklist, implementation, review, and changelog updates outside that section.
+- After editing, verify the diff does not touch that section. If it does, revert only that part before handoff.
+
 ## Finding Knowledge Bases
 
 Treat the knowledge-base argument as either a file-like target or a search query:
