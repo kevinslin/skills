@@ -21,15 +21,21 @@ Required:
 Optional:
 
 - Scorecard path. If absent, find a nearby `reports/maturity-scorecard.md`.
-- Output directory. If absent, write beside the scorecard.
+- Output directory. If absent, create a surface subfolder beside the scorecard.
 - Existing surface report or component notes to update.
+
+OpenClaw default:
+
+- Scorecard path:
+  `docs/kevinslin/maturity-scorecard/maturity-scorecard.md`.
+- Report root: `<surface-slug>/` in the same directory as the scorecard.
 
 Default output names:
 
 - Main report: `<surface-slug>-feature-matrix.md`.
 - Component notes: `<surface-slug>-feature-matrix.<component-slug>.md`.
-- If the user asks for a subfolder, place both the main report and notes inside
-  `<surface-slug>/` and keep the same filenames.
+- Place both the main report and notes inside `<surface-slug>/` and keep the
+  same filenames unless the user gives an explicit output directory.
 
 Worked example shape: the Gateway audit used
 `.mem/main/specs/25-lts-release-placeholder/reports/gateway-runtime-websocket-feature-matrix.md`
@@ -39,12 +45,16 @@ plus one note per feature family.
 
 1. Resolve source and target.
    - If the user gives a scorecard path, use it.
-   - Otherwise search from the current repo for `reports/maturity-scorecard.md`.
+   - Otherwise use `docs/kevinslin/maturity-scorecard/maturity-scorecard.md`.
+     If that path is missing, search from the current repo for
+     `reports/maturity-scorecard.md`.
    - Read the scorecard and locate the requested surface. If multiple rows
      match, ask one concise question.
    - Derive a stable lowercase slug by replacing non-alphanumeric runs with
      `-`, trimming leading/trailing dashes, and keeping established local slug
      spelling if an existing report uses it.
+   - By default, write reports under `<scorecard-dir>/<surface-slug>/`. Use a
+     different output root only when the user provides one.
    - Lock the canonical output root once. If the user later says a public docs
      or maintainer-docs copy is now the source of truth, copy the full artifact
      set there and make all subsequent edits against that new root only.
