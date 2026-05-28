@@ -1,0 +1,5 @@
+{
+  "DOCS_ROOT": "~/code/openai/0/notes",
+  "STATE_ROOT": "~/.llm/skills/slack-report",
+  "INITIAL_LOOKBACK_HOURS": 24
+}
