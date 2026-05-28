@@ -28,6 +28,8 @@ When testing exec or plugin approvals, read `./references/approvals.md` before s
 
 When testing Signal channel delivery or Signal-backed approvals, read `./references/signal.md` before starting the live run.
 
+When testing iMessage or SMS-backed approvals, read `./references/imessage.md` before starting the live run.
+
 ## Approval Proof Matrix
 
 When the live run tests exec or plugin approval delivery, create a row-by-row proof matrix before triggering requests. The proof is incomplete until every user-requested row is either observed with artifacts or recorded with a specific blocker.
