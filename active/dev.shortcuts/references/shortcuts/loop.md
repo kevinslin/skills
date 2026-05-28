@@ -1,6 +1,6 @@
 ---
 name: loop
-description: Run provided instructions in a child agent up to three times, with the parent fixing major findings between passes.
+description: Run provided instructions with a reviewer subagent and a fixer subagent until major findings are cleared or a blocker stops progress.
 ---
 
 Shortcut: Loop
@@ -16,18 +16,19 @@ Examples:
 
 Instructions:
 
-Create a to-do list for up to three passes, then perform them in order. Each pass has two roles:
+Create a to-do list for repeated passes, then perform them in order. Each pass has three roles:
 
-- Child agent: run `instructions` and report findings.
-- Parent agent: decide whether findings are major, apply fixes, and decide whether another pass is needed.
+- Reviewer subagent: run `instructions` and report findings.
+- Fixer subagent: apply the accepted fixes for blocker or major findings.
+- Parent agent: decide which findings are major, scope the fixes, and decide whether another pass is needed.
 
 For each pass:
 
-1. Spawn a child agent to run `instructions` exactly as provided.
+1. Spawn a reviewer subagent to run `instructions` exactly as provided.
    - If `instructions` is missing, ask the user what should be looped.
-   - Give the child agent the relevant artifact paths, current diff, and review scope.
-   - The child agent should not apply fixes unless the user explicitly requested that the looped instruction itself makes edits.
-   - Wait for the child result before deciding whether to continue.
+   - Give the reviewer subagent the relevant artifact paths, current diff, and review scope.
+   - The reviewer subagent should not apply fixes unless the user explicitly requested that the looped instruction itself makes edits.
+   - Wait for the reviewer result before deciding whether to continue.
 
 2. Classify the pass result:
    - Treat blocker, critical, high-severity, or major findings as major findings.
@@ -36,9 +37,19 @@ For each pass:
 
 3. If no blocker or major findings remain, stop the loop and report the clean pass.
 
-4. If blocker or major findings remain, the parent agent addresses them before the next pass.
+4. If blocker or major findings remain, the parent agent scopes the accepted fix list before another review pass.
    - Keep fixes scoped to the reviewed task.
    - Do not continue looping on a finding that needs user input; stop and ask for that input.
-   - Do not ask the child agent to fix its own findings; the next child-agent pass should independently re-check the parent-applied fix.
+   - Drop minor-only feedback from the auto-fix list unless the user explicitly asked for all findings to be addressed.
 
-Stop after the third pass even if major findings remain. In the final report, include the number of passes run, whether major findings remain, and the unresolved findings or follow-ups.
+5. Spawn a fixer subagent to address the accepted blocker or major findings.
+   - Give the fixer subagent the exact findings, target files, and any validation expectations.
+   - The fixer subagent should not perform a fresh review; it should only implement the scoped fixes.
+   - Wait for the fixer result, then continue to the next review pass with a fresh reviewer subagent.
+
+6. Continue looping until one of these exit conditions is met:
+   - no blocker or major findings remain
+   - the next step needs user input or approval
+   - the same major finding repeats without meaningful progress after three passes
+
+In the final report, include the number of review passes run, whether blocker or major findings remain, and any unresolved findings or follow-ups.
