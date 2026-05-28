@@ -2,6 +2,7 @@
 name: dev.review
 description: Review code, docs, specs, architecture, UX, or design docs.
 dependencies:
+- dev.shortcuts
 - sc
 - specy
 ---
@@ -19,9 +20,12 @@ dependencies:
    - For docs reviews, use `./references/workflow-docs.md`; when reviewing OpenClaw docs and `$openclaw-docs` is available, apply its guidance as domain-specific context.
    - For `integrator`, default input artifacts are outputs from `ag-learn` and adjacent retrospectives.
    - For code reviews that require flow docs, use the sibling dependency at `../specy/SKILL.md`.
-3. Apply the workflow to the material and produce the review.
-4. For review-loop requests, keep going until the remote exit condition is met.
-   - Applies when the user says `trigger:loop`, asks to finish a PR review loop, or asks to address review findings/CI.
+3. Route every top-level review request through the `trigger:loop` shortcut from `dev.shortcuts`.
+   - If the user request already contains `trigger:...`, resolve it through `dev.shortcuts`.
+   - If no shortcut trigger is present, invoke `trigger:loop` with the resolved review instruction, for example `trigger:loop review the current diff with $dev.review`.
+   - Give the loop reviewer the review type, workflow file, artifact paths, current diff, and review scope.
+   - When this skill is already running inside a `trigger:loop` reviewer pass, apply the workflow directly to the material and produce the review instead of nesting another loop.
+4. For PR or CI-backed review loops, keep going until the remote exit condition is met.
    - Completion is remote-state based, not patch based: current head SHA is known, relevant CI is green, unresolved non-outdated review threads are zero, and actionable comments are addressed or explicitly routed to the user.
    - Before saying the loop is finished, run a final PR gate query and report head SHA, failing/pending check count, unresolved thread count, and actionable comment count.
    - If any required check is failed/pending or any actionable review item remains, the loop is not finished; continue fixing or report the exact blocker.
