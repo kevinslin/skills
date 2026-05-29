@@ -38,7 +38,7 @@ Example:
 
 ### Dev
 
-- [claw-integ](active/claw-integ/SKILL.md): Run live OpenClaw integration proof against a named claw gateway profile with showboat-v2 evidence, ffmpeg video proof, and `$mem`-resolved durable proof storage.
+- [claw-integ](active/claw-integ/SKILL.md): Run live OpenClaw integration proof against a named claw gateway profile with showboat-v2 evidence, approval preflight gates for existing apps, ffmpeg video proof, and `$mem`-resolved durable proof storage.
 - [claw-score](active/claw-score/SKILL.md): Audit an OpenClaw maturity-scorecard surface into an evidence-backed component score report under the scorecard directory, using required gitcrawl/discrawl evidence, parallel component research, and shared maturity-band Coverage/Quality scoring.
 - [commits](active/commits/SKILL.md): Write repository-appropriate git commit messages by first checking local history, then matching that repo's conventions. Use when asked to draft a commit message, explain how a repo formats commits, or adapt commit style across different repositories.
 - [create-task](active/create-task/SKILL.md): Create tasks across target platforms. Use when a user asks to create an issue/ticket/task. Currently supports GitHub Issues and always appends a required Context footer with the LLM session to the task body.

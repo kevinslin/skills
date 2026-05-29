@@ -63,6 +63,7 @@ OpenClaw profile state is conventionally resolved as:
 
 ```text
 dev: ~/.openclaw-dev
+prod: ~/.openclaw
 <profile>: ~/.openclaw-<profile>
 ```
 
@@ -99,6 +100,36 @@ OPENCLAW_PROFILE=<profile> pnpm openclaw tui
 ```
 
 If the test needs Codex plugins, ensure the selected profile has the required `allow_destructive_actions` or equivalent policy before the live invocation, and record the redacted setting in the proof.
+
+## Existing App Approval Runs
+
+When testing approvals through an existing channel app such as WhatsApp, Signal, iMessage, SMS, or a browser-backed sender, do this preflight before sending the first live message:
+
+1. Confirm the requested harness and runtime path.
+   - If the user asks for Pi harness, verify the profile config is not pointing at the Codex app server.
+   - If the user asks for Codex harness, verify the app-server path intentionally points at Codex.
+   - Record the redacted harness/app-server summary before changing anything.
+2. Confirm the selected profile's concrete state path.
+   - `prod` resolves to `~/.openclaw`, not `~/.openclaw-prod`.
+   - Use user-provided profile instructions as runtime input; do not bake profile-specific paths into scenario docs.
+3. Confirm the requested launch surface.
+   - If the user asks for iTerm or another visible app launch, use that surface for the live run.
+   - Do not switch to LaunchAgent, tmux, or a background service for an existing-app proof unless the user explicitly asks.
+4. Confirm the target channel and plugin are active in the selected profile.
+   - Record the enabled channel/plugin ids, relevant approval config, and any installed local plugin path in redacted form.
+   - For plugin approval tests, confirm the plugin is installed and enabled before sending a message that asks the model to call it.
+5. Use one nonce per row and carry it through the outbound message, logs, screenshots, and proof matrix.
+
+Split every approval row into two gates:
+
+- request-created gate: prove the approval request exists before attempting to approve or deny it.
+- decision gate: only after the request exists, prove accept and deny resolve the expected pending request.
+
+For plugin approvals, the request-created gate must include evidence that the plugin call actually reached the approval path, such as `plugin.approval.waitDecision`, a pending item from `plugin.approval.list`, or the equivalent channel/runtime artifact. If the model sends a normal reply without calling the plugin, record that as a plugin-invocation blocker rather than testing accept or deny.
+
+For exec approvals, similarly prove the exec approval request exists before acting on it. Do not infer plugin approval health from exec approval success; they use different approval namespaces and may fail independently.
+
+Keep log collection narrow. Search by nonce, channel session id, request id, or the selected profile's known log/session files. Avoid broad recursive scans of the entire profile directory when it can include caches, `node_modules`, or old session artifacts.
 
 ## Video Proof
 

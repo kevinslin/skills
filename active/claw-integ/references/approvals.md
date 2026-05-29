@@ -37,6 +37,8 @@ OPENCLAW_PROFILE=<profile> claw-debug send-approval --type plugin <channel> --to
 
 For WhatsApp, `<target>` is a direct E.164 target or group JID supplied by the user for the test. Keep real phone numbers and private chat ids out of committed docs, logs, screenshots, and final summaries unless the user explicitly asks for local debugging detail.
 
+Only do this if user prompts for simulation
+
 ## Proof Requirements
 
 Approval proof is complete only when all of these are true:
