@@ -22,6 +22,23 @@ Create a to-do list for repeated passes, then perform them in order. Each pass h
 - Fixer subagent: apply the accepted fixes for blocker or major findings.
 - Parent agent: decide which findings are major, scope the fixes, and decide whether another pass is needed.
 
+Shortcut compliance rules:
+
+- When the user explicitly invokes `trigger:loop`, follow this shortcut
+  literally. Do not approximate it with a custom parent-thread workflow.
+- The reviewer subagent and fixer subagent are both mandatory parts of this
+  shortcut. The parent agent must not silently replace either role by doing the
+  review or the fix work itself.
+- If the required subagent topology, waiting pattern, or pass structure cannot
+  be executed, stop and report the blocker instead of substituting a manual
+  process.
+- Do not claim that `trigger:loop` was followed if any required step, role, or
+  pass was skipped, merged, or approximated.
+- When the looped instruction is itself a review skill such as `$dev.review`,
+  the shortcut contract still governs execution: reviewer subagent first,
+  fixer subagent second, parent agent only for classification, scoping, and
+  loop control.
+
 For each pass:
 
 1. Spawn a reviewer subagent to run `instructions` exactly as provided.

@@ -1,11 +1,13 @@
 ---
 name: dev.shortcuts
-description: Resolve explicit shortcut triggers and usage. Always read this file at the start of a thread or when user uses `trigger`.
-dependencies: []
+description: Resolve explicit shortcut triggers and usage. Always read this file at the start of a thread or when user mentions `trigger`.
+dependencies: [dev.review]
 ---
 
 ## Context
 Shortcuts are a small self-contained workflow that can be triggered via `trigger:<shortcut-name>`, for example `trigger:merge-pr`.
+
+ALWAYS use the shortcut when user mentions `trigger:<shortcut>`. Read the shortcut file and follow literaly. 
 
 ## Shortcut Location
 Shortcuts can be in the following locations:
@@ -43,6 +45,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `push-code` | Commit if needed, then push the current branch. |
 | `push-pr` | Commit if needed, push the branch, create a PR, then watch and fix CI as needed. |
 | `rebase-and-fix` | Rebase the current branch onto a provided branch, fix PR conflicts, push, and check CI. |
+| `review` | Create a new worktree for a PR link and run `dev.review` on the PR. |
 | `sync-branch-push` | Rebase the current branch onto the remote default branch from `git remote show`, then force-push upstream with lease. |
 | `sync-branch` | Rebase the current branch onto the remote default branch from `git remote show` and resolve conflicts if needed. |
 
