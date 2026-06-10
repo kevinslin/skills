@@ -45,7 +45,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `push-code` | Commit if needed, then push the current branch. |
 | `push-pr` | Commit if needed, push the branch, create a PR, then watch and fix CI as needed. |
 | `rebase-and-fix` | Rebase the current branch onto a provided branch, fix PR conflicts, push, and check CI. |
-| `review` | Create a new worktree for a PR link and run `dev.review` on the PR. |
+| `review` | Create a new worktree for a PR link, run `dev.review`, and add a flow doc for the PR logic. |
 | `sync-branch-push` | Rebase the current branch onto the remote default branch from `git remote show`, then force-push upstream with lease. |
 | `sync-branch` | Rebase the current branch onto the remote default branch from `git remote show` and resolve conflicts if needed. |
 
