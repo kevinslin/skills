@@ -37,6 +37,20 @@ Label parent-derived findings clearly.
 
 For default/current-session learning, always scan the active rollout JSONL before narrowing to a specific learning. The current user complaint is a seed for search terms, not a boundary.
 
+### JSONL Scan Hygiene
+
+Rollout JSONL files usually have a very large `session_meta` entry containing
+the full instruction bundle. Start with structured extraction of
+`response_item` and `event_msg` records before running broad text searches over
+the whole file.
+
+Use `jq` to inspect compact user, assistant, tool, and event rows first. This
+keeps instruction text from dominating the evidence scan and prevents accidental
+100k-token outputs from broad `rg` matches.
+
+Only search `session_meta` directly when the learning depends on instruction,
+environment, parent/fork, or tool-availability state.
+
 Use a two-pass scan for default and formal session-specific learning:
 
 1. Read or search the active rollout JSONL and any parent/forked rollout JSONL. Identify mistakes, uncertainty, repeated friction, user corrections, explicit skill invocations, interruptions, and time sinks.
