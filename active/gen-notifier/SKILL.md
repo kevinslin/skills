@@ -1,7 +1,8 @@
 ---
 name: gen-notifier
-description: Send exactly one final-state desktop notification before the final report.
-version: 1.1.0
+description: "Top-level agents only: send exactly one final-state desktop notification before the final report."
+dependencies: []
+version: 1.1.1
 ---
 
 # Task Completion Notifier
@@ -15,12 +16,15 @@ Use this skill in the following scenarios:
 1. **User explicitly requests notification** - When the user says "notify me when done", "let me know when this finishes", etc.
 2. **Long-running tasks** - Jobs that take significant time (builds, deployments, large refactors, test suites)
 3. **Background tasks** - When the user might context-switch while waiting
-4. **Default behavior** - By default, assume all jobs assigned to you will require one notification unless the user specifies otherwise
+4. **Default behavior** - By default, assume all jobs assigned to the top-level agent will require one notification unless the user specifies otherwise
 
 ## Core Rule
 
 Use this skill only once per job, at the very end, after the work is finalized and immediately before you generate the final user-facing report.
 
+- Use this skill only from the top-level or parent agent
+- Do not use this skill from subagents, delegated workers, review workers, or background worker agents
+- If you are a subagent or worker, report your terminal state to the parent agent instead; the parent agent owns the single final notification for the overall job
 - Do not notify during intermediate steps
 - Do not notify when you are still investigating or iterating
 - Do not notify before verification, cleanup, or finalization is complete
@@ -99,6 +103,7 @@ Don't send notifications for:
 - Every tool execution
 - Tasks where user is actively watching
 - Cases where the job is not yet finalized
+- Subagent, delegated-worker, review-worker, or background-worker completion
 
 ## Best Practices
 

@@ -4,7 +4,7 @@ A generic agent skill that sends desktop notifications when tasks are complete u
 
 ## Overview
 
-This skill enables an agent to notify you via desktop notifications when a job is finalized, needs input, or ends in errors. By default, all jobs assigned to the agent trigger one notification at final handoff unless you say otherwise.
+This skill enables a top-level agent to notify you via desktop notifications when a job is finalized, needs input, or ends in errors. By default, all jobs assigned to the top-level agent trigger one notification at final handoff unless you say otherwise.
 
 ## Installation
 
@@ -31,6 +31,10 @@ The skill is automatically invoked when:
 ### Automatic Behavior
 
 By default, assume all jobs will generate exactly one notification. The agent should send it only after the work is fully finalized and immediately before the final user-facing report.
+
+### Agent Scope
+
+Only the top-level or parent agent should use this skill. Subagents, delegated workers, review workers, and background worker agents should report their terminal state to the parent agent instead of sending a desktop notification themselves.
 
 ### Timing Rule
 
@@ -107,6 +111,7 @@ terminal-notifier -title "Production Deployment" -message "errors"
 - **Concise titles** - Understand what finished at a glance
 - **Final-handoff timing** - Sent only after work is finalized and right before the final report
 - **No spam** - One notification per task, not per step
+- **Top-level ownership** - Subagents report state upward; the parent agent sends the single final notification
 
 ## Configuration
 
@@ -137,4 +142,4 @@ Ensure Terminal has notification permissions:
 
 ## Version
 
-Current version: 1.1.0
+Current version: 1.1.1
