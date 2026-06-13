@@ -6,12 +6,12 @@ Read this reference before using `claw-integ` for exec approval or plugin approv
 
 Approval integration tests need explicit routing up front:
 
-- claw profile, for example `dev` or `prod`
+- claw profile: `openclaw-codex-dev` for Codex approval behavior, otherwise `.openclaw-dev`
 - channel, for example `whatsapp`, `telegram`, `slack`, `discord`, `matrix`, or `tui`
 - target recipient or conversation for the channel
 - approval kind: `exec`, `plugin`, or both
 
-If the user does not specify the claw profile and channel, ask for them before starting the live approval proof. Do not guess a production profile or a private channel target.
+If the user does not specify the claw profile, infer it using the main skill's Profile Selection rules before starting the live approval proof. If the channel is missing, ask for it. Do not guess a private channel target.
 
 ## Live Surface
 
@@ -31,8 +31,8 @@ For TUI approval tests, run or focus the TUI and capture the terminal/TUI pane a
 Use the local CLI to create approval requests against the selected live gateway profile and channel.
 
 ```sh
-OPENCLAW_PROFILE=<profile> claw-debug send-approval --type exec <channel> --to <target>
-OPENCLAW_PROFILE=<profile> claw-debug send-approval --type plugin <channel> --to <target>
+OPENCLAW_PROFILE=<resolved-openclaw-profile> claw-debug send-approval --type exec <channel> --to <target>
+OPENCLAW_PROFILE=<resolved-openclaw-profile> claw-debug send-approval --type plugin <channel> --to <target>
 ```
 
 For WhatsApp, `<target>` is a direct E.164 target or group JID supplied by the user for the test. Keep real phone numbers and private chat ids out of committed docs, logs, screenshots, and final summaries unless the user explicitly asks for local debugging detail.

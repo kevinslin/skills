@@ -16,7 +16,7 @@ Usage:
 $claw-integ [profile] "test it"
 ```
 
-`profile` is optional. Default to `dev` when omitted.
+`profile` is optional. When omitted, infer the profile from the behavior under test.
 
 ## Contract
 
@@ -50,24 +50,19 @@ For each row, record the exact command or live action, expected result, observed
 1. Resolve the OpenClaw repo root.
    - Prefer the current git root when it is the OpenClaw repo.
    - Otherwise use `/Users/kevinlin/code/openclaw` unless the user gives another path.
-2. Resolve the profile name.
-   - If the user passes no profile, use `dev`.
-   - If the user passes `dev`, use the dev profile as-is.
-   - If the user passes another profile, check whether that profile already exists.
-   - If it exists, use it as-is.
-   - If it does not exist, create it by copying values from `dev`.
-3. Never overwrite an existing non-dev profile unless the user explicitly asks.
-4. Do not print secrets, auth tokens, refresh tokens, or provider credentials.
+2. Select exactly one local claw integration profile:
+   - `openclaw-codex-dev`: Codex claw profile. Use it for Codex harness, Codex app-server, Codex plugin/tool, Codex approval, or OpenAI Codex runtime/protocol behavior.
+   - `.openclaw-dev`: dev claw profile. Use it for the normal OpenClaw dev gateway/TUI path, Pi-style harness work, non-Codex channel delivery, and generic OpenClaw behavior.
+3. If the user passes no profile, infer the profile from the requested test:
+   - choose `openclaw-codex-dev` only when the behavior being tested depends on Codex;
+   - otherwise choose `.openclaw-dev`.
+4. If the user passes a profile, use it only when it is one of the two valid profiles above. If another profile is requested, stop and ask which valid profile should be used.
+5. Do not create ad hoc profiles, clone `.openclaw-dev`, or copy credentials between profiles.
+6. Do not print secrets, auth tokens, refresh tokens, or provider credentials.
 
-OpenClaw profile state is conventionally resolved as:
+Treat these as local claw profile selectors, not always as literal `OPENCLAW_PROFILE` values. Before invoking OpenClaw commands, resolve and record the selected profile's concrete OpenClaw runtime environment, including the actual `OPENCLAW_PROFILE`, `OPENCLAW_STATE_DIR`, and `OPENCLAW_CONFIG_PATH` when present. For `.openclaw-dev`, the OpenClaw dev CLI profile is `dev` and the state directory is `~/.openclaw-dev`; do not pass `.openclaw-dev` as `OPENCLAW_PROFILE`.
 
-```text
-dev: ~/.openclaw-dev
-prod: ~/.openclaw
-<profile>: ~/.openclaw-<profile>
-```
-
-Profile existence is a local state check: the profile exists when the matching state directory exists and contains an `openclaw.json`. Prefer profile-aware CLI commands for operation, but use these paths for existence checks and redacted summaries.
+Profile existence is a local state check: the selected claw profile exists only when its matching local config/state can be found and the resolved OpenClaw config path points at `openclaw.json`. Prefer profile-aware CLI commands for operation, but use the resolved state/config paths for existence checks and redacted summaries.
 
 ## Gateway Setup
 
@@ -84,20 +79,42 @@ Before running the proof:
    - destructive-action or approval settings relevant to the test
 4. If the test needs a specific app/plugin setup, use the product migration or setup command that the profile would use in production. Do not manually symlink plugin/cache/auth files unless the user explicitly asks.
 
-For `dev`, use the dev profile and dev gateway/TUI path:
+For `.openclaw-dev`, use the dev profile and dev gateway/TUI path:
 
 ```sh
 pnpm gateway:dev
 pnpm tui:dev
 ```
 
-For a non-dev profile, use profile-scoped commands from the repo root:
+For `openclaw-codex-dev`, first resolve the profile's concrete OpenClaw environment from the local claw profile config/service env, then use profile-scoped commands from the repo root:
 
 ```sh
-OPENCLAW_PROFILE=<profile> pnpm openclaw gateway status --deep --require-rpc
-OPENCLAW_PROFILE=<profile> pnpm openclaw gateway restart
-OPENCLAW_PROFILE=<profile> pnpm openclaw tui
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw gateway status --deep --require-rpc
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw gateway restart
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw tui
 ```
+
+For every `openclaw-codex-dev` run, confirm the Google Calendar Codex plugin is configured and enabled before the live invocation. The redacted config summary must show:
+
+- `plugins.entries.codex.enabled: true`
+- `plugins.entries.codex.config.codexPlugins.enabled: true`
+- `plugins.entries.codex.config.codexPlugins.plugins["google-calendar"].enabled: true`
+- `marketplaceName: "openai-curated"`
+- `pluginName: "google-calendar"`
+
+If the `google-calendar` entry exists but is disabled, enable it through the product-supported Codex command:
+
+```text
+/codex plugins enable google-calendar
+```
+
+If the entry is missing, use the Codex migration/setup flow for the selected profile before the live run:
+
+```sh
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw migrate apply codex --yes --plugin google-calendar
+```
+
+After changing `codexPlugins`, start a fresh Codex conversation with `/new` or `/reset` before testing plugin behavior. Do not treat `openclaw-codex-dev` proof as ready until Google Calendar is enabled or a specific blocker is recorded.
 
 If the test needs Codex plugins, ensure the selected profile has the required `allow_destructive_actions` or equivalent policy before the live invocation, and record the redacted setting in the proof.
 
@@ -110,7 +127,9 @@ When testing approvals through an existing channel app such as WhatsApp, Signal,
    - If the user asks for Codex harness, verify the app-server path intentionally points at Codex.
    - Record the redacted harness/app-server summary before changing anything.
 2. Confirm the selected profile's concrete state path.
-   - `prod` resolves to `~/.openclaw`, not `~/.openclaw-prod`.
+   - Valid local claw profiles are only `openclaw-codex-dev` and `.openclaw-dev`.
+   - `.openclaw-dev` resolves to OpenClaw profile `dev` and state path `~/.openclaw-dev`.
+   - `openclaw-codex-dev` must be resolved from its local profile config/service env before launch.
    - Use user-provided profile instructions as runtime input; do not bake profile-specific paths into scenario docs.
 3. Confirm the requested launch surface.
    - If the user asks for iTerm or another visible app launch, use that surface for the live run.
@@ -233,29 +252,20 @@ The proof must include:
 
 When the output includes timestamps, temp paths, session ids, event ids, or stochastic model text, save raw output under `raw/` and capture a stable summary command in the verified Showboat summary.
 
-## Profile Copy From dev
+## Missing or Invalid Profiles
 
-When a requested profile is not `dev` and does not exist:
+When the selected local claw profile is missing, ambiguous, or not one of `openclaw-codex-dev` / `.openclaw-dev`:
 
-1. Verify `dev` exists.
-2. Create the requested profile by copying values from `dev`.
-3. Prefer a repo-supported profile/config command if one exists.
-4. If no command exists, copy the `dev` state directory to the requested profile state directory:
-
-```sh
-cp -R "$HOME/.openclaw-dev" "$HOME/.openclaw-<profile>"
-```
-
-This intentionally copies local state and credentials for a local integration profile. Do not print copied secret values, and never commit the copied state.
-5. If only the config values are needed and full state copy would be excessive, copy `~/.openclaw-dev/openclaw.json` into a newly created `~/.openclaw-<profile>/openclaw.json`, then document that narrower fallback in the proof directory.
-6. Re-read the new profile config after creation and record a redacted summary in the proof directory.
-7. Stop if `dev` is missing or ambiguous; do not guess values.
+1. Stop before starting the gateway or sending any live message.
+2. Record the blocker in the proof directory if one has already been created.
+3. Ask the user which valid profile to use or ask them to repair the missing local profile.
+4. Do not copy `.openclaw-dev`, create a new profile, or move credentials as part of `claw-integ`.
 
 ## Completion Criteria
 
 The run is complete only when:
 
-- the requested profile was selected or created from `dev`
+- the requested profile was selected from `openclaw-codex-dev` or `.openclaw-dev`
 - the claw gateway for that profile was used
 - the requested behavior was exercised live
 - ffmpeg video proof was captured under `raw/`, or a video-capture blocker was saved there

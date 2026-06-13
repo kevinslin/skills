@@ -16,7 +16,7 @@ Before every send, inspect the visible sender/from account and the visible desti
 
 iMessage approval tests need explicit routing up front:
 
-- claw profile, for example `prod` or `dev`
+- claw profile: normally `.openclaw-dev`; use `openclaw-codex-dev` only when the iMessage proof explicitly depends on Codex behavior
 - sender surface, usually Google Voice in a browser
 - target number, provided by the user for this run in E.164 format
 - any alternate target number, also provided by the user for this run in E.164 format
@@ -78,8 +78,8 @@ started from that iTerm session.
 
 ```sh
 cd /Users/kevinlin/code/openclaw
-OPENCLAW_PROFILE=<profile> pnpm openclaw gateway status --deep --require-rpc
-OPENCLAW_PROFILE=<profile> pnpm openclaw channels status --channel imessage --probe
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw gateway status --deep --require-rpc
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw channels status --channel imessage --probe
 ```
 
 When testing a worktree code change, build from the same repo checkout before restarting the gateway. Stale gateway builds were a recurring cause of old approval text, missing reaction hints, and missing suppression behavior.
@@ -87,7 +87,7 @@ When testing a worktree code change, build from the same repo checkout before re
 ```sh
 cd /Users/kevinlin/code/openclaw
 pnpm build
-OPENCLAW_PROFILE=<profile> pnpm openclaw gateway restart
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw gateway restart
 ```
 
 If restarting through the CLI leaves the gateway owned by an older background process, stop it and
@@ -240,7 +240,7 @@ If no exec approval appears, verify the harness before debugging iMessage. In pr
 Start a focused log stream before sending the prompt. Save the raw log output under the proof `raw/` directory.
 
 ```sh
-OPENCLAW_PROFILE=<profile> pnpm openclaw logs --follow --json --limit 0 2>/dev/null \
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw logs --follow --json --limit 0 2>/dev/null \
   | jq --unbuffered -Rrc '
       fromjson?
       | select(.type=="log")

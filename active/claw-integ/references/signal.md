@@ -6,7 +6,7 @@ Read this reference before using `claw-integ` for Signal channel delivery, Signa
 
 Signal integration tests need explicit routing up front:
 
-- claw profile, for example `dev` or `prod`
+- claw profile: normally `.openclaw-dev`; use `openclaw-codex-dev` only when the Signal proof explicitly depends on Codex behavior
 - Signal bot account configured in OpenClaw, written as `<bot-e164>`
 - Signal sender account used by the test CLI, written as `<sender-e164>`
 - test message text, unless the user asks for a specific prompt
@@ -18,7 +18,7 @@ Do not guess production phone numbers. Do not commit real phone numbers, message
 Confirm the selected profile has Signal configured and the gateway is running.
 
 ```sh
-OPENCLAW_PROFILE=<profile> pnpm openclaw channels status --probe
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw channels status --probe
 ```
 
 If OpenClaw owns the Signal daemon for `<bot-e164>`, do not run a second `signal-cli -a <bot-e164> receive`; it can fight the daemon account lock or miss events already consumed by OpenClaw.
@@ -36,7 +36,7 @@ Then retry the send. Record this repair command in the proof if it was needed.
 Start a Signal-only log stream before sending the message. Use raw-input `jq` so CLI banners or non-JSON lines do not crash parsing.
 
 ```sh
-OPENCLAW_PROFILE=<profile> pnpm openclaw logs --follow --json --limit 0 2>/dev/null \
+OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw logs --follow --json --limit 0 2>/dev/null \
   | jq --unbuffered -Rrc '
       fromjson?
       | select(.type=="log")
@@ -47,7 +47,7 @@ OPENCLAW_PROFILE=<profile> pnpm openclaw logs --follow --json --limit 0 2>/dev/n
     '
 ```
 
-For local ad hoc proof when profile scoping is already set by the shell, `openclaw logs ...` is acceptable. In durable proof, prefer the explicit `OPENCLAW_PROFILE=<profile> pnpm openclaw ...` form and record it.
+For local ad hoc proof when profile scoping is already set by the shell, `openclaw logs ...` is acceptable. In durable proof, prefer the explicit `OPENCLAW_PROFILE=<resolved-openclaw-profile> pnpm openclaw ...` form and record it.
 
 Expected proof signal: the filtered stream shows a Signal subsystem event such as `delivered reply to <sender-e164>` after the test send.
 
