@@ -17,7 +17,11 @@ When the user wants the new thread in the same project directory as the current 
 3. Call `codex_app.set_thread_title` on the new thread with that computed title.
 4. Send the requested prompt into the child with `codex_app.send_message_to_thread`.
 5. Update the child-thread registry file at `~/.llm/skills/threads/{parent-thread-id}.md`.
-6. Return both:
+6. Verify before replying:
+   - the child title still exactly matches `{parent-thread}/{topic-name}`
+   - the registry entry uses that same `topic-name`
+   - the returned deep link will be rendered as a clickable Markdown link
+7. Return both:
    - the thread id
    - the Codex deep link `codex://threads/<thread-id>`
 
@@ -47,7 +51,7 @@ If the user explicitly wants a clean new user-owned thread rather than a sibling
 Report the result plainly:
 
 - `Thread ID: <thread-id>`
-- `Deep link: codex://threads/<thread-id>`
+- `Deep link: [codex://threads/<thread-id>](codex://threads/<thread-id>)`
 
 Do not fabricate a deep link before a real `threadId` exists.
 
