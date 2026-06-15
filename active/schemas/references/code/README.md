@@ -30,7 +30,8 @@ code [version=1.0 output=directory extension=md]
 |   |-- faq_topic: *, default=topic
 |   |-- library: *, default=library
 |   |-- vendor_reference: *, default=api
-|   `-- vendor_topic: *, default=topic
+|   |-- vendor_topic: *, default=topic
+|   `-- db_name: *, default=database
 `-- tree
     `-- packages [path-only] - Package-level code documentation root.
         `-- {{module}} [path-only children_from=1] - Root module, service, package, or docs area containing code documentation.
@@ -71,6 +72,8 @@ code [version=1.0 output=directory extension=md]
             |       |   `-- {{vendor_reference}} [template=vendor-reference dynamic] - Vendor API reference doc.
             |       `-- topics [path-only] - Optional vendor topic deep-dives.
             |           `-- {{vendor_topic}} [template=vendor-topic dynamic] - Vendor topic doc.
+            |-- db [path-only] - Database and persistence-layer documentation.
+            |   `-- {{db_name}} [template=default dynamic] - Database schema, model, migration, query, or storage behavior documentation.
             |-- readme [template=default] - general overview of code
             |-- concepts [template=default] - index of various concepts
             |-- flow [path-only] - execution-flow documentation

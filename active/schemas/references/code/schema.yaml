@@ -82,6 +82,10 @@ variables:
     values: ["*"]
     default: topic
     description: Optional vendor topic doc slug.
+  db_name:
+    values: ["*"]
+    default: database
+    description: Database, model, migration, query, or storage topic slug.
 schema:
   packages:
     description: Package-level code documentation root.
@@ -246,3 +250,10 @@ schema:
                         description: Vendor topic doc.
                         dynamic_child: true
                         template: vendor-topic
+          db:
+            description: Database and persistence-layer documentation.
+            children:
+              "{{db_name}}":
+                description: Database schema, model, migration, query, or storage behavior documentation.
+                dynamic_child: true
+                template: default
