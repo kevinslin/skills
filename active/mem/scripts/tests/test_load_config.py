@@ -22,6 +22,8 @@ class LoadConfigTests(unittest.TestCase):
         self.config = self.root / ".mem.yaml"
         self.base = self.root / "kb"
         self.base.mkdir()
+        self.schema_file = self.root / "schema.yaml"
+        self.schema_file.write_text("version: 1.0\nschema: {}\n", encoding="utf-8")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -46,7 +48,8 @@ class LoadConfigTests(unittest.TestCase):
                 description: Durable documentation notes.
                 root: {self.base}
                 path_style: dotted
-                schemas: [tool]
+                schemas:
+                  - name: tool
             """
         )
 
@@ -56,6 +59,66 @@ class LoadConfigTests(unittest.TestCase):
         data = json.loads(result.stdout)
         self.assertEqual(data["bases"][0]["description"], "Durable documentation notes.")
         self.assertEqual(data["bases"][0]["path_style"], "dotted")
+        self.assertEqual(data["bases"][0]["schemas"], [{"name": "tool"}])
+
+    def test_schema_path_is_normalized(self) -> None:
+        self.write_config(
+            f"""
+            version: 1
+            bases:
+              - name: docs
+                description: Durable documentation notes.
+                root: {self.base}
+                schemas:
+                  - name: local
+                    path: {self.schema_file}
+            """
+        )
+
+        result = self.run_loader()
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(
+            data["bases"][0]["schemas"],
+            [{"name": "local", "path": str(self.schema_file.resolve())}],
+        )
+
+    def test_scalar_schema_is_rejected(self) -> None:
+        self.write_config(
+            f"""
+            version: 1
+            bases:
+              - name: docs
+                description: Durable documentation notes.
+                root: {self.base}
+                schemas: [tool]
+            """
+        )
+
+        result = self.run_loader()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("bases[0].schemas[0] must be a mapping", result.stderr)
+
+    def test_relative_schema_path_is_rejected(self) -> None:
+        self.write_config(
+            f"""
+            version: 1
+            bases:
+              - name: docs
+                description: Durable documentation notes.
+                root: {self.base}
+                schemas:
+                  - name: local
+                    path: schema.yaml
+            """
+        )
+
+        result = self.run_loader()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("bases[0].schemas[0].path must be an absolute path", result.stderr)
 
     def test_missing_description_is_rejected(self) -> None:
         self.write_config(
@@ -64,7 +127,8 @@ class LoadConfigTests(unittest.TestCase):
             bases:
               - name: docs
                 root: {self.base}
-                schemas: [tool]
+                schemas:
+                  - name: tool
             """
         )
 
@@ -82,7 +146,8 @@ class LoadConfigTests(unittest.TestCase):
                 description: Durable documentation notes.
                 root: {self.base}
                 path_style: flat
-                schemas: [tool]
+                schemas:
+                  - name: tool
             """
         )
 
@@ -100,7 +165,8 @@ class LoadConfigTests(unittest.TestCase):
               - name: docs
                 description: Durable documentation notes.
                 root: {self.base}
-                schemas: [tool]
+                schemas:
+                  - name: tool
             """
         )
 
@@ -121,7 +187,8 @@ class LoadConfigTests(unittest.TestCase):
               - name: docs
                 description: Durable documentation notes.
                 root: {self.base}
-                schemas: [code]
+                schemas:
+                  - name: code
             """
         )
 

@@ -42,6 +42,36 @@ def normalize_path_style(value: Any, field: str) -> str:
     return path_style
 
 
+def resolve_schema_path(raw_path: str, field: str) -> Path:
+    expanded = os.path.expandvars(os.path.expanduser(raw_path))
+    path = Path(expanded)
+    if not path.is_absolute():
+        fail(f"{field} must be an absolute path")
+    return path.resolve(strict=False)
+
+
+def normalize_schema(value: Any, field: str) -> dict[str, str]:
+    if not isinstance(value, dict):
+        fail(f"{field} must be a mapping with name and optional path")
+
+    name = non_empty_string(value.get("name"), f"{field}.name")
+    normalized = {"name": name}
+
+    extra_keys = set(value) - {"name", "path"}
+    if extra_keys:
+        joined = ", ".join(sorted(extra_keys))
+        fail(f"{field} has unsupported key(s): {joined}")
+
+    if "path" in value:
+        raw_path = non_empty_string(value.get("path"), f"{field}.path")
+        path = resolve_schema_path(raw_path, f"{field}.path")
+        if not path.is_file():
+            fail(f"{field}.path does not exist or is not a file: {path}")
+        normalized["path"] = str(path)
+
+    return normalized
+
+
 def find_config(cwd: Path, home: Path) -> Path:
     candidates = [
         cwd / ".mem.yaml",
@@ -134,7 +164,7 @@ def normalize_config(path: Path, require_roots: bool) -> dict[str, Any]:
         if not isinstance(schemas, list) or not schemas:
             fail(f"{label}.schemas must be a non-empty list")
         normalized_schemas = [
-            non_empty_string(schema, f"{label}.schemas[{schema_index}]")
+            normalize_schema(schema, f"{label}.schemas[{schema_index}]")
             for schema_index, schema in enumerate(schemas)
         ]
         if "path_style" in base:
