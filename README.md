@@ -1,5 +1,13 @@
 Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) that I use in my day to day.
 
+## Top Skills
+
+- [specy](active/specy/SKILL.md): Write flow docs and other useful doc types.
+- [dev.review](active/dev.review/SKILL.md): Code review, slop review, spec review, and other review passes.
+- [sw-loop](active/sw-loop/SKILL.md): Devloop with subagents and loops on review.
+- [dev.shortcuts](active/dev.shortcuts/SKILL.md): Triggers for workflows like push code, loop, and PR.
+- [ag-learn](active/ag-learn/SKILL.md): Automatically improve skills based on conversation sessions.
+
 ## Conventions
 
 Skills may use these path conventions:
@@ -28,10 +36,11 @@ Example:
 - [fast-mode](active/fast-mode/SKILL.md): Operate Codex in fast-mode by skipping skill loading and going directly to task execution, while allowing only explicitly whitelisted skills from a local allow-list file. Use when a user requests fast-mode, minimal overhead, or "no skills unless allowed."
 - [gen-notifier](active/gen-notifier/SKILL.md): Generic desktop notification skill for agents. Send desktop notifications when tasks are complete (or when user input/errors block progress). By default, assume that all jobs will require a notification unless the user says otherwise.
 - [learning-capture](active/learning-capture/SKILL.md): Extract and consolidate key learnings, insights, and actionable takeaways from the current conversation session. Use when the user wants to capture, summarize, or document what was learned during the chat, create study materials from discussions, or save important discoveries and decisions for future reference. Triggers include requests like "capture learnings," "summarize what we discussed," "create notes from this conversation," "what did I learn today," or "document our key findings."
-- [mem](active/mem/SKILL.md): Resolve `.mem.yaml` knowledge bases for durable reads and writes, including per-base descriptions for routing, schemas, optional routing skills, `path_style` conventions, and protected `## Manual Notes` handling for existing Markdown artifacts.
+- [mem](active/mem/SKILL.md): Resolve `.mem.yaml` knowledge bases for durable reads and writes, including per-base descriptions for routing, schema objects with optional absolute schema-file paths, optional routing skills, `path_style` conventions, and protected `## Manual Notes` handling for existing Markdown artifacts.
 - [meta.skill-optimizer](active/meta.skill-optimizer/SKILL.md): Optimize existing skills and their associated files (SKILL.md, scripts, references, assets) for clarity, concision, and ease of use. Use when asked to optimize, streamline, simplify, or clean up a skill; consolidate duplicated or conflicting instructions; add small, clarifying examples; or run an evidence-based skill review using past runs/sessions and learnings.
 - [meta.summarize](active/meta.summarize/SKILL.md): Summarize Codex activity from ag-ledger using optional `scope`, `lookup`, and `groupby` arguments (`meta.summarize [scope] [lookup] [groupby]`). Use when asked to summarize the current conversation (`convo`), summarize sessions that started in the current workspace (`workspace`), or summarize all sessions across workspaces (`all`) over current day, last 24 hours, last week, or last month.
 - [sc](active/sc/SKILL.md): Guide for creating or updating skills and SKILL.md content, including edits to existing skills, adding workflows/tools, or changing triggers. Use whenever a user asks to create/update a skill, directly invokes $sc, or mentions a skill name and requests changes (e.g., 'update $learn skill', 'edit skill description'), even if the skill currently lives outside allowed roots.
+- [thread](active/thread/SKILL.md): Create a same-directory Codex thread from a prompt, rename it to `{parent-thread}/{topic-name}`, record `topic-name -> thread-id` in `~/.llm/skills/threads/{parent-thread-id}.md`, and return the running thread's `codex://threads/<id>` deep link. Use when the user asks for a new or separate thread with a prompt.
 - [secrets](active/secrets/SKILL.md): Load and manage local dotenvx credential sets for agent workflows. Use when directly invoked as `$secrets` or when a task needs credentials from `~/.secrets/.env.*`.
 - [slack-notify](active/slack-notify/SKILL.md): Send explicit Slack notifications through `slack-post` using Slack credentials loaded by `$secrets slack`.
 - [sw-loop](active/sw-loop/SKILL.md): Swarm-based feature delivery workflow that coordinates manager, spec, implementation, review, cleanup, verification, and required checklist tracking across multiple subagents, routing durable artifacts through `$mem` before choosing paths and turning explicit user proof/completion gates into checklist rows. Use when the user explicitly wants a swarm, parallelized feature work, or a managed loop that should use `$sw-ctrl`, `$specy`, `$dev.review`, and `$dev.loop` in that order.
