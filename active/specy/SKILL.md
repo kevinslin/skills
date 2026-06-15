@@ -56,6 +56,7 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 - Feature Specs (Execution Plans) (`feature-spec`): Milestone-based implementation plans with dependencies, risks, and verification.
 - Investigation Specs (`investigation-spec`): Structured debugging plans for competing root-cause hypotheses and evidence capture.
 - Validation Specs (`validation-spec`): Validation coverage docs for automated and manual checks tied to specs.
+- Report Notes (`report-note`): Concise report sidecars for source-backed findings, status, and open questions.
 - Recipes (`recipe`): Reproducible step-by-step change instructions derived from conversation or PR context.
 - Frequently Asked Questions (FAQ) (`faq-doc`): Reusable Q&A docs with concise answers and source citations.
 - FAQ Specs (`faq-spec`): In-place FAQ additions that append a focused Q&A to the most recent research document type mentioned in the conversation.
@@ -179,6 +180,10 @@ When invoked, follow the mapped workflow section exactly.
 
 - Follow `./references/investigation-spec/workflow.md` section `Instructions`.
 
+### new-report-note
+
+- Follow `./references/report-note/workflow.md` section `Instructions`.
+
 ### update-flow-doc
 
 When updating existing flow docs, use a preservation-first revision style.
@@ -230,6 +235,8 @@ $DOCS_ROOT/
     core.exit.md
     topic.{name}.md
     ref.{name}.md
+  reports/           # Concise report notes
+    {report-name}.md
   state/             # State docs
     {state-name}.md
   recipes/           # Change recipes
@@ -275,6 +282,8 @@ Throughout this skill, bundled paths prefixed with `./` are relative to this ski
 - `./references/investigation-spec/template.md` -> `./references/investigation-spec/template.md`
 - `./references/validation-spec/workflow.md` -> `./references/validation-spec/workflow.md`
 - `./references/validation-spec/template.md` -> `./references/validation-spec/template.md`
+- `./references/report-note/workflow.md` -> `./references/report-note/workflow.md`
+- `./references/report-note/template.md` -> `./references/report-note/template.md`
 - `./references/recipe/workflow.md` -> `./references/recipe/workflow.md`
 - `./references/recipe/template.md` -> `./references/recipe/template.md`
 - `./references/faq-doc/workflow.md` -> `./references/faq-doc/workflow.md`
