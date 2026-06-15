@@ -8,6 +8,18 @@ dependencies: []
 
 Use this skill when the user asks to create a new Codex thread and provides, or clearly wants you to derive, the prompt to seed it with.
 
+## Usage
+
+```text
+$thread [prompt]. use xhigh profile
+```
+
+- Parse an optional profile request from the user's prompt.
+- Supported profiles:
+  - `xhigh`: send the child-thread prompt with `model: gpt-5.5` and `thinking: xhigh`
+- When no profile is requested, use the same profile as the existing thread by omitting `model` and `thinking` overrides.
+- If the user names an unsupported profile, say so plainly rather than silently mapping it.
+
 ## Default behavior
 
 When the user wants the new thread in the same project directory as the current thread:
@@ -16,6 +28,8 @@ When the user wants the new thread in the same project directory as the current 
 2. Compute the child title as `{parent-thread}/{topic-name}`.
 3. Call `codex_app.set_thread_title` on the new thread with that computed title.
 4. Send the requested prompt into the child with `codex_app.send_message_to_thread`.
+   - If the user requested the `xhigh` profile, pass `model: "gpt-5.5"` and `thinking: "xhigh"`.
+   - Otherwise omit `model` and `thinking` so the child uses the same profile/settings as the existing thread.
 5. Update the child-thread registry file at `~/.llm/skills/threads/{parent-thread-id}.md`.
 6. Verify before replying:
    - the child title still exactly matches `{parent-thread}/{topic-name}`
@@ -32,6 +46,7 @@ This same-directory fork is the preferred default because it reliably keeps the 
 - Use the user's prompt verbatim when they provide one.
 - If they describe the work but do not phrase the exact prompt, write a concise execution prompt that preserves their intent, paths, constraints, and deliverable shape.
 - Keep the seeded prompt task-focused. Include cwd, relevant file paths, and explicit output expectations when helpful.
+- Treat profile directives such as `use xhigh profile` as execution settings, not as part of the child prompt body unless the user explicitly wants that text preserved.
 
 ## Title handling
 
@@ -45,6 +60,9 @@ This same-directory fork is the preferred default because it reliably keeps the 
 ## Alternate path
 
 If the user explicitly wants a clean new user-owned thread rather than a sibling fork, and the current saved project id is already available in context, use `codex_app.create_thread` with the current project target and local environment instead of `fork_thread`. After creation, still rename the thread to `{parent-thread}/{topic-name}` when a real `threadId` is available.
+
+- If the user requested the `xhigh` profile, pass `model: "gpt-5.5"` and `thinking: "xhigh"` on `create_thread`.
+- Otherwise omit `model` and `thinking` so the new thread uses the same/default profile behavior rather than forcing an override.
 
 ## Output
 
