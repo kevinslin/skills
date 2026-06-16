@@ -13,6 +13,9 @@ variables:
   flow:
     values: ["*"]
     description: Concise kebab-case flow name.
+  cook:
+    values: ["*"]
+    description: Kebab-case cookbook slug.
   subspec:
     values: ["*"]
     default: "1.1"
@@ -38,9 +41,6 @@ schema:
         description: One numbered spec directory.
         dynamic_child: true
         children:
-          spec:
-            description: Main spec document.
-            template: spec
           flows:
             description: Flow docs for this spec. Use concise kebab-case flow names, following the specy flow-doc naming contract.
             children:
@@ -55,6 +55,19 @@ schema:
                   avoid_when:
                     - The document is the main feature spec or milestone plan.
                     - The content is a raw integration artifact or proof summary.
+          cook:
+            description: Cookbooks and reusable recipes for this spec.
+            children:
+              "{{cook}}":
+                description: Cookbook or reusable recipe for a recurring spec task.
+                template: cook
+                dynamic_child: true
+                insertion_policy:
+                  use_when:
+                    - The document captures a repeatable recipe or workflow that can be reused across runs.
+                    - The content includes inputs, commands, decision points, and expected outputs for a recurring task.
+                  avoid_when:
+                    - The document is a one-off report, raw proof artifact, or main feature spec.
           milestones:
             description: Optional milestone subspecs, numbered as 1.N where N increments from 1.
             children:

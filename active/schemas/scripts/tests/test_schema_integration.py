@@ -459,20 +459,32 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertEqual((out / "root" / "child.md").read_text(encoding="utf-8").strip(), "child from path")
 
-    def test_show_fixture_schema_expands_code_core_children_with_parent_description(self) -> None:
+    def test_show_fixture_schema_renders_path_tree_and_descriptions(self) -> None:
         self.install_prod_schema("code-core")
         self.install_fixture_schema("foo")
 
         result = self.run_schema("show", "foo")
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
-        self.assertIn("pkg [path-only]", result.stdout)
-        self.assertIn("{{name}} [path-only children_from=1]", result.stdout)
-        self.assertIn("dev [template=default] - this is the foo test", result.stdout)
-        self.assertIn("qa [template=qa] - testing", result.stdout)
-        self.assertIn("obs [template=obs] - observability", result.stdout)
-        self.assertIn("api [path-only] - api reference", result.stdout)
-        self.assertIn("{{api_name}} [template=api dynamic] - api reference", result.stdout)
+        self.assertIn("|-- tree", result.stdout)
+        self.assertIn("    `-- pkg\n", result.stdout)
+        self.assertIn("        `-- {{name}}\n", result.stdout)
+        self.assertIn("            |-- dev\n", result.stdout)
+        self.assertIn("            |   |-- qa\n", result.stdout)
+        self.assertIn("            |   `-- obs\n", result.stdout)
+        self.assertIn("            |-- api\n", result.stdout)
+        self.assertNotIn("descriptions", result.stdout)
+        self.assertNotIn("[template=", result.stdout)
+        self.assertNotIn("[path-only", result.stdout)
+
+        describe_result = self.run_schema("describe", "foo")
+
+        self.assertEqual(describe_result.returncode, 0, msg=describe_result.stderr)
+        self.assertIn("- pkg/{{name}}/dev: this is the foo test", describe_result.stdout)
+        self.assertIn("- pkg/{{name}}/dev/qa: testing", describe_result.stdout)
+        self.assertIn("- pkg/{{name}}/dev/obs: observability", describe_result.stdout)
+        self.assertIn("- pkg/{{name}}/api: api reference", describe_result.stdout)
+        self.assertIn("- pkg/{{name}}/api/{{api_name}}: api reference", describe_result.stdout)
 
     def test_fixture_schema_materializes_code_core_qa_template(self) -> None:
         self.install_prod_schema("code-core")
@@ -504,15 +516,28 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         result = self.run_schema("show", "tool")
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
-        self.assertIn("{{name}} [template=root children_from=1] - general description", result.stdout)
-        self.assertIn("dev [template=dev] - development setup, tests, and debugging", result.stdout)
-        self.assertIn("qa [template=default] - how to test changes", result.stdout)
-        self.assertIn("obs [template=obs] - observability", result.stdout)
-        self.assertIn("api [path-only] - public module API namespace", result.stdout)
-        self.assertIn("{{api}} [template=default dynamic] - public interfaces for a module", result.stdout)
-        self.assertIn("{{api_name}} [template=api dynamic] - api reference", result.stdout)
-        self.assertIn("flow [path-only] - execution-flow documentation", result.stdout)
-        self.assertIn("{{flow}} [template=flow-doc dynamic] - flow doc for a specific execution path", result.stdout)
+        self.assertIn("    `-- {{prefix}}\n", result.stdout)
+        self.assertIn("        `-- {{name}}\n", result.stdout)
+        self.assertIn("            |-- dev\n", result.stdout)
+        self.assertIn("            |   |-- qa\n", result.stdout)
+        self.assertIn("            |   `-- obs\n", result.stdout)
+        self.assertIn("            |-- api\n", result.stdout)
+        self.assertIn("            |   |-- {{api}}\n", result.stdout)
+        self.assertIn("            |   `-- {{api_name}}\n", result.stdout)
+        self.assertIn("            |-- flow\n", result.stdout)
+        self.assertIn("            |   `-- {{flow}}\n", result.stdout)
+        describe_result = self.run_schema("describe", "tool")
+
+        self.assertEqual(describe_result.returncode, 0, msg=describe_result.stderr)
+        self.assertIn("- {{prefix}}/{{name}}: general description", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/dev: development setup, tests, and debugging", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/dev/qa: how to test changes", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/dev/obs: observability", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/api: public module API namespace", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/api/{{api}}: public interfaces for a module", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/api/{{api_name}}: api reference", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/flow: execution-flow documentation", describe_result.stdout)
+        self.assertIn("- {{prefix}}/{{name}}/flow/{{flow}}: flow doc for a specific execution path", describe_result.stdout)
 
     def test_tool_schema_materializes_mounted_unrestricted_api_name(self) -> None:
         self.install_prod_schema("code-core")
@@ -540,16 +565,115 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             (out / "pkg.test.api.custom-api.md").read_text(encoding="utf-8"),
         )
 
+    def test_ag_dir_v2_materializes_cook_docs(self) -> None:
+        self.install_prod_schema("integ-proof")
+        self.install_prod_schema("ag-dir-v2")
+
+        show_result = self.run_schema("show", "ag-dir-v2")
+
+        self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
+        self.assertNotIn("            |-- spec\n", show_result.stdout)
+        self.assertIn("            |-- flows\n", show_result.stdout)
+        self.assertIn("            |-- cook\n", show_result.stdout)
+
+        out = self.root / "out"
+        result = self.run_schema(
+            "materialize",
+            "ag-dir-v2",
+            "--out",
+            str(out),
+            "--path-style",
+            "directory",
+            "--var",
+            "spec_number=1",
+            "--var",
+            "spec_slug=pilot",
+            "--var",
+            "cook=release-loop",
+            "--include",
+            "specs/1-pilot/cook/release-loop",
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn(
+            "# Release Loop",
+            (out / "specs" / "1-pilot" / "cook" / "release-loop.md").read_text(encoding="utf-8"),
+        )
+
+    def test_project_schema_materializes_root_level_docs(self) -> None:
+        self.install_prod_schema("project")
+
+        show_result = self.run_schema("show", "project")
+
+        self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
+        self.assertIn("    |-- specs\n", show_result.stdout)
+        self.assertIn("    |-- flows\n", show_result.stdout)
+        self.assertIn("    |   `-- {{flow}}\n", show_result.stdout)
+        self.assertIn("    |-- cook\n", show_result.stdout)
+        self.assertIn("    |   `-- {{cook}}\n", show_result.stdout)
+        self.assertIn("    `-- reports\n", show_result.stdout)
+
+        describe_result = self.run_schema("describe", "project")
+
+        self.assertEqual(describe_result.returncode, 0, msg=describe_result.stderr)
+        self.assertIn("- specs: Project spec directory.", describe_result.stdout)
+        self.assertIn("- flows/{{flow}}: Project-level flow doc", describe_result.stdout)
+        self.assertIn("- cook/{{cook}}: Project-level cookbook", describe_result.stdout)
+        self.assertIn("- reports/{{report}}: Project-level report.", describe_result.stdout)
+
+        out = self.root / "out"
+        materialize_result = self.run_schema(
+            "materialize",
+            "project",
+            "--out",
+            str(out),
+            "--path-style",
+            "directory",
+            "--var",
+            "flow=devbox-initialization",
+            "--var",
+            "cook=release-loop",
+            "--var",
+            "report=security-review",
+            "--include",
+            "flows/devbox-initialization",
+            "--include",
+            "cook/release-loop",
+            "--include",
+            "reports/security-review",
+        )
+
+        self.assertEqual(materialize_result.returncode, 0, msg=materialize_result.stderr)
+        self.assertIn(
+            "# Devbox Initialization Flow",
+            (out / "flows" / "devbox-initialization.md").read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            "# Release Loop",
+            (out / "cook" / "release-loop.md").read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            "# Security Review",
+            (out / "reports" / "security-review.md").read_text(encoding="utf-8"),
+        )
+
     def test_global_core_schema_shows_and_materializes_reference_and_topic(self) -> None:
         self.install_prod_schema("global-core")
 
         show_result = self.run_schema("show", "global-core")
 
         self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
-        self.assertIn("ref [path-only] - References for facts", show_result.stdout)
-        self.assertIn("{{reference}} [template=ref dynamic] - Reference for a fact", show_result.stdout)
-        self.assertIn("t [path-only] - Topics for domain entities", show_result.stdout)
-        self.assertIn("{{topic}} [template=topic dynamic] - Topic for a domain entity", show_result.stdout)
+        self.assertIn("    |-- ref\n", show_result.stdout)
+        self.assertIn("    |   `-- {{reference}}\n", show_result.stdout)
+        self.assertIn("    `-- t\n", show_result.stdout)
+        self.assertIn("        `-- {{topic}}\n", show_result.stdout)
+        describe_result = self.run_schema("describe", "global-core")
+
+        self.assertEqual(describe_result.returncode, 0, msg=describe_result.stderr)
+        self.assertIn("- ref: References for facts", describe_result.stdout)
+        self.assertIn("- ref/{{reference}}: Reference for a fact", describe_result.stdout)
+        self.assertIn("- t: Topics for domain entities", describe_result.stdout)
+        self.assertIn("- t/{{topic}}: Topic for a domain entity", describe_result.stdout)
 
         out = self.root / "out"
         materialize_result = self.run_schema(

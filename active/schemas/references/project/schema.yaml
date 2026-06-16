@@ -1,0 +1,38 @@
+version: 1.0
+output:
+  file_extension: md
+variables:
+  flow:
+    values: ["*"]
+    description: Concise kebab-case flow name.
+  cook:
+    values: ["*"]
+    description: Kebab-case cookbook slug.
+  report:
+    values: ["*"]
+    description: Kebab-case report slug.
+schema:
+  specs:
+    description: Project spec directory.
+    dynamic_child: true
+  flows:
+    description: Project-level flow docs.
+    children:
+      "{{flow}}":
+        description: Project-level flow doc for a behavior or execution path.
+        template: flow-doc
+        dynamic_child: true
+  cook:
+    description: Project-level cookbooks and reusable recipes.
+    children:
+      "{{cook}}":
+        description: Project-level cookbook or reusable recipe.
+        template: cook
+        dynamic_child: true
+  reports:
+    description: Project-level reports.
+    children:
+      "{{report}}":
+        description: Project-level report.
+        template: report
+        dynamic_child: true

@@ -670,24 +670,6 @@ def list_schemas() -> int:
     return 0
 
 
-def tree_label(segment: str, node: SchemaNode) -> str:
-    flags: list[str] = []
-    if should_materialize(node):
-        flags.append(f"template={node.template or DEFAULT_TEMPLATE}")
-    else:
-        flags.append("path-only")
-    if node.children_from:
-        flags.append(f"children_from={len(node.children_from)}")
-    if node.dynamic_child:
-        flags.append("dynamic")
-    if node.insertion_policy:
-        flags.append("insertion-policy")
-
-    flag_text = f" [{' '.join(flags)}]" if flags else ""
-    description = f" - {node.description}" if node.description else ""
-    return f"{segment}{flag_text}{description}"
-
-
 def merge_schema_nodes_for_show(parent_node: SchemaNode, mounted_node: SchemaNode) -> SchemaNode:
     merged = parent_node.model_copy(deep=True)
     for segment, child_node in mounted_node.children.items():
@@ -733,7 +715,7 @@ def print_tree(
     for index, (segment, node) in enumerate(items):
         is_last = index == len(items) - 1
         connector = "`-- " if is_last else "|-- "
-        print(f"{prefix}{connector}{tree_label(segment, node)}")
+        print(f"{prefix}{connector}{segment}")
         child_prefix = prefix + ("    " if is_last else "|   ")
         print_tree(
             expanded_children_for_show(schema_dir, node, schema_stack=schema_stack),
@@ -741,6 +723,36 @@ def print_tree(
             prefix=child_prefix,
             schema_stack=schema_stack,
         )
+
+
+def collect_descriptions(
+    nodes: dict[str, SchemaNode],
+    *,
+    schema_dir: Path,
+    schema_stack: tuple[Path, ...],
+    path: tuple[str, ...] = (),
+) -> list[tuple[str, str]]:
+    descriptions: list[tuple[str, str]] = []
+    for segment, node in nodes.items():
+        next_path = (*path, segment)
+        if node.description:
+            descriptions.append(("/".join(next_path), node.description))
+        descriptions.extend(
+            collect_descriptions(
+                expanded_children_for_show(schema_dir, node, schema_stack=schema_stack),
+                schema_dir=schema_dir,
+                schema_stack=schema_stack,
+                path=next_path,
+            )
+        )
+    return descriptions
+
+
+def print_descriptions(
+    descriptions: list[tuple[str, str]],
+) -> None:
+    for path, description in descriptions:
+        print(f"- {path}: {description}")
 
 
 def show_schema(schema_name: str) -> int:
@@ -756,10 +768,19 @@ def show_schema(schema_name: str) -> int:
             default = f", default={spec.default}" if spec.default else ""
             print(f"|   {connector}{name}: {', '.join(spec.values)}{default}")
     if document.variables:
-        print("`-- tree")
+        print("|-- tree")
         print_tree(document.tree, schema_dir=schema_dir, prefix="    ", schema_stack=(schema_path,))
     else:
-        print_tree(document.tree, schema_dir=schema_dir, schema_stack=(schema_path,))
+        print("|-- tree")
+        print_tree(document.tree, schema_dir=schema_dir, prefix="    ", schema_stack=(schema_path,))
+    return 0
+
+
+def describe_schema(schema_name: str) -> int:
+    schema_path = schema_path_for_name(schema_name)
+    schema_dir, document = load_schema_file(schema_path)
+    descriptions = collect_descriptions(document.tree, schema_dir=schema_dir, schema_stack=(schema_path,))
+    print_descriptions(descriptions)
     return 0
 
 
@@ -774,6 +795,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     show = subparsers.add_parser("show", help="Show a schema tree.")
     show.add_argument("schema")
+
+    describe = subparsers.add_parser("describe", help="Show schema descriptions as Markdown bullets.")
+    describe.add_argument("schema")
 
     materialize_parser = subparsers.add_parser("materialize", help="Materialize a schema into an output directory.")
     materialize_parser.add_argument("schema")
@@ -804,6 +828,8 @@ def main(argv: list[str] | None = None) -> int:
             return list_schemas()
         if args.command == "show":
             return show_schema(args.schema)
+        if args.command == "describe":
+            return describe_schema(args.schema)
         if args.command == "materialize":
             if args.overwrite and args.skip_existing:
                 raise ValueError("use either --overwrite or --skip-existing, not both")
