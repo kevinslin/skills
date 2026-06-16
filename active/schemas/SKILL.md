@@ -11,7 +11,6 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 ## Available Schemas
 
 - `tool`: Dendron note hierarchy for `pkg.<name>` and `vpkg.<name>` tool documentation. See `./references/tool/schema.yaml`.
-- `ag-dir`: Agent Project Directory scaffold with durable root docs, active specs under `docs/`, and per-spec runtime artifacts under `.agents/runs/spec-{num}/`. See `./references/ag-dir/schema.yaml`.
 - `code`: Specy-style code documentation tree under the selected output root, usually a `$mem` base root, at `packages/{{module}}`, including navfiles, dev/QA, reference catchalls, architecture, research, design, specs, flows, state, recipes, FAQ, vendor docs, and database docs. See `./references/code/schema.yaml`.
 - `code-core`: Reusable code documentation subtree with `dev/qa`, `dev/obs`, `flow/{{flow}}`, `arch/{{arch}}`, and API reference nodes. See `./references/code-core/schema.yaml`.
 - `global-core`: Reusable global reference and topic namespaces with `ref/{{reference}}` and `t/{{topic}}`. See `./references/global-core/schema.yaml`.
@@ -129,13 +128,13 @@ Materialize another node by including its full rendered path:
 For directory-style schemas, pass `--include` using slash-separated rendered paths so literal-dot directory names still work:
 
 ```bash
-./scripts/schema.py materialize ag-dir \
-  --out /tmp/ag-dir-output \
+./scripts/schema.py materialize specs \
+  --out /tmp/specs-output \
   --path-style directory \
-  --var project_title="Example Project" \
-  --var archived_spec_num=00 \
-  --var archived_spec_name=landed-work \
-  --include docs/.archive/spec-00-landed-work \
+  --var spec_number=1 \
+  --var spec_slug=example \
+  --var report=security-review \
+  --include specs/1-example/reports/security-review \
   --skip-existing
 ```
 
