@@ -65,8 +65,8 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 ## Common Instructions (All Doc Types)
 
 0. For durable knowledge artifacts, resolve `$mem` first and report the selected base name, resolved root, and concrete output path. If no `$mem` base clearly matches and the user did not name a concrete non-memory destination, ask instead of guessing.
-0a. If `$mem` resolves an existing folder-based spec unit (for example `ag-dir-v2` `specs/{NN}-{topic}/`) and the user asks to place a report "under spec 30" or similar, treat that folder as the target container. Do not create a new numbered spec just because the requested doc type is a research brief.
-0b. If `$mem` resolves a sidecar node such as `ag-dir-v2/reports/{{report}}`, recast the content into that node's required shape. For research output, adapt findings into the selected schema template instead of copying the default `research-brief` headings verbatim.
+0a. If `$mem` resolves an existing folder-based spec unit (for example `specs` `specs/{NN}-{topic}/`) and the user asks to place a report "under spec 30" or similar, treat that folder as the target container. Do not create a new numbered spec just because the requested doc type is a research brief.
+0b. If `$mem` resolves a sidecar node such as `specs/reports/{{report}}`, recast the content into that node's required shape. For research output, adapt findings into the selected schema template instead of copying the default `research-brief` headings verbatim.
 1. Find the requested doc type workflow at `./references/[doc-type]/workflow.md`.
 2. Follow the `Instructions` header in that workflow to do the implementation.
 3. Copy `./references/[doc-type]/template.md` to the requested output location before filling in content.
@@ -253,7 +253,7 @@ $DOCS_ROOT/
 ```
 
 Active feature specs live directly under `$DOCS_ROOT/specs/` with a monotonic two-digit integer prefix starting at `01`; choose the next prefix by scanning active and archived specs and do not reuse gaps. When a single-file spec is complete, move it to `$DOCS_ROOT/specs/.archive/` and keep the same filename.
-When a workspace explicitly uses a folder-based schema such as `ag-dir-v2`, each active spec folder lives directly under `$DOCS_ROOT/specs/{NN}-{topic}/` and contains `spec.md` plus optional sidecars such as `checklist.md` or `data/`. Treat the folder as the spec unit: update `spec.md`, preserve sidecars, and archive the whole folder to `$DOCS_ROOT/specs/.archive/{NN}-{topic}/` when complete.
+When a workspace explicitly uses a folder-based schema such as `specs`, each active spec folder lives directly under `$DOCS_ROOT/specs/{NN}-{topic}/` and may contain sidecars such as `milestones/`, `flows/`, `reports/`, `cook/`, or proof artifacts. Treat the folder as the spec unit: update the selected schema sidecar, preserve siblings, and archive the whole folder to `$DOCS_ROOT/specs/.archive/{NN}-{topic}/` when complete.
 If multiple spec types exist for the same topic, keep the filename format and distinguish them in the `{topic}` slug, for example `01-payments-design.md` or `02-payments-validation.md`.
 
 FAQ Specs do not create standalone files. They update the target research document in place.

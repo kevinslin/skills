@@ -37,7 +37,7 @@ changes.
 
 - Create a swarm checklist before starting the loop.
 - Before writing any durable spec, checklist, flow doc, proof, review artifact, runbook, or long-lived project note, invoke `$mem` to resolve the intended base, root, schemas, and file rules. Do this by artifact intent, not by path shape: `$mem` roots may be anywhere and may not contain `.mem`.
-- Store the checklist in the active spec folder when using `schemas` `ag-dir-v2`.
+- Store the checklist in the active spec folder when using `schemas` `specs`.
 - Store the checklist in a temporary folder for all other workflows.
 - Include every required gate: spec, spec review, implementation, review swarm,
   review fixes, verification, PR push, and any user-requested stopping condition.
@@ -132,7 +132,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
   planning/review only or explicitly said not to push.
 - Include the PR URL in the final handoff. If push or PR creation fails, report
   the exact failure and treat the swarm run as incomplete.
-- Write a flow doc for the implementation. Store it in the `$mem`-resolved active spec folder when using `schemas` `ag-dir-v2`, and report the selected base plus concrete path in the handoff.
+- Write a flow doc for the implementation. Store it in the `$mem`-resolved active spec folder when using `schemas` `specs`, and report the selected base plus concrete path in the handoff.
 - Kick of $babysit-pr after the PR is pushed
 - Create a flow doc that goes over the primary logic path that this pr exercises using $specy skill
 - $slack-notify me with alert once pr is green

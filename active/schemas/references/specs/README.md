@@ -1,16 +1,16 @@
-# ag-dir-v2 Schema
+# specs Schema
 
 Source: `schema.yaml`
 
 Regenerate this view from the schemas skill root:
 
 ```bash
-UV_CACHE_DIR=/private/tmp/uv-cache ./scripts/schema.py show ag-dir-v2
-UV_CACHE_DIR=/private/tmp/uv-cache ./scripts/schema.py describe ag-dir-v2
+UV_CACHE_DIR=/private/tmp/uv-cache ./scripts/schema.py show specs
+UV_CACHE_DIR=/private/tmp/uv-cache ./scripts/schema.py describe specs
 ```
 
 ```text
-ag-dir-v2 [version=1.0 extension=md]
+specs [version=1.0 extension=md]
 |-- variables
 |   |-- spec_number: *, default=1
 |   |-- spec_slug: *, default=bootstrap

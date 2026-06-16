@@ -565,11 +565,11 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             (out / "pkg.test.api.custom-api.md").read_text(encoding="utf-8"),
         )
 
-    def test_ag_dir_v2_materializes_cook_docs(self) -> None:
+    def test_specs_schema_materializes_cook_docs(self) -> None:
         self.install_prod_schema("integ-proof")
-        self.install_prod_schema("ag-dir-v2")
+        self.install_prod_schema("specs")
 
-        show_result = self.run_schema("show", "ag-dir-v2")
+        show_result = self.run_schema("show", "specs")
 
         self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
         self.assertNotIn("            |-- spec\n", show_result.stdout)
@@ -579,7 +579,7 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         out = self.root / "out"
         result = self.run_schema(
             "materialize",
-            "ag-dir-v2",
+            "specs",
             "--out",
             str(out),
             "--path-style",

@@ -68,7 +68,7 @@ Run `fin [context] [target]`.
 - Only use candidate roots that exist or whose parent exists and is clearly the intended workspace artifact root. Report the selected spec root when a matching spec is found.
 - Follow `specy`'s layout rule for each candidate root: active specs live directly under `$DOCS_ROOT/specs/`.
 - Only treat files directly under a candidate `$DOCS_ROOT/specs/` as active specs. Ignore files already under `$DOCS_ROOT/specs/.archive/`.
-- Also support folder specs when the workspace uses a folder schema such as `ag-dir-v2`: an active spec folder lives directly under a candidate `$DOCS_ROOT/specs/<spec-slug>/` and contains `spec.md`, with optional sidecars such as `checklist.md` or `data/`. Treat the folder as the active spec unit, not only `spec.md`.
+- Also support folder specs when the workspace uses a folder schema such as `specs`: an active spec folder lives directly under a candidate `$DOCS_ROOT/specs/<spec-slug>/`, with optional sidecars such as `milestones/`, `flows/`, `reports/`, `cook/`, `checklist.md`, or `data/`. Treat the folder as the active spec unit.
 - If the completed work is a milestone or sidecar inside an active folder spec,
   do not archive the parent folder unless the parent spec itself is complete. If
   sibling milestones remain, record that the milestone landed and leave the

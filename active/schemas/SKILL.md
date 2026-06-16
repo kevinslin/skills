@@ -12,12 +12,12 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 
 - `tool`: Dendron note hierarchy for `pkg.<name>` and `vpkg.<name>` tool documentation. See `./references/tool/schema.yaml`.
 - `ag-dir`: Agent Project Directory scaffold with durable root docs, active specs under `docs/`, and per-spec runtime artifacts under `.agents/runs/spec-{num}/`. See `./references/ag-dir/schema.yaml`.
-- `ag-dir-v2`: Agent Project Directory tree with numbered spec directories, per-spec flow docs, cookbooks, milestones, integration proofs, and reports. See `./references/ag-dir-v2/schema.yaml`.
 - `code`: Specy-style code documentation tree under the selected output root, usually a `$mem` base root, at `packages/{{module}}`, including navfiles, dev/QA, reference catchalls, architecture, research, design, specs, flows, state, recipes, FAQ, vendor docs, and database docs. See `./references/code/schema.yaml`.
 - `code-core`: Reusable code documentation subtree with `dev/qa`, `dev/obs`, `flow/{{flow}}`, `arch/{{arch}}`, and API reference nodes. See `./references/code-core/schema.yaml`.
 - `global-core`: Reusable global reference and topic namespaces with `ref/{{reference}}` and `t/{{topic}}`. See `./references/global-core/schema.yaml`.
 - `integ-proof`: Integration behavior proof tree with claim, status, scenario summaries, proof-local scripts, and arbitrary raw artifacts. See `./references/integ-proof/schema.yaml`.
 - `project`: Project-level directory tree with `specs/`, root-level flow docs, cookbooks, and reports. See `./references/project/schema.yaml`.
+- `specs`: Agent Project Directory tree with numbered spec directories, per-spec flow docs, cookbooks, milestones, integration proofs, and reports. See `./references/specs/schema.yaml`.
 
 ## Schema Layout
 

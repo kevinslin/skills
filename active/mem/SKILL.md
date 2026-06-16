@@ -105,7 +105,7 @@ The selected base `root` is the authoritative filesystem root for that operation
    - Use `insertion_policy` only as a tie-breaker or guardrail when descriptions leave ambiguity.
    - Before writing, render or derive the expected file path for the chosen schema node under the selected base `root`, including required slug, name, and template conventions.
    - Use the selected base's normalized `path_style` when deriving paths or invoking schema materialization. If using `../schemas/scripts/schema.py materialize`, pass `--path-style {{path_style}}`.
-   - For folder-based schemas, distinguish the primary document from sidecars. Example: in `ag-dir-v2`, the spec unit is `specs/{NN}-{slug}/spec.md` and report sidecars live at `specs/{NN}-{slug}/reports/{report}.md`. Do not treat the spec folder as a generic bucket, and do not create a reports-only spec folder with no `spec.md`.
+   - For folder-based schemas, distinguish the spec directory from sidecars. Example: in `specs`, the spec unit is `specs/{NN}-{slug}/` and report sidecars live at `specs/{NN}-{slug}/reports/{report}.md`. Do not treat the spec folder as a generic bucket, and do not create a reports-only spec folder with no spec directory.
    - Create only the chosen target file and its parent directories. Do not materialize a whole schema tree, required sibling nodes, or placeholder/default nodes just to create one knowledge file.
    - If using a schema helper command, use it only when it can render exactly the selected node. Do not run broad schema materialization commands that also create required siblings under the base root.
    - Do not invent schema metadata fields such as `schema_route`, `schema`, `route`, or `node`. Add or update route-like metadata only when the resolved schema template or the existing file explicitly defines that field, and then use the concrete materialized route for the selected root and `path_style`, not an unresolved template route.
@@ -156,7 +156,7 @@ When adding a finding:
 - Choose the schema node before writing, then shape new or updated content according to the resolved `$schema` definitions.
 - If another invoked skill proposes a default structure or template, treat that as content guidance only. The selected `$mem` schema node still owns the destination path and the required document shape.
 - When the selected file does not exist, create that file directly from the selected node's expected template/sections. Do not initialize the rest of the schema around it.
-- If the selected node is a sidecar under an existing folder-based unit, preserve the unit's required primary file. For example, adding `ag-dir-v2/reports/{{report}}` under `specs/{NN}-{slug}/` must leave `spec.md` present and authoritative for that spec folder.
+- If the selected node is a sidecar under an existing folder-based unit, preserve the existing spec folder. For example, adding `specs/reports/{{report}}` under `specs/{NN}-{slug}/` must leave that spec folder present and authoritative.
 - After writing, verify the schema-path invariants: the expected file exists, any wrong-path sibling is absent or intentionally left alone, empty wrong-path directories from this operation are removed or reported, and route or index metadata points at the expected concrete slug or path.
 - Add the smallest durable note that will be useful later.
 - Include source context when available: originating file, command, log, PR, conversation, date, or rationale.
@@ -165,10 +165,10 @@ When adding a finding:
 
 ## Folder-Based Schema Example
 
-When the selected base uses a folder-based schema such as `ag-dir-v2` and the user says "put this report under spec 30":
+When the selected base uses a folder-based schema such as `specs` and the user says "put this report under spec 30":
 
 1. Resolve `spec 30` to the existing folder under the selected base root, for example `specs/30-crabshell-research/`.
-2. Confirm the primary spec file exists or create/repair it if the schema requires it (`spec.md` for `ag-dir-v2`).
+2. Confirm the spec folder exists or create/repair it if the schema requires it.
 3. Choose the sidecar node `reports/{{report}}` for the requested artifact.
 4. Write the concrete report file under that folder, for example `specs/30-crabshell-research/reports/open-shell.md`.
 5. Use the report node's template/sections, not another skill's default research template, unless the existing file already has a stable user-owned format that you are preserving.
