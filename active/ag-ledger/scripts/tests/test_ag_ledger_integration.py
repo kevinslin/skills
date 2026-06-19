@@ -105,6 +105,8 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         self.assertEqual(entry["session"], codex_thread_id)
         self.assertEqual(entry["msg"], "session start: test")
         self.assertEqual(entry["invoked_skill"], "ag-learn")
+        self.assertEqual(entry["invoked_skills"], ["ag-learn"])
+        self.assertEqual(entry["invocation_trigger"], "explicit")
         self.assertEqual(entry["mode"], "review")
         self.assertEqual(entry["parent_session_id"], "sess-parent")
 
@@ -243,6 +245,40 @@ class AgLedgerIntegrationTests(unittest.TestCase):
         self.assertIn("deprecated", result.stdout.lower())
         self.assertIn("ag-ledger sync", result.stdout)
         self.assertEqual(agents_file.read_text(encoding="utf-8"), original)
+
+    def test_status_reports_persisted_closeout_state(self) -> None:
+        state_dir = self.root / "state"
+        state_dir.mkdir(parents=True, exist_ok=True)
+        (state_dir / "sync-state.json").write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "files": {},
+                    "closeout": {
+                        "state": "blocked",
+                        "reason": "files_failed",
+                        "stable": True,
+                        "blocker_fingerprint": "abc123",
+                        "blocker_occurrences": 2,
+                    },
+                },
+                ensure_ascii=True,
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_cli("status")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        status = json.loads(result.stdout.strip())
+        self.assertEqual(status["closeout_state"], "blocked")
+        self.assertTrue(status["stable_blocked"])
+        self.assertEqual(status["blocker_fingerprint"], "abc123")
+        self.assertEqual(status["blocker_occurrences"], 2)
+        self.assertEqual(status["invoked_skill"], "ag-ledger")
+        self.assertEqual(status["invoked_skills"], ["ag-ledger"])
+        self.assertEqual(status["invocation_trigger"], "explicit")
+        self.assertEqual(status["invocation_source"], "ag-ledger-cli")
+        self.assertEqual(status["mode"], "status")
 
 
 if __name__ == "__main__":

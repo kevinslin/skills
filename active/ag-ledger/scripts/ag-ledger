@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -26,8 +27,22 @@ ENV_CODEX_THREAD_ID = "CODEX_THREAD_ID"
 ENV_CODEX_HOME = "CODEX_HOME"
 FINAL_PHASES = {"final", "final_answer"}
 SYNC_STATE_VERSION = 1
+STABLE_BLOCKED_OCCURRENCES = 2
 SKILL_ROOT = Path(__file__).resolve().parents[2]
-SKILL_TOKEN_PATTERN = re.compile(r"`(?:\$)?([A-Za-z0-9][A-Za-z0-9_.-]*)`")
+SKILL_TOKEN_PATTERN = re.compile(r"`(?:\$)?([A-Za-z0-9][A-Za-z0-9_.-]*)")
+DOLLAR_SKILL_PATTERN = re.compile(r"(?<![A-Za-z0-9_.-])\$([A-Za-z0-9][A-Za-z0-9_.-]*)")
+SKILL_PATH_PATTERN = re.compile(
+    r"/(?:drafts|active)/([A-Za-z0-9][A-Za-z0-9_.-]*)(?:/|$)"
+)
+JSON_SKILL_PATTERN = re.compile(
+    r'"(?:invoked_skill|skill)"\s*:\s*"([A-Za-z0-9][A-Za-z0-9_.-]*)"'
+)
+SYNC_INVOCATION_METADATA = {
+    "invoked_skill": "ag-ledger",
+    "invoked_skills": ["ag-ledger"],
+    "invocation_trigger": "explicit",
+    "invocation_source": "ag-ledger-cli",
+}
 
 
 @dataclass(frozen=True)
@@ -165,14 +180,19 @@ def append_entry(
         "session": session_id,
         "msg": message,
     }
+    normalized_invoked_skill = normalize_optional_field(invoked_skill)
     optional_fields = {
-        "invoked_skill": normalize_optional_field(invoked_skill),
+        "invoked_skill": normalized_invoked_skill,
         "mode": normalize_optional_field(mode),
         "parent_session_id": normalize_optional_field(parent_session_id),
     }
     for key, value in optional_fields.items():
         if value is not None:
             entry[key] = value
+
+    if normalized_invoked_skill is not None:
+        entry["invoked_skills"] = [normalized_invoked_skill]
+        entry["invocation_trigger"] = "explicit"
 
     if extra_fields:
         for key, value in extra_fields.items():
@@ -291,18 +311,71 @@ def infer_invocation_trigger(message_text: str) -> str:
         return "catalog-only"
     if "required" in lowered and "skill" in lowered:
         return "required-by-repo"
-    if "using `" in lowered or "running `" in lowered or "use `" in lowered:
+    if (
+        "using" in lowered
+        or "running" in lowered
+        or "invoke" in lowered
+        or "$" in message_text
+        or "/active/" in lowered
+        or '"invoked_skill"' in lowered
+    ):
         return "explicit"
     return "implicit"
 
 
+def skill_name_pattern(skill_name: str) -> str:
+    parts = [part for part in re.split(r"[-_.]+", skill_name) if part]
+    return r"[-_.\s]+".join(re.escape(part) for part in parts)
+
+
+@lru_cache(maxsize=1)
+def explicit_skill_patterns() -> tuple[tuple[str, re.Pattern[str]], ...]:
+    patterns: list[tuple[str, re.Pattern[str]]] = []
+    for skill_name in sorted(known_skill_names()):
+        patterns.append(
+            (
+                skill_name,
+                re.compile(
+                    rf"\b(?:using|use|running|run|invoking|invoke)\s+"
+                    rf"(?:the\s+)?(?:\$)?{skill_name_pattern(skill_name)}\b",
+                    flags=re.IGNORECASE,
+                ),
+            )
+        )
+    return tuple(patterns)
+
+
 def infer_invocation_metadata(message_text: str) -> dict[str, object]:
-    matched: list[str] = []
     available = known_skill_names()
-    for match in SKILL_TOKEN_PATTERN.finditer(message_text):
-        candidate = match.group(1)
-        if candidate in available and candidate not in matched:
-            matched.append(candidate)
+    candidate_positions: dict[str, int] = {}
+
+    def add_candidate(candidate: str, position: int) -> None:
+        if candidate not in available:
+            return
+        prior_position = candidate_positions.get(candidate)
+        if prior_position is None or position < prior_position:
+            candidate_positions[candidate] = position
+
+    for pattern in (
+        SKILL_TOKEN_PATTERN,
+        DOLLAR_SKILL_PATTERN,
+        SKILL_PATH_PATTERN,
+        JSON_SKILL_PATTERN,
+    ):
+        for match in pattern.finditer(message_text):
+            add_candidate(match.group(1), match.start(1))
+
+    for skill_name, explicit_pattern in explicit_skill_patterns():
+        match = explicit_pattern.search(message_text)
+        if match is not None:
+            add_candidate(skill_name, match.start())
+
+    matched = [
+        skill_name
+        for skill_name, _ in sorted(
+            candidate_positions.items(), key=lambda item: (item[1], item[0])
+        )
+    ]
 
     if not matched:
         return {}
@@ -551,7 +624,11 @@ def file_fingerprint(path: Path) -> dict[str, int]:
 
 def load_sync_state(path: Path) -> dict[str, object]:
     if not path.exists():
-        return {"version": SYNC_STATE_VERSION, "files": {}}
+        return {
+            "version": SYNC_STATE_VERSION,
+            "files": {},
+            "closeout": default_closeout_state(),
+        }
 
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
@@ -576,7 +653,180 @@ def load_sync_state(path: Path) -> dict[str, object]:
             ],
         }
 
-    return {"version": SYNC_STATE_VERSION, "files": normalized_files}
+    return {
+        "version": SYNC_STATE_VERSION,
+        "files": normalized_files,
+        "closeout": normalize_closeout_state(raw.get("closeout")),
+    }
+
+
+def default_closeout_state() -> dict[str, object]:
+    return {
+        "state": "settled",
+        "reason": "no_prior_sync",
+        "stable": False,
+        "blocker_occurrences": 0,
+    }
+
+
+def normalize_closeout_state(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        return default_closeout_state()
+
+    state = value.get("state")
+    if state not in {"settled", "live_frontier", "blocked"}:
+        return default_closeout_state()
+
+    normalized: dict[str, object] = {
+        "state": state,
+        "reason": str(value.get("reason", "unknown")),
+        "stable": bool(value.get("stable", False)) if state == "blocked" else False,
+        "blocker_occurrences": (
+            max(0, int(value.get("blocker_occurrences", 0)))
+            if state == "blocked"
+            else 0
+        ),
+    }
+    blocker_fingerprint = value.get("blocker_fingerprint")
+    if state == "blocked" and isinstance(blocker_fingerprint, str):
+        normalized["blocker_fingerprint"] = blocker_fingerprint
+    return normalized
+
+
+def path_scope(path_value: object, *, root: Path, state_path: Path) -> str:
+    if not isinstance(path_value, (str, os.PathLike)):
+        return "unknown"
+
+    try:
+        candidate = Path(path_value).expanduser().resolve()
+    except OSError:
+        return "unknown"
+
+    ledger_directory = data_dir(root).resolve()
+    if candidate == ledger_directory or ledger_directory in candidate.parents:
+        return "ledger_data"
+    resolved_state_path = state_path.resolve()
+    if candidate == resolved_state_path or resolved_state_path.parent in candidate.parents:
+        return "sync_state"
+    return "other"
+
+
+def failure_details(
+    *,
+    path: Path,
+    exc: Exception,
+    operation: str,
+    root: Path,
+    state_path: Path,
+) -> dict[str, str]:
+    if isinstance(exc, PermissionError):
+        blocker_kind = "permission_denied"
+    elif isinstance(exc, FileExistsError):
+        blocker_kind = "path_conflict"
+    elif isinstance(exc, FileNotFoundError):
+        blocker_kind = "missing_path"
+    elif isinstance(exc, OSError) and exc.errno == 30:
+        blocker_kind = "read_only_filesystem"
+    elif isinstance(exc, OSError):
+        blocker_kind = f"os_error_{exc.errno or 'unknown'}"
+    else:
+        blocker_kind = type(exc).__name__
+
+    error_path = getattr(exc, "filename", None)
+    return {
+        "path": str(path),
+        "operation": operation,
+        "error": str(exc),
+        "error_type": type(exc).__name__,
+        "blocker_kind": blocker_kind,
+        "blocker_scope": path_scope(error_path, root=root, state_path=state_path),
+    }
+
+
+def blocker_fingerprint(failures: list[dict[str, str]]) -> str:
+    signatures: set[str] = set()
+    stable_barrier_kinds = {
+        "permission_denied",
+        "read_only_filesystem",
+        "path_conflict",
+    }
+    for failure in failures:
+        kind = failure.get("blocker_kind", "unknown")
+        operation = failure.get("operation", "unknown")
+        scope = failure.get("blocker_scope", "unknown")
+        signature = f"{operation}:{kind}:{scope}"
+        if kind not in stable_barrier_kinds:
+            signature = ":".join(
+                [
+                    signature,
+                    failure.get("path", ""),
+                    failure.get("error", ""),
+                ]
+            )
+        signatures.add(signature)
+
+    payload = "\n".join(sorted(signatures)).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def determine_closeout_state(
+    *,
+    entries_appended: int,
+    failures: list[dict[str, str]],
+    previous_closeout: Mapping[str, object],
+) -> dict[str, object]:
+    if failures:
+        fingerprint = blocker_fingerprint(failures)
+        previous_fingerprint = previous_closeout.get("blocker_fingerprint")
+        previous_occurrences = int(previous_closeout.get("blocker_occurrences", 0))
+        occurrences = (
+            previous_occurrences + 1
+            if previous_closeout.get("state") == "blocked"
+            and previous_fingerprint == fingerprint
+            else 1
+        )
+        return {
+            "state": "blocked",
+            "reason": "files_failed",
+            "stable": occurrences >= STABLE_BLOCKED_OCCURRENCES,
+            "blocker_fingerprint": fingerprint,
+            "blocker_occurrences": occurrences,
+        }
+
+    if entries_appended > 0:
+        return {
+            "state": "live_frontier",
+            "reason": "entries_appended",
+            "stable": False,
+            "blocker_occurrences": 0,
+        }
+
+    return {
+        "state": "settled",
+        "reason": "no_new_entries",
+        "stable": False,
+        "blocker_occurrences": 0,
+    }
+
+
+def closeout_summary_fields(
+    closeout: Mapping[str, object], *, mode: str
+) -> dict[str, object]:
+    fields: dict[str, object] = {
+        **SYNC_INVOCATION_METADATA,
+        "mode": mode,
+        "closeout_state": closeout.get("state", "settled"),
+        "closeout_reason": closeout.get("reason", "unknown"),
+        "stable_blocked": bool(closeout.get("stable", False)),
+    }
+    if closeout.get("state") == "blocked":
+        fields["blocker_occurrences"] = int(
+            closeout.get("blocker_occurrences", 0)
+        )
+        blocker_value = closeout.get("blocker_fingerprint")
+        if isinstance(blocker_value, str):
+            fields["blocker_fingerprint"] = blocker_value
+    return fields
 
 
 def write_json_atomic(path: Path, data: Mapping[str, object]) -> None:
@@ -731,6 +981,24 @@ def cmd_session_id(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    root = resolve_root(args.root)
+    state_path = resolve_state_file(root, args.state_file)
+    try:
+        state = load_sync_state(state_path)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    closeout = normalize_closeout_state(state.get("closeout"))
+    status = {
+        "state_file": str(state_path),
+        **closeout_summary_fields(closeout, mode="status"),
+    }
+    print(json.dumps(status, ensure_ascii=True))
+    return 0
+
+
 def cmd_filter(args: argparse.Namespace) -> int:
     root = resolve_root(args.root)
 
@@ -808,6 +1076,8 @@ def cmd_sync(args: argparse.Namespace) -> int:
         print(f"Invalid sync state structure in {state_path}", file=sys.stderr)
         return 2
 
+    previous_closeout = normalize_closeout_state(state.get("closeout"))
+
     summary = {
         "files_considered": 0,
         "files_processed": 0,
@@ -848,7 +1118,15 @@ def cmd_sync(args: argparse.Namespace) -> int:
             )
         except Exception as exc:  # noqa: BLE001
             print(f"sync failed for {path}: {exc}", file=sys.stderr)
-            failures.append({"path": str(path), "error": str(exc)})
+            failures.append(
+                failure_details(
+                    path=path,
+                    exc=exc,
+                    operation="sync_rollout",
+                    root=root,
+                    state_path=state_path,
+                )
+            )
             summary["files_failed"] += 1
             continue
 
@@ -856,11 +1134,40 @@ def cmd_sync(args: argparse.Namespace) -> int:
         summary["entries_appended"] += appended_count
         summary["entries_already_present"] += existing_count
 
+    closeout = determine_closeout_state(
+        entries_appended=int(summary["entries_appended"]),
+        failures=failures,
+        previous_closeout=previous_closeout,
+    )
+    state["closeout"] = closeout
+    try:
+        write_json_atomic(state_path, state)
+        summary["closeout_persisted"] = True
+    except Exception as exc:  # noqa: BLE001
+        print(f"sync closeout persistence failed for {state_path}: {exc}", file=sys.stderr)
+        failures.append(
+            failure_details(
+                path=state_path,
+                exc=exc,
+                operation="persist_closeout",
+                root=root,
+                state_path=state_path,
+            )
+        )
+        summary["closeout_persisted"] = False
+        summary["state_write_failed"] = True
+        closeout = determine_closeout_state(
+            entries_appended=int(summary["entries_appended"]),
+            failures=failures,
+            previous_closeout=previous_closeout,
+        )
+
+    summary.update(closeout_summary_fields(closeout, mode="sync"))
     if failures:
         summary["failures"] = failures
 
     print(json.dumps(summary, ensure_ascii=True))
-    if failures:
+    if closeout["state"] == "blocked":
         return 1
     return 0
 
@@ -925,6 +1232,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print the current Codex session id from CODEX_THREAD_ID.",
     )
     session_id_parser.set_defaults(func=cmd_session_id)
+
+    status_parser = subparsers.add_parser(
+        "status",
+        help="Print the persisted sync closeout state.",
+    )
+    status_parser.add_argument(
+        "--state-file",
+        help="Path to the sync state file. Defaults under the ledger root.",
+    )
+    status_parser.set_defaults(func=cmd_status)
 
     filter_parser = subparsers.add_parser("filter", help="Filter stored entries.")
     filter_parser.add_argument("--session", help="Filter by session id.")

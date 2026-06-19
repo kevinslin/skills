@@ -1,6 +1,6 @@
 # Architecture Doc: AG Ledger Script
 
-**Last Updated**: 2026-03-17
+**Last Updated**: 2026-06-19
 
 **Status**: Complete
 
@@ -9,9 +9,9 @@
 **Related**:
 
 - `SKILL.md`
-- `scripts/ag-ledger`
-- `scripts/tests/test_ag_ledger_integration.py`
-- `scripts/integration/test_sync.py`
+- `./scripts/ag-ledger`
+- `./scripts/tests/test_ag_ledger_integration.py`
+- `./scripts/integration/test_sync.py`
 
 * * *
 
@@ -27,11 +27,13 @@
 
 ### In Scope
 
-- Local path resolution for ledger data, Codex session inputs, and sync state (`scripts/ag-ledger`:56-89)
-- Manual activity recording via `append`, `append-current`, and `session-id` (`scripts/ag-ledger`:635-682)
-- Local ledger querying via `filter` (`scripts/ag-ledger`:685-722)
-- Transcript-to-ledger derivation and idempotent sync (`scripts/ag-ledger`:374-632,734-812)
-- CLI command routing and public contract definition (`scripts/ag-ledger`:815-941)
+- Local path resolution for ledger data, Codex session inputs, and sync state (`./scripts/ag-ledger`:56-89)
+- Manual activity recording via `append`, `append-current`, and `session-id` (`./scripts/ag-ledger`:635-682)
+- Local ledger querying via `filter` (`./scripts/ag-ledger`:685-722)
+- Transcript-to-ledger derivation and idempotent sync (`./scripts/ag-ledger`:374-632,734-812)
+- Persisted sync closeout classification as `settled`, `live_frontier`, or
+  `blocked`, including repeated-blocker fingerprints
+- CLI command routing and public contract definition (`./scripts/ag-ledger`:815-941)
 
 ### Out of Scope
 
@@ -39,7 +41,7 @@
 - Conversation capture outside Codex rollout files
 - Real-time streaming or file-watcher based ingestion
 - Mutation or deletion of existing ledger rows
-- Any `AGENTS.md` installation workflow beyond printing migration guidance for deprecated `init` (`scripts/ag-ledger`:725-730)
+- Any `AGENTS.md` installation workflow beyond printing migration guidance for deprecated `init` (`./scripts/ag-ledger`:725-730)
 
 * * *
 
@@ -47,11 +49,12 @@
 
 ### Boundary Definition
 
-The script owns three things:
+The script owns four things:
 
 1. Converting local CLI inputs and environment variables into normalized ledger writes.
 2. Translating Codex rollout transcript structure into a smaller activity ledger model.
 3. Maintaining just enough sync state to avoid reprocessing unchanged rollout files.
+4. Classifying each sync run into a persisted terminal closeout state.
 
 It deliberately delegates transcript production to Codex, notification/automation scheduling to external tooling, and durable storage semantics to the local filesystem.
 
@@ -83,6 +86,7 @@ flowchart TD
 
   Root --> Ledgers["Daily ledger JSONL"]
   Root --> State["Sync state JSON"]
+  State --> Status["Closeout status"]
 
   Rollouts --> Parse["Parse transcript events"]
   Parse --> Derive["Derive session start notable end records"]
@@ -94,19 +98,21 @@ flowchart TD
 
 | Component | Responsibility | Key Interface |
 | --- | --- | --- |
-| Path resolution layer | Resolves ledger root, Codex home, session root, and sync state path from CLI args, env vars, and defaults | `resolve_root`, `resolve_codex_home`, `resolve_session_root`, `resolve_state_file` (`scripts/ag-ledger`:56-82) |
-| Ledger storage layer | Appends canonical JSON entries and iterates stored rows from daily files | `append_entry`, `iter_entries`, `iter_entries_from_file`, `ledger_path_for_datetime` (`scripts/ag-ledger`:88-227) |
-| Manual command layer | Handles user-supplied session ids, current-thread lookups, filtering, and deprecated init output | `cmd_append`, `cmd_append_current`, `cmd_session_id`, `cmd_filter`, `cmd_init` (`scripts/ag-ledger`:635-730) |
-| Transcript parser | Converts rollout JSONL into typed `MessageEvent` sequences with local timestamps | `parse_rollout_file`, `extract_message_text`, `parse_event_timestamp` (`scripts/ag-ledger`:237-260,374-436) |
-| Turn classifier | Collapses user/assistant event streams into `session_start`, `notable_change`, and `session_end` records | `derive_records_for_rollout`, `finalize_turn`, `build_record`, `is_context_user_message` (`scripts/ag-ledger`:270-372,439-492) |
-| Sync engine | Detects changed rollout files, deduplicates by deterministic `source_key`, writes new ledger rows, and persists state | `load_sync_state`, `discover_recent_rollout_files`, `load_source_keys_for_ledger`, `sync_rollout_file`, `cmd_sync` (`scripts/ag-ledger`:503-632,734-812) |
-| CLI contract | Declares subcommands, options, aliases, and dispatch | `build_parser`, `main` (`scripts/ag-ledger`:815-941) |
+| Path resolution layer | Resolves ledger root, Codex home, session root, and sync state path from CLI args, env vars, and defaults | `resolve_root`, `resolve_codex_home`, `resolve_session_root`, `resolve_state_file` (`./scripts/ag-ledger`:56-82) |
+| Ledger storage layer | Appends canonical JSON entries and iterates stored rows from daily files | `append_entry`, `iter_entries`, `iter_entries_from_file`, `ledger_path_for_datetime` (`./scripts/ag-ledger`:88-227) |
+| Manual command layer | Handles user-supplied session ids, current-thread lookups, filtering, and deprecated init output | `cmd_append`, `cmd_append_current`, `cmd_session_id`, `cmd_filter`, `cmd_init` (`./scripts/ag-ledger`:635-730) |
+| Transcript parser | Converts rollout JSONL into typed `MessageEvent` sequences with local timestamps | `parse_rollout_file`, `extract_message_text`, `parse_event_timestamp` (`./scripts/ag-ledger`:237-260,374-436) |
+| Turn classifier | Collapses user/assistant event streams into `session_start`, `notable_change`, and `session_end` records | `derive_records_for_rollout`, `finalize_turn`, `build_record`, `is_context_user_message` (`./scripts/ag-ledger`:270-372,439-492) |
+| Sync engine | Detects changed rollout files, deduplicates by deterministic `source_key`, writes new ledger rows, and persists state | `load_sync_state`, `discover_recent_rollout_files`, `load_source_keys_for_ledger`, `sync_rollout_file`, `cmd_sync` (`./scripts/ag-ledger`:503-632,734-812) |
+| Closeout classifier | Emits `settled`, `live_frontier`, or `blocked`; fingerprints repeated blockers; exposes persisted state through `status` | `determine_closeout_state`, `blocker_fingerprint`, `cmd_status` |
+| CLI contract | Declares subcommands, options, aliases, and dispatch | `build_parser`, `main` (`./scripts/ag-ledger`:815-941) |
 
 ### Primary Flows
 
 1. Manual append flow: parse CLI args, resolve ledger root, use explicit or current session id, write one JSON row, print the stored row.
 2. Query flow: parse filters, iterate all daily files, normalize workspace paths when needed, emit matching JSON rows.
-3. Sync flow: discover recent rollout files, parse transcript events, derive summarized records, dedupe against both sync state and existing ledgers, append missing rows, then atomically update sync state.
+3. Sync flow: discover recent rollout files, parse transcript events, derive summarized records, dedupe against both sync state and existing ledgers, append missing rows, classify the run, then atomically update sync state.
+4. Status flow: read the persisted closeout record without scanning transcripts.
 
 ### Primary Request and Data Narrative
 
@@ -118,14 +124,14 @@ The core architectural split is between a thin manual write/query surface and a 
 
 ### Internal Interfaces
 
-- Entry write contract: every persisted row must include `time`, `workspace`, `session`, and `msg`; manual writes may also include `invoked_skill`, `mode`, and `parent_session_id` (`scripts/ag-ledger`:145-183).
-- Transcript parsing contract: only `response_item` rows whose payload type is `message` become `MessageEvent`s; missing `session_meta.id` is fatal for that rollout file (`scripts/ag-ledger`:374-436).
+- Entry write contract: every persisted row must include `time`, `workspace`, `session`, and `msg`; manual writes may also include `invoked_skill`, `mode`, and `parent_session_id` (`./scripts/ag-ledger`:145-183).
+- Transcript parsing contract: only `response_item` rows whose payload type is `message` become `MessageEvent`s; missing `session_meta.id` is fatal for that rollout file (`./scripts/ag-ledger`:374-436).
 - Turn-classification contract:
   - first assistant `commentary` in a turn becomes `session_start`
   - later assistant `commentary` messages in the same turn become `notable_change`
   - assistant `final` or `final_answer` messages become `session_end`
-  - `# AGENTS.md instructions` and inline `<skill>` payloads are ignored as user-context noise (`scripts/ag-ledger`:25,270-276,314-372,439-492)
-- Deduplication contract: `source_key = {absolute rollout path}:{line_number}:{entry_kind}` must stay deterministic across reruns so both state and ledger scans can suppress duplicates (`scripts/ag-ledger`:279-311,579-632).
+  - `# AGENTS.md instructions` and inline `<skill>` payloads are ignored as user-context noise (`./scripts/ag-ledger`:25,270-276,314-372,439-492)
+- Deduplication contract: `source_key = {absolute rollout path}:{line_number}:{entry_kind}` must stay deterministic across reruns so both state and ledger scans can suppress duplicates (`./scripts/ag-ledger`:279-311,579-632).
 
 ### External Interfaces
 
@@ -133,15 +139,16 @@ The core architectural split is between a thin manual write/query surface and a 
   - `append <session-id> <message...>`
   - `append-current <message...>`
   - `session-id`
+  - `status [--state-file]`
   - `filter [--session|--workspace|--invoked-skill|--mode|--parent-session-id|--from|--to]`
   - `sync [--lookback-minutes|--session-root|--state-file]`
-  - `init` as a deprecation-only compatibility command (`scripts/ag-ledger`:815-929)
+  - `init` as a deprecation-only compatibility command (`./scripts/ag-ledger`:815-929)
 - Storage interface:
   - daily append-only JSONL files at `$META_LEDGER_ROOT/data/ledger-YYYY-MM-DD.md`
   - sync state JSON at `$META_LEDGER_ROOT/state/sync-state.json`
 - Input transcript interface:
   - rollout files under `$CODEX_HOME/sessions` or `~/.codex/sessions`
-  - uses `session_meta.payload.id`, `session_meta.payload.cwd`, `timestamp`, `payload.role`, `payload.phase`, and message content arrays (`scripts/ag-ledger`:65-75,374-436,739-766)
+  - uses `session_meta.payload.id`, `session_meta.payload.cwd`, `timestamp`, `payload.role`, `payload.phase`, and message content arrays (`./scripts/ag-ledger`:65-75,374-436,739-766)
 
 * * *
 
@@ -153,10 +160,33 @@ The authoritative activity history is the set of ledger files under `$META_LEDGE
 
 ### Data Lifecycle
 
-1. Manual commands construct a row from CLI input plus cwd/session metadata and append it directly to the current day ledger (`scripts/ag-ledger`:145-183,635-669).
-2. Sync reads recent rollout files, parses transcript events, and derives summarized `DerivedRecord`s keyed to source transcript lines (`scripts/ag-ledger`:374-632).
-3. Each derived record is written into the ledger day chosen by the event timestamp, not by sync execution time (`scripts/ag-ledger`:88-89,137-143,602-616). The sync integration test asserts this behavior (`scripts/integration/test_sync.py`:233-254).
-4. State is rewritten atomically after each processed rollout file with file fingerprint and emitted source keys (`scripts/ag-ledger`:533-545,621-631).
+1. Manual commands construct a row from CLI input plus cwd/session metadata and append it directly to the current day ledger (`./scripts/ag-ledger`:145-183,635-669).
+2. Sync reads recent rollout files, parses transcript events, and derives summarized `DerivedRecord`s keyed to source transcript lines (`./scripts/ag-ledger`:374-632).
+3. Each derived record is written into the ledger day chosen by the event timestamp, not by sync execution time (`./scripts/ag-ledger`:88-89,137-143,602-616). The sync integration test asserts this behavior (`./scripts/integration/test_sync.py`:233-254).
+4. State is rewritten atomically after each processed rollout file with file fingerprint and emitted source keys (`./scripts/ag-ledger`:533-545,621-631).
+5. The final state write records one closeout state. A zero-append/no-failure run
+   is `settled`; a successful append run is `live_frontier`; any failure is
+   `blocked`. Two consecutive blocked runs with the same normalized fingerprint
+   set `stable=true`.
+
+### Sync Closeout State Machine
+
+```mermaid
+stateDiagram-v2
+  [*] --> Settled: no prior work
+  Settled --> LiveFrontier: entries appended
+  LiveFrontier --> Settled: later run appends zero
+  Settled --> Blocked: file or state write fails
+  LiveFrontier --> Blocked: file or state write fails
+  Blocked --> Blocked: same blocker repeats
+  Blocked --> LiveFrontier: retry appends entries
+  Blocked --> Settled: retry has no missing entries
+```
+
+`blocked` becomes stable on the second consecutive identical blocker
+fingerprint. Permission and read-only failures are fingerprinted by operation
+and storage scope instead of rollout filename, so a changing frontier does not
+hide the same underlying write barrier.
 
 ### Temporal Context Check
 
@@ -176,8 +206,10 @@ All critical values are initialized before the consuming context is captured. Th
 - Ledger rows are append-only; the script never rewrites historical ledger files.
 - Manual and sync-derived rows share the same core schema, so `filter` can treat them uniformly.
 - `source_key` stability is the main dedupe invariant; if it changes, idempotent sync breaks.
-- Sync state can be stale or empty without corrupting history because ledger files are rescanned for existing `source_key` values (`scripts/ag-ledger`:560-576,598-607). The sync integration test covers stale-state recovery (`scripts/integration/test_sync.py`:148-231).
-- Workspace filtering accepts either exact stored value or normalized absolute path equivalence (`scripts/ag-ledger`:699-715).
+- Sync state can be stale or empty without corrupting history because ledger files are rescanned for existing `source_key` values (`./scripts/ag-ledger`:560-576,598-607). The sync integration test covers stale-state recovery (`./scripts/integration/test_sync.py`:148-231).
+- Closeout state is operational metadata, not ledger history. It may be reset by
+  the next successful run without changing append-only ledger rows.
+- Workspace filtering accepts either exact stored value or normalized absolute path equivalence (`./scripts/ag-ledger`:699-715).
 
 * * *
 
@@ -194,21 +226,24 @@ This is a local utility, not a long-running service. Reliability is defined as:
 
 ### Failure Modes
 
-- Missing `CODEX_THREAD_ID` for current-session commands returns exit code 2 with guidance (`scripts/ag-ledger`:116-125,651-679).
-- Invalid `--from` / `--to` values or inverted ranges return exit code 2 (`scripts/ag-ledger`:92-113,688-697).
-- Missing session root or malformed sync state stops sync before processing (`scripts/ag-ledger`:739-756).
-- Malformed rollout JSON or missing transcript metadata fails the affected rollout file and records it in sync summary while allowing other files to continue (`scripts/ag-ledger`:385-388,409-411,432-433,787-811).
+- Missing `CODEX_THREAD_ID` for current-session commands returns exit code 2 with guidance (`./scripts/ag-ledger`:116-125,651-679).
+- Invalid `--from` / `--to` values or inverted ranges return exit code 2 (`./scripts/ag-ledger`:92-113,688-697).
+- Missing session root or malformed sync state stops sync before processing (`./scripts/ag-ledger`:739-756).
+- Malformed rollout JSON or missing transcript metadata fails the affected rollout file and records it in sync summary while allowing other files to continue (`./scripts/ag-ledger`:385-388,409-411,432-433,787-811).
+- Sync summaries always emit structured skill metadata and a closeout state.
+  Blocked summaries include a fingerprint and occurrence count; status reads the
+  same persisted fields without starting another sync.
 - Concurrent writers are not coordinated with file locks; simultaneous appends could interleave at the filesystem level.
-- Lookback-based rollout discovery is mtime-driven, so older transcripts outside the selected window will not sync unless the user widens `--lookback-minutes` (`scripts/ag-ledger`:548-557,916-919).
+- Lookback-based rollout discovery is mtime-driven, so older transcripts outside the selected window will not sync unless the user widens `--lookback-minutes` (`./scripts/ag-ledger`:548-557,916-919).
 
 ### Observability
 
 - Metrics: none built in.
-- Logs: command errors and warning conditions go to stderr; successful operations print structured JSON to stdout (`scripts/ag-ledger`:203-224,647,669,720,797,809).
+- Logs: command errors and warning conditions go to stderr; successful operations print structured JSON to stdout (`./scripts/ag-ledger`:203-224,647,669,720,797,809).
 - Traces: none.
 - Tests:
-  - manual command contract coverage in `scripts/tests/test_ag_ledger_integration.py`
-  - sync idempotency and timestamp-placement coverage in `scripts/integration/test_sync.py`
+  - manual command contract coverage in `./scripts/tests/test_ag_ledger_integration.py`
+  - sync idempotency and timestamp-placement coverage in `./scripts/integration/test_sync.py`
 
 * * *
 
@@ -229,6 +264,8 @@ This is a local utility, not a long-running service. Reliability is defined as:
 | Transcript abstraction | Collapse full conversations into `session_start`, `notable_change`, `session_end` | Store every message, use heuristic NLP summarization later | Keeps ledger concise and aligned with agent workflow milestones |
 | Timestamp semantics | Use transcript event time or local write time, then bucket by local day | Bucket by sync run time or UTC day | Preserves when work happened from the agent perspective and makes daily ledgers human-readable locally |
 | `init` behavior | Compatibility shim that prints migration guidance only | Continue mutating `AGENTS.md` | Keeps architecture focused on automation-first sync instead of repo-local prompt injection |
+| Sync terminal state | Persist `settled`, `live_frontier`, or `blocked` | Agent-authored prose and repeated zero-chasing reruns | Gives automation a deterministic stop condition and makes repeated write barriers machine-readable |
+| Automation checkout | Run the recurring sync in the local skill checkout | Create an isolated worktree every hour | Sync does not mutate the repository, so worktrees add cost without isolation benefit |
 
 * * *
 
@@ -266,9 +303,9 @@ This is a local utility, not a long-running service. Reliability is defined as:
 
 ## References
 
-- `scripts/ag-ledger`
-- `scripts/tests/test_ag_ledger_integration.py`
-- `scripts/integration/test_sync.py`
+- `./scripts/ag-ledger`
+- `./scripts/tests/test_ag_ledger_integration.py`
+- `./scripts/integration/test_sync.py`
 - `SKILL.md`
 
 ## Manual Notes 

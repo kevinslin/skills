@@ -122,6 +122,13 @@ class AgLedgerSyncIntegrationTests(unittest.TestCase):
         self.assertEqual(summary["files_considered"], 2)
         self.assertEqual(summary["files_processed"], 2)
         self.assertEqual(summary["entries_appended"], 5)
+        self.assertEqual(summary["closeout_state"], "live_frontier")
+        self.assertFalse(summary["stable_blocked"])
+        self.assertEqual(summary["invoked_skill"], "ag-ledger")
+        self.assertEqual(summary["invoked_skills"], ["ag-ledger"])
+        self.assertEqual(summary["invocation_trigger"], "explicit")
+        self.assertEqual(summary["invocation_source"], "ag-ledger-cli")
+        self.assertEqual(summary["mode"], "sync")
 
         entries = self.read_all_entries()
         self.assertEqual(len(entries), 5)
@@ -193,7 +200,10 @@ class AgLedgerSyncIntegrationTests(unittest.TestCase):
                                 "content": [
                                     {
                                         "type": "output_text",
-                                        "text": "Using `sw-loop` with `specy` and `gen-notifier`.",
+                                        "text": (
+                                            "Running the sw-loop workflow with $specy and "
+                                            "/tmp/active/gen-notifier/SKILL.md."
+                                        ),
                                     }
                                 ],
                             },
@@ -275,6 +285,14 @@ class AgLedgerSyncIntegrationTests(unittest.TestCase):
         second_summary = json.loads(second.stdout.strip())
         self.assertEqual(second_summary["entries_appended"], 0)
         self.assertEqual(second_summary["files_skipped_unchanged"], 1)
+        self.assertEqual(second_summary["closeout_state"], "settled")
+        self.assertFalse(second_summary["stable_blocked"])
+
+        persisted_after_settle = json.loads(
+            (self.root / "state" / "sync-state.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(persisted_after_settle["closeout"]["state"], "settled")
+        self.assertFalse(persisted_after_settle["closeout"]["stable"])
 
         state_path = self.root / "state" / "sync-state.json"
         state = json.loads(state_path.read_text(encoding="utf-8"))
@@ -332,6 +350,52 @@ class AgLedgerSyncIntegrationTests(unittest.TestCase):
         self.assertEqual(len(hello_entries), 5)
         self.assertIn("run directly", hello_entries[-2]["msg"])
         self.assertIn("run directly", hello_entries[-1]["msg"])
+
+    def test_sync_marks_repeated_identical_failures_as_stable_blocked(self) -> None:
+        self.install_fixture(
+            "hello_world_rollout.jsonl",
+            "2026/01/02/rollout-2026-01-02T10-00-00-sess-hello-world.jsonl",
+        )
+        data_path = self.root / "data"
+        data_path.write_text("blocks ledger directory creation", encoding="utf-8")
+
+        first = self.run_cli(
+            "sync",
+            "--session-root",
+            str(self.session_root),
+            "--lookback-minutes",
+            "1440",
+        )
+        self.assertEqual(first.returncode, 1)
+        first_summary = json.loads(first.stdout.strip())
+        self.assertEqual(first_summary["closeout_state"], "blocked")
+        self.assertFalse(first_summary["stable_blocked"])
+        self.assertEqual(first_summary["blocker_occurrences"], 1)
+        self.assertTrue(first_summary["blocker_fingerprint"])
+
+        second = self.run_cli(
+            "sync",
+            "--session-root",
+            str(self.session_root),
+            "--lookback-minutes",
+            "1440",
+        )
+        self.assertEqual(second.returncode, 1)
+        second_summary = json.loads(second.stdout.strip())
+        self.assertEqual(second_summary["closeout_state"], "blocked")
+        self.assertTrue(second_summary["stable_blocked"])
+        self.assertEqual(second_summary["blocker_occurrences"], 2)
+        self.assertEqual(
+            second_summary["blocker_fingerprint"],
+            first_summary["blocker_fingerprint"],
+        )
+
+        state = json.loads(
+            (self.root / "state" / "sync-state.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(state["closeout"]["state"], "blocked")
+        self.assertTrue(state["closeout"]["stable"])
+        self.assertEqual(state["closeout"]["blocker_occurrences"], 2)
 
     def test_sync_uses_fixture_timestamps_for_ledger_dates(self) -> None:
         self.install_fixture(
