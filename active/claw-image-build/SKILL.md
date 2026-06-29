@@ -13,7 +13,7 @@ Use this skill for OpenClaw container image work from source checkout to publish
 1. Work from the current OpenClaw checkout unless the user explicitly asks for another worktree.
 2. Respect the repo `AGENTS.md`: do not switch worktrees for git mutations, do not print secrets, do not print Docker auth configuration, and verify live sources when requested.
 3. Pull or checkout exactly what the user asked for before building. If the worktree is dirty, stop before `git pull` and report the dirty state. If the user asks for a new worktree, create it from the latest upstream default branch and preserve unrelated local changes.
-4. Read `docs/install/docker.md` and the relevant package manifests before choosing build args or plugin install strategy.
+4. Read `docs/install/docker.md` and the relevant package manifests before choosing build args or plugin install strategy. Unless the user explicitly narrows or changes the plugin set, require `@openclaw/codex`, `@openclaw/slack`, and `@openclaw/diagnostics-otel`.
 5. Resolve "latest" from the repository's actual upstream default branch. If a prompt says `origin/master` but the default branch is different, fetch the default branch, record the exact commit, and state the branch name used.
 6. Build multi-arch images when requested; include `linux/amd64` explicitly for x86_64/amd64 proof unless the user says otherwise.
 7. Prefer `ghcr.io/kevinslin/openclaw` for Kevin's registry unless the user explicitly provides a different owner. Verify namespace and visibility with `gh api`.
@@ -26,7 +26,7 @@ Use this skill for OpenClaw container image work from source checkout to publish
 
 Use the repo Dockerfile and repository-native build pipeline when it can build the requested image directly. Do not rebase onto an unrelated runtime image and do not modify built plugin contents after the final packaging stage.
 
-For self-contained source-bundled images, build OpenClaw and bundled plugins from the same source revision whenever the repository supports it. Do not combine a newer OpenClaw source build with older published plugin packages. Use the repository's standard bundled-extension packaging location and build args, for example `OPENCLAW_EXTENSIONS=diagnostics-otel,codex,slack`, when the requested image must contain `@openclaw/codex`, `@openclaw/slack`, and `@openclaw/diagnostics-otel`. Preserve manifests, runtime dependencies, source maps, assets, and generated output required for plugin discovery and runtime loading.
+For self-contained source-bundled images, build OpenClaw and bundled plugins from the same source revision whenever the repository supports it. Do not combine a newer OpenClaw source build with older published plugin packages. The default required plugin set is `@openclaw/codex`, `@openclaw/slack`, and `@openclaw/diagnostics-otel`; use the repository's standard bundled-extension packaging location and build args, for example `OPENCLAW_EXTENSIONS=diagnostics-otel,codex,slack`, unless the user explicitly mentions a different plugin set. Preserve manifests, runtime dependencies, source maps, assets, and generated output required for plugin discovery and runtime loading.
 
 `diagnostics-otel` is a first-class packaged plugin for these images. It must not require `openclaw plugins install`, npm installation, network access, or filesystem mutation at container startup. Do not add runtime installation scripts for it; remove or replace manual diagnostics installation logic with packaged plugin coverage.
 
@@ -61,7 +61,7 @@ Do not rely on `require.resolve("@openclaw/<plugin>/package.json")` from `/app` 
    - `docs/install/docker.md`
    - `Dockerfile`
    - `extensions/<plugin>/package.json`
-   - for source-bundled plugin images, verify OpenClaw and each requested plugin package report the same intended version from the same checkout.
+   - for source-bundled plugin images, verify OpenClaw and each default/requested plugin package report the same intended version from the same checkout.
    - use `npm view @openclaw/<plugin> version dist.tarball --json` only for images that intentionally install external npm plugin packages.
 3. Build and push arch-specific tags first:
    - `<baseTag>-amd64`
@@ -73,7 +73,7 @@ Do not rely on `require.resolve("@openclaw/<plugin>/package.json")` from `/app` 
    - expected tag set.
 6. Pull-run verify each requested platform:
    - OpenClaw version;
-   - requested plugin discovery and runtime inspect output;
+   - default/requested plugin discovery and runtime inspect output;
    - package manifests in plugin store when external npm plugins are requested;
    - packaged manifests, entrypoints, and runtime dependencies when source-bundled plugins are requested;
    - `/healthz` returns HTTP 200;

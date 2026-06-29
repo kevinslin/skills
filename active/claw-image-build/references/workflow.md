@@ -1,6 +1,6 @@
 # OpenClaw Image Build Workflow
 
-Use these patterns after reading the repo's current `Dockerfile` and `docs/install/docker.md`. Adjust tags and plugin list to the user request.
+Use these patterns after reading the repo's current `Dockerfile` and `docs/install/docker.md`. Adjust tags to the user request. Keep `@openclaw/codex`, `@openclaw/slack`, and `@openclaw/diagnostics-otel` as the default required plugin set unless the user explicitly narrows or changes it.
 
 ## Source Preflight
 
@@ -20,7 +20,7 @@ If the worktree is dirty, do not pull. Report the dirty state and ask before syn
 
 ## Package Preflight
 
-For same-source bundled plugin images, inspect source manifests and confirm version alignment from the checkout:
+For same-source bundled plugin images, inspect source manifests and confirm version alignment from the checkout. By default, include Codex, Slack, and diagnostics-otel:
 
 ```bash
 node - <<'NODE'
@@ -41,7 +41,7 @@ Do not use older published npm plugin packages with a newer OpenClaw source buil
 
 ## Self-Contained Bundled Image
 
-For the standard source-bundled Codex, Slack, and diagnostics image, build through the repo Dockerfile with all requested plugins in the Docker extension keep-list:
+For the standard source-bundled Codex, Slack, and diagnostics image, build through the repo Dockerfile with the default required plugins in the Docker extension keep-list:
 
 ```bash
 IMAGE="ghcr.io/kevinslin/openclaw"

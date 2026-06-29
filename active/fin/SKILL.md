@@ -22,13 +22,15 @@ Run `fin [context] [target]`.
 - If the argument is `gh` or `local`, respect it throughout the flow. Do not silently switch later just because repo state would make the other path easier.
 - If `gh` has an explicit `[target]`, lock that PR target before current-branch detection. Use the target PR as the source of truth for state, mergeability, comments, checks, spec matching, merge, and automation cleanup.
 - If the user omits `[target]` but the immediately preceding active heartbeat or delayed-merge instruction names exactly one PR and the user asks to merge, finalize, ignore a waiting period, or ignore a proof gate, treat that PR as an explicit `gh` target after one live PR-state check. Report the target source as `heartbeat automation`.
+- If the user omits `[target]` but the immediately preceding task in the same thread completed or repaired exactly one PR, such as after `trigger:fix-pr`, `trigger:fix-pr-conflict`, or a PR-specific babysit/CI run, treat that PR as an explicit `gh` target after one live PR-state check. Report the target source as `active task context`. If the current checkout points at another branch or PR, mention the mismatch and ignore the unrelated checkout for PR state, spec archival, merge, automation, and cleanup decisions unless it blocks local cleanup.
 - If an explicit `gh` target does not match the current branch, do not silently fall back to the current branch's PR. Either run the remote-PR finalization path for that explicit target, or stop with a target mismatch before any spec archival, branch cleanup, or merge.
 - If the argument is omitted, detect the context from the current branch before any archival or landing work:
   - Choose `gh` when the current branch has an open or already-merged PR that corresponds to the branch being finalized.
   - Choose `local` when the current branch has no matching PR and the work should land directly from local git state.
+- Treat heartbeat-derived or active-task-derived PR targets as explicit `gh` targets, not as current-branch auto-detection.
 - If the argument is present but not one of `gh` / `local`, stop and ask the user which context to use.
 - Report whether the finalization context was explicitly provided or auto-detected.
-- Before reporting any PR status or blocker, print one target identity line: `Target: PR #<number>, branch <headRefName>, source=<current checkout|explicit user PR|heartbeat automation>`. When multiple PRs have been mentioned in the session, prefix every PR-specific state claim with the PR number.
+- Before reporting any PR status or blocker, print one target identity line: `Target: PR #<number>, branch <headRefName>, source=<current checkout|explicit user PR|heartbeat automation|active task context>`. When multiple PRs have been mentioned in the session, prefix every PR-specific state claim with the PR number.
 
 ## Shared Workflow
 
@@ -45,7 +47,7 @@ Run `fin [context] [target]`.
 - If the checkout is detached `HEAD`, create a temporary local branch from the current commit first. Prefer the repo's normal task-branch prefix when one exists, otherwise use a short `codex/` branch name derived from the task.
 - After converting detached `HEAD` into a named branch, lock that branch identity for the rest of the run. Do not continue finalization from anonymous detached state.
 - When the user omitted the context, lock the detected context once and use it for the rest of the run. Do not re-detect after archiving or mid-landing.
-- When the user provided, or the heartbeat handoff implied, an explicit PR target, lock that PR number, head branch, and target source once. Do not replace it with the current checkout's PR because the current checkout is different or easier to operate from.
+- When the user provided, or the heartbeat handoff or active task context implied, an explicit PR target, lock that PR number, head branch, and target source once. Do not replace it with the current checkout's PR because the current checkout is different or easier to operate from.
 - Do not silently switch contexts after selection. If the user requested `gh`, do not fall back to local-only landing. If the user requested `local`, do not silently land via PR merge just because a PR exists.
 - For `gh` without an explicit target, identify the current PR and check its state before testing mergeability or attempting any merge command.
 - For `gh` with an explicit target, identify that target PR directly with GitHub before consulting current-branch PR state. If the current checkout points at another PR, report the mismatch in the target identity line and ignore the other PR unless it blocks local cleanup.
@@ -119,10 +121,13 @@ Run `fin [context] [target]`.
 6. Update the local `main` checkout
 - After the PR merge succeeds, or after confirming the PR was already merged, update the local main checkout before reporting completion once any linked-worktree cleanup is finished.
 - Run this refresh from the main checkout, not from a detached or soon-to-be-removed worktree.
-- Check out `main` if needed.
-- Pull or otherwise fast-forward `main` to `origin/main`.
-- Confirm the local `main` HEAD includes the merge commit for the landed PR before continuing.
-- If branch cleanup was deferred because the PR used a squash/rebase merge or `git branch -d` rejected ancestry, finish that branch deletion now after local `main` contains the PR merge commit and the branch is no longer checked out anywhere.
+- If the target PR was explicit, heartbeat-derived, or active-task-derived and the non-worktree checkout is on an unrelated active branch, prefer a non-switching base-ref refresh before checking out `main`: run `git fetch <remote> <base>:<base>` only when `<base>` is not checked out in any worktree, then confirm containment with `git merge-base --is-ancestor <mergeCommit> <base>`.
+- If the non-switching base-ref refresh is rejected because `<base>` is checked out elsewhere or the ref cannot fast-forward, fall back to the normal checkout-and-pull path when that is safe. Otherwise, stop with a local-main refresh blocker.
+- Do not use the non-switching base-ref refresh for `local` landing flows that need to merge the completed local branch into `main`.
+- Check out `main` if needed and if the non-switching base-ref refresh path was not used.
+- For the normal checkout path, pull or otherwise fast-forward `main` to `origin/main`.
+- Confirm the local `main` HEAD, or the refreshed local base ref when the non-switching path was used, includes the merge commit for the landed PR before continuing.
+- If branch cleanup was deferred because the PR used a squash/rebase merge or `git branch -d` rejected ancestry, finish that branch deletion now after local `main` or the refreshed base ref contains the PR merge commit and the branch is no longer checked out anywhere.
 - Delete or cancel any active PR babysit/watch automation that was tracking the now-merged PR. If the automation cannot be deleted, report the exact blocker instead of leaving silent stale state behind.
 - If the local `main` refresh fails because the non-worktree checkout has unrelated dirty changes, stop local-main refresh and report a partial terminal state instead of overwriting or stashing user work: PR landed, any linked worktree cleanup completed, automation cleanup completed if it was safe to do, local `main` not refreshed, and local branch deletion deferred when squash/rebase containment proof is unavailable.
 - If the local `main` refresh fails for any other reason, stop and report the exact git error instead of claiming the task is fully finalized.
@@ -163,7 +168,7 @@ Run `fin [context] [target]`.
 
 7. Run the retrospective
 - Run `$ag-learn` after the task lands in the requested context, after any matching spec has been archived, and after any matching repo-specific final hooks from `~/.fin.yaml` have completed.
-- For `gh`, run it after the PR merge or already-merged confirmation, repo-specific final hooks, and local `main` refresh complete.
+- For `gh`, run it after the PR merge or already-merged confirmation, repo-specific final hooks, and local `main` refresh or base-ref containment proof complete.
 - For `local`, run it after the local merge, repo-specific final hooks, and local `main` verification complete.
 - Review the saved learning note and extract 2-3 high-signal learnings.
 - Present these as proposed learnings for follow-up, not mandatory extra scope.
@@ -171,7 +176,7 @@ Run `fin [context] [target]`.
 
 8. Report the finished state
 - State which context ran: `gh` or `local`.
-- State whether that context was explicitly requested or auto-detected from current-branch PR state.
+- State whether that context was explicitly requested, implied by heartbeat or active task context, or auto-detected from current-branch PR state.
 - For `gh`, state the target identity line with PR number, branch, and source before reporting mergeability, checks, blockers, merge, or cleanup. If another PR was also present in the current checkout, explicitly state that it was not the finalization target.
 - State whether the mergeability check passed directly, was skipped because the PR was already merged, or required `fix-pr-conflict` / `fix-pr` / `sync-branch` / manual repair.
 - State whether a spec was archived and include the source and destination paths when applicable.
@@ -180,7 +185,7 @@ Run `fin [context] [target]`.
 - State whether a linked worktree was removed, pruned, and had its merged branch deleted when applicable.
 - For `gh`, state whether any PR babysit/watch automation was found and whether it was deleted, already absent, or blocked.
 - If branch deletion required squash/rebase merge proof, state the PR head SHA, merge commit, and local `main` containment check used as the cleanup proof.
-- State whether the local `main` checkout was updated or verified successfully and identify the resulting `main` tip when relevant.
+- State whether the local `main` checkout or base ref was updated or verified successfully, identify the resulting `main` tip when relevant, and say whether the normal checkout path or non-switching base-ref path was used.
 - State any requested external notification result separately from CI and merge state. If notification delivery is blocked by missing credentials, unavailable CLIs, or channel configuration, say that directly without describing the PR as not green.
 - If the remote PR landed but local `main` refresh was blocked by unrelated dirty changes, call that out as `partial local cleanup`: include the merge commit, the dirty-main error, which cleanup steps did complete, and which local branch or verification step was intentionally deferred.
 - State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
@@ -197,7 +202,7 @@ Run `fin [context] [target]`.
 - Do not archive a spec or land the change before the current branch or PR is confirmed mergeable for the chosen context, unless the matching PR is already merged.
 - Do not silently switch from `gh` to `local` or from `local` to `gh`.
 - Do not ask the user to choose `gh` vs `local` when the argument is omitted and branch PR state clearly determines the context.
-- Do not choose `gh` from a no-argument invocation unless the PR belongs to the current branch being finalized.
+- Do not choose `gh` from a no-argument invocation unless the PR belongs to the current branch being finalized, or a heartbeat-derived or active-task-derived PR target has been locked after live PR verification.
 - Do not run `trigger:merge-pr` when GitHub reports the matching PR is already `MERGED`; use the existing merged state and continue finalization from there.
 - If `gh` repair via `fix-pr-conflict` or `fix-pr` cannot restore a mergeable state, stop and report the blockage instead of continuing the finalization flow.
 - If `local` repair via branch sync or rebase cannot restore a mergeable state, stop and report the blockage instead of continuing the finalization flow.
@@ -207,7 +212,7 @@ Run `fin [context] [target]`.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
 - Do not remove unrelated named worktrees or branches during cleanup. A worktree is cleanup-eligible only when it checks out the landed branch, or, in `gh` mode, when it is a detached temporary PR review worktree tied to the finalized PR by PR number/path or recorded head SHA.
 - Do not leave a PR babysit/watch automation active after its PR has merged. Delete or cancel it during finalization, and report any deletion blocker.
-- Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state. Verify local `main` contains the PR merge commit first, and verify no worktree still checks out the branch.
+- Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state. Verify local `main` or the safely refreshed local base ref contains the PR merge commit first, and verify no worktree still checks out the branch.
 - If local `main` cannot be refreshed because it has unrelated dirty changes, do not use that dirty checkout as a reason to delete a squash/rebase-merged local branch. Leave the branch, report the dirty-main blocker, and let cleanup resume after local `main` can be safely fast-forwarded.
 - Do not remove a linked worktree before running any matching repo-specific final hooks from `~/.fin.yaml`.
 - Do not preserve dirty tracked, untracked, or ignored files in a linked worktree that has already passed final hooks and is about to be deleted. Reset and clean that linked worktree first so `git worktree remove` cannot be blocked by disposable local changes.
@@ -216,7 +221,7 @@ Run `fin [context] [target]`.
 - Do not ignore a matching `~/.fin.yaml` workspace entry. If the additional instructions are ambiguous, destructive, or cannot be verified, stop and report the blocker before cleanup.
 - Do not silently ignore malformed `~/.fin.yaml`; a parse failure is a finalization preflight issue unless raw content is clearly non-executable and unambiguous. Never delete a linked worktree while malformed fin config might contain unrun hooks or cleanup instructions.
 - Do not try to remove the current live worktree from inside itself; switch to another checkout first.
-- Do not report final success while local `main` still points behind the landed result unless the user explicitly says not to refresh or verify it.
+- Do not report final success while local `main` or the safely refreshed local base ref still points behind the landed result unless the user explicitly says not to refresh or verify it.
 - Do not reclassify a green PR or passing CI as blocked because a Slack/chat/desktop notification could not be sent. Report notification failures as auxiliary notification blockers with the missing prerequisite.
 - Do not invent a parallel spec layout; use the `specy` convention already present in the workspace.
 - Do not archive an active parent folder spec just because a milestone sidecar
@@ -226,8 +231,8 @@ Run `fin [context] [target]`.
 
 ## Done Checklist
 
-- `fin` was run with either an explicit `gh` / `local` argument or no argument and a context auto-detected from current-branch PR state.
-- In `gh` mode, any explicit PR number, PR URL, branch target, or heartbeat-derived PR target was locked before current-branch PR detection and reused for every PR-state, mergeability, merge, automation, and cleanup decision.
+- `fin` was run with either an explicit `gh` / `local` argument, a heartbeat-derived or active-task-derived PR target, or no argument and a context auto-detected from current-branch PR state.
+- In `gh` mode, any explicit PR number, PR URL, branch target, heartbeat-derived PR target, or active-task-derived PR target was locked before current-branch PR detection and reused for every PR-state, mergeability, merge, automation, and cleanup decision.
 - Every PR status or blocker report included a target identity line with PR number, branch, and source; when multiple PRs were mentioned, every PR-specific claim was labeled with the PR number.
 - If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
 - The chosen or detected context was locked once and respected throughout the flow.
@@ -244,10 +249,10 @@ Run `fin [context] [target]`.
 - Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere; unrelated named worktrees and branches were left untouched.
 - Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
 - Requested external notifications, if any, were attempted or explicitly skipped with a separate notification blocker; notification failures were not described as CI failures.
-- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
-- The local `main` checkout was refreshed or verified to include the landed work before the task was reported complete.
+- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` or a safely refreshed local base ref containing the PR merge commit, not branch ancestry alone.
+- The local `main` checkout, or the local base ref when using the non-switching explicit-target path, was refreshed or verified to include the landed work before the task was reported complete.
 - `$ag-learn` has been run.
-- The final report states whether the context was explicit or auto-detected.
+- The final report states whether the context was explicit, implied by heartbeat or active task context, or auto-detected.
 - The final report includes the archived spec path change when applicable.
 - The final report states the landing result for the chosen context.
 - The final report states the local `main` refresh or verification result.
