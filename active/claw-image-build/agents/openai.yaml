@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenClaw Image Build"
+  short_description: "Build, publish, and verify OpenClaw Docker images."
+  default_prompt: "Build and publish an OpenClaw image, then verify the published GHCR image."
