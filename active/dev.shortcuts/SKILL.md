@@ -32,7 +32,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `check-ci` | Watch PR checks and classify Buildkite failures before reporting status. |
 | `checkout-worktree` | Use `arbor checkout` from the main checkout with an explicit worktree path, then verify cleanup. |
 | `commit-code` | Run the canonical precommit flow, commit cleanly, and update the PR if one exists. |
-| `fix-pr-conflict` | Rebase the current PR branch onto its base branch, resolve conflicts, and force-push. |
+| `fix-pr-conflict` | Rebase the current PR branch onto its base branch, using an explicit old-parent boundary and range-diff when a stacked base was rewritten. |
 | `fix-pr` | Check out a PR, address review feedback, resolve review threads, and rerun CI. |
 | `inline-shortcut` | Inline one or more shortcut definitions into another skill. |
 | `loop` | Run review instructions with a reviewer subagent and a fixer subagent until major findings are cleared or a blocker stops progress. |

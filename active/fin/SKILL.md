@@ -91,6 +91,26 @@ Run `fin [context] [target]`.
 
 ## `gh` Context Workflow
 
+### Stacked PR landing contract
+
+- Treat a PR as stacked when its configured `baseRefName` is not the repository
+  default branch. Lock both refs before merge or cleanup.
+- Child landing proof is GitHub state `MERGED` plus the locked remote base ref
+  containing the recorded merge commit. If a clean local worktree for that base
+  exists, fast-forward it and verify the same containment there. This is enough
+  to report the child PR as landed even while the parent PR remains open.
+- Default-branch containment is stack-level cleanup. Refresh it independently
+  when safe, but do not reclassify the child landing as failed merely because
+  the parent has not landed.
+- Defer local child-branch deletion until the repository default branch contains
+  the child merge commit. Also defer it when the relevant checkout is dirty or
+  containment cannot be proven. Preserve user changes; report `landed with
+  partial local cleanup` and the exact deferred steps.
+- If the task has an exactly linked Linear issue, complete it after child
+  landing proof only when its scope is explicitly the child PR. Leave a
+  parent-, stack-, or default-branch-scoped issue open. If scope is ambiguous,
+  leave it unchanged and report the reason.
+
 4. Merge the PR
 - Before running a merge command, check the target PR state with GitHub. If the PR is already `MERGED`, do not run `trigger:merge-pr`; record the merge commit or merged-at details when available and proceed as an already-landed PR.
 - If the PR is not already merged and the target PR belongs to the current branch, run `trigger:merge-pr` immediately after the matching spec has been marked complete and archived.
@@ -113,24 +133,23 @@ Run `fin [context] [target]`.
 - After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
 - If `gh pr merge --delete-branch` already deleted the remote branch but failed local deletion because the branch was still attached to the worktree, finish the cleanup explicitly instead of retrying the merge.
 - Fully remove the worktree, then run `git worktree prune`.
-- If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete the merged branch too.
-- If local branch deletion reports that the branch is not merged into current `HEAD`, do not use ancestry alone as the safety check. For squash or rebase merges, verify the GitHub PR is `MERGED`, record the PR head SHA and merge commit, refresh local `main`, confirm local `main` contains the merge commit, and only then delete the local branch when no worktree checks it out.
+- If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete it only after the repository default branch contains the merge commit.
+- If local branch deletion reports that the branch is not merged into current `HEAD`, do not use ancestry alone as the safety check. For squash or rebase merges, verify the GitHub PR is `MERGED`, record the PR head SHA and merge commit, refresh the repository default branch, confirm it contains the merge commit, and only then delete the local branch when no worktree checks it out.
 - If the PR used a squash or rebase merge and local `main` cannot be refreshed because the non-worktree checkout has unrelated dirty changes, treat the remote PR landing and linked-worktree removal as complete but defer local branch deletion. Report the dirty-main refresh blocker exactly, keep the local branch until local `main` can safely contain the merge commit, and do not force-delete it from GitHub state alone.
 - If there is no linked worktree for the task branch, state that explicitly and continue.
 
-6. Update the local `main` checkout
-- After the PR merge succeeds, or after confirming the PR was already merged, update the local main checkout before reporting completion once any linked-worktree cleanup is finished.
-- Run this refresh from the main checkout, not from a detached or soon-to-be-removed worktree.
-- If the target PR was explicit, heartbeat-derived, or active-task-derived and the non-worktree checkout is on an unrelated active branch, prefer a non-switching base-ref refresh before checking out `main`: run `git fetch <remote> <base>:<base>` only when `<base>` is not checked out in any worktree, then confirm containment with `git merge-base --is-ancestor <mergeCommit> <base>`.
-- If the non-switching base-ref refresh is rejected because `<base>` is checked out elsewhere or the ref cannot fast-forward, fall back to the normal checkout-and-pull path when that is safe. Otherwise, stop with a local-main refresh blocker.
+6. Update local landing refs
+- After the PR merge succeeds, or after confirming the PR was already merged, refresh the locked configured base before reporting completion once any linked-worktree cleanup is finished. When the configured base is the default branch, this is the normal local-main refresh.
+- Run this refresh from a clean configured-base worktree when one exists, never from a detached or soon-to-be-removed worktree.
+- Otherwise, prefer a non-switching base-ref refresh: run `git fetch <remote> <base>:<base>` only when `<base>` is not checked out in any worktree, then confirm containment with `git merge-base --is-ancestor <mergeCommit> <base>`.
+- If the non-switching base-ref refresh is rejected because `<base>` is checked out elsewhere or the ref cannot fast-forward, fall back to checkout-and-pull in a clean base worktree. Otherwise, stop with a configured-base refresh blocker.
 - Do not use the non-switching base-ref refresh for `local` landing flows that need to merge the completed local branch into `main`.
-- Check out `main` if needed and if the non-switching base-ref refresh path was not used.
-- For the normal checkout path, pull or otherwise fast-forward `main` to `origin/main`.
-- Confirm the local `main` HEAD, or the refreshed local base ref when the non-switching path was used, includes the merge commit for the landed PR before continuing.
-- If branch cleanup was deferred because the PR used a squash/rebase merge or `git branch -d` rejected ancestry, finish that branch deletion now after local `main` or the refreshed base ref contains the PR merge commit and the branch is no longer checked out anywhere.
+- Confirm the refreshed configured base includes the merge commit for the landed PR before continuing.
+- For a stacked PR, separately fast-forward the repository default branch when safe and test whether it contains the child merge commit. An open parent normally means it does not; record that as deferred stack-level cleanup rather than a child landing failure.
+- If branch cleanup was deferred because the PR used a squash/rebase merge or `git branch -d` rejected ancestry, finish that branch deletion only after the repository default branch contains the PR merge commit and the branch is no longer checked out anywhere.
 - Delete or cancel any active PR babysit/watch automation that was tracking the now-merged PR. If the automation cannot be deleted, report the exact blocker instead of leaving silent stale state behind.
-- If the local `main` refresh fails because the non-worktree checkout has unrelated dirty changes, stop local-main refresh and report a partial terminal state instead of overwriting or stashing user work: PR landed, any linked worktree cleanup completed, automation cleanup completed if it was safe to do, local `main` not refreshed, and local branch deletion deferred when squash/rebase containment proof is unavailable.
-- If the local `main` refresh fails for any other reason, stop and report the exact git error instead of claiming the task is fully finalized.
+- If configured-base or default-branch refresh is blocked by unrelated dirty changes, report a partial terminal state instead of overwriting or stashing user work: PR landed when configured-base containment is already proven, any linked-worktree cleanup completed, automation cleanup completed if it was safe to do, the blocked ref not refreshed, and local branch deletion deferred.
+- If configured-base refresh fails for any other reason, stop and report the exact git error instead of claiming the child landed. For a stacked PR, a default-branch refresh or containment gap alone remains partial local cleanup.
 
 ## `local` Context Workflow
 
@@ -188,6 +207,10 @@ Run `fin [context] [target]`.
 - State whether the local `main` checkout or base ref was updated or verified successfully, identify the resulting `main` tip when relevant, and say whether the normal checkout path or non-switching base-ref path was used.
 - State any requested external notification result separately from CI and merge state. If notification delivery is blocked by missing credentials, unavailable CLIs, or channel configuration, say that directly without describing the PR as not green.
 - If the remote PR landed but local `main` refresh was blocked by unrelated dirty changes, call that out as `partial local cleanup`: include the merge commit, the dirty-main error, which cleanup steps did complete, and which local branch or verification step was intentionally deferred.
+- For a stacked PR, report the locked configured base, its containment proof,
+  whether the default branch contains the merge commit, the linked Linear issue
+  decision when applicable, and `landed with partial local cleanup` whenever
+  default-branch refresh or child-branch deletion remains deferred.
 - State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
 - If `local` pushed `main`, state whether the push succeeded. If it intentionally remained local-only, say that explicitly.
 - Summarize the proposed learnings as a numbered list so each item can be referenced later.
@@ -212,7 +235,7 @@ Run `fin [context] [target]`.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
 - Do not remove unrelated named worktrees or branches during cleanup. A worktree is cleanup-eligible only when it checks out the landed branch, or, in `gh` mode, when it is a detached temporary PR review worktree tied to the finalized PR by PR number/path or recorded head SHA.
 - Do not leave a PR babysit/watch automation active after its PR has merged. Delete or cancel it during finalization, and report any deletion blocker.
-- Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state. Verify local `main` or the safely refreshed local base ref contains the PR merge commit first, and verify no worktree still checks out the branch.
+- Do not force-delete a squash/rebase-merged local branch based only on GitHub PR state or configured-base containment. Verify the repository default branch contains the PR merge commit first, and verify no worktree still checks out the branch.
 - If local `main` cannot be refreshed because it has unrelated dirty changes, do not use that dirty checkout as a reason to delete a squash/rebase-merged local branch. Leave the branch, report the dirty-main blocker, and let cleanup resume after local `main` can be safely fast-forwarded.
 - Do not remove a linked worktree before running any matching repo-specific final hooks from `~/.fin.yaml`.
 - Do not preserve dirty tracked, untracked, or ignored files in a linked worktree that has already passed final hooks and is about to be deleted. Reset and clean that linked worktree first so `git worktree remove` cannot be blocked by disposable local changes.
@@ -249,7 +272,7 @@ Run `fin [context] [target]`.
 - Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere; unrelated named worktrees and branches were left untouched.
 - Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
 - Requested external notifications, if any, were attempted or explicitly skipped with a separate notification blocker; notification failures were not described as CI failures.
-- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` or a safely refreshed local base ref containing the PR merge commit, not branch ancestry alone.
+- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus repository default-branch containment of the PR merge commit, not branch ancestry or configured-base containment alone.
 - The local `main` checkout, or the local base ref when using the non-switching explicit-target path, was refreshed or verified to include the landed work before the task was reported complete.
 - `$ag-learn` has been run.
 - The final report states whether the context was explicit, implied by heartbeat or active task context, or auto-detected.
