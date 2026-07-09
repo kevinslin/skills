@@ -1,7 +1,7 @@
 ---
 name: dev.shortcuts
 description: Resolve explicit shortcut triggers and usage. Always read this file at the start of a thread or when user mentions `trigger`.
-dependencies: [dev.review]
+dependencies: [dev.review, oai-push, spec-simulate, specy]
 ---
 
 ## Context
@@ -32,6 +32,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `check-ci` | Watch PR checks and classify Buildkite failures before reporting status. |
 | `checkout-worktree` | Use `arbor checkout` from the main checkout with an explicit worktree path, then verify cleanup. |
 | `commit-code` | Run the canonical precommit flow, commit cleanly, and update the PR if one exists. |
+| `create-spec` | Create a spec with `specy`, then run looped `dev.review` and `spec-simulate` passes on it. |
 | `fix-pr-conflict` | Rebase the current PR branch onto its base branch, resolve conflicts, and force-push. |
 | `fix-pr` | Check out a PR, address review feedback, resolve review threads, and rerun CI. |
 | `inline-shortcut` | Inline one or more shortcut definitions into another skill. |
@@ -42,10 +43,11 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `prepare` | Stash local changes, switch to local `master` or `main`, and pull latest from `origin`. |
 | `precommit-process` | Run the canonical pre-commit review and validation workflow before committing. |
 | `promote-shortcut-to-skill` | Convert a shortcut into a standalone skill and replace old shortcut references. |
-| `push-code` | Commit if needed, then push the current branch. |
+| `push-code` | Commit if needed, then push the current branch using repo-specific push guardrails. |
 | `push-pr` | Commit if needed, push the branch, create a PR, then watch and fix CI as needed. |
 | `rebase-and-fix` | Rebase the current branch onto a provided branch, fix PR conflicts, push, and check CI. |
 | `review` | Create a new worktree for a PR link, run `dev.review`, and add a flow doc for the PR logic. |
+| `review-spec` | Run looped `dev.review` and `spec-simulate` passes against an existing spec. |
 | `sync-branch-push` | Rebase the current branch onto the remote default branch from `git remote show`, then force-push upstream with lease. |
 | `sync-branch` | Rebase the current branch onto the remote default branch from `git remote show` and resolve conflicts if needed. |
 
