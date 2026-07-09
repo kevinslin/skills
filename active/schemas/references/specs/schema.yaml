@@ -10,6 +10,9 @@ variables:
     values: ["*"]
     default: bootstrap
     description: Kebab-case spec slug.
+  artifact:
+    values: ["*"]
+    description: Kebab-case artifact slug.
   flow:
     values: ["*"]
     description: Concise kebab-case flow name.
@@ -35,12 +38,29 @@ variables:
     description: Integration proof scenario slug.
 schema:
   specs:
-    description: Numbered specs, incrementing from 1.
+    description: Active numbered specs plus a root archive for completed or superseded spec units.
     children:
+      ".archive":
+        description: Completed or superseded spec units, including terminal milestone subspecs, moved here without renaming.
+        dynamic_child: true
       "{{spec_number}}-{{spec_slug}}":
-        description: One numbered spec directory.
+        description: One active numbered spec directory.
         dynamic_child: true
         children:
+          artifacts:
+            description: Durable supporting artifacts attached to this spec, including operator runbooks, handoff instructions, and other concrete deliverables.
+            children:
+              "{{artifact}}":
+                description: One durable supporting artifact for this spec.
+                template: artifact
+                dynamic_child: true
+                insertion_policy:
+                  use_when:
+                    - The file is a concrete deliverable, operator runbook, command sequence, or handoff artifact referenced by the spec.
+                    - The content should remain independently usable without expanding the main spec.
+                  avoid_when:
+                    - The document is the main feature spec, a milestone plan, or a behavior flow explanation.
+                    - The content is raw integration evidence; put that under proofs instead.
           flows:
             description: Flow docs for this spec. Use concise kebab-case flow names, following the specy flow-doc naming contract.
             children:

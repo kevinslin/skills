@@ -14,6 +14,7 @@ specs [version=1.0 extension=md]
 |-- variables
 |   |-- spec_number: *, default=1
 |   |-- spec_slug: *, default=bootstrap
+|   |-- artifact: *
 |   |-- flow: *
 |   |-- cook: *
 |   |-- subspec: *, default=1.1
@@ -23,7 +24,10 @@ specs [version=1.0 extension=md]
 |   `-- scenario: *
 |-- tree
     `-- specs
+        |-- .archive
         `-- {{spec_number}}-{{spec_slug}}
+            |-- artifacts
+            |   `-- {{artifact}}
             |-- flows
             |   `-- {{flow}}
             |-- cook
@@ -43,8 +47,11 @@ specs [version=1.0 extension=md]
 
 ## Descriptions
 
-- specs: Numbered specs, incrementing from 1.
-- specs/{{spec_number}}-{{spec_slug}}: One numbered spec directory.
+- specs: Active numbered specs plus a root archive for completed or superseded spec units.
+- specs/.archive: Completed or superseded spec units, including terminal milestone subspecs, moved here without renaming.
+- specs/{{spec_number}}-{{spec_slug}}: One active numbered spec directory.
+- specs/{{spec_number}}-{{spec_slug}}/artifacts: Durable supporting artifacts attached to this spec, including operator runbooks, handoff instructions, and other concrete deliverables.
+- specs/{{spec_number}}-{{spec_slug}}/artifacts/{{artifact}}: One durable supporting artifact for this spec.
 - specs/{{spec_number}}-{{spec_slug}}/flows: Flow docs for this spec. Use concise kebab-case flow names, following the specy flow-doc naming contract.
 - specs/{{spec_number}}-{{spec_slug}}/flows/{{flow}}: Flow doc for a specific spec behavior or execution path.
 - specs/{{spec_number}}-{{spec_slug}}/cook: Cookbooks and reusable recipes for this spec.

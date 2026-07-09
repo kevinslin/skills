@@ -3,6 +3,7 @@ name: fin
 description: Finalize completed PR or local checkout work.
 dependencies:
 - ag-learn
+- dev.llm-session
 - dev.shortcuts
 - specy
 ---
@@ -62,6 +63,33 @@ Run `fin [context] [target]`.
 - If the `local` flow is blocked only by trunk drift, run `trigger:sync-branch` or otherwise rebase the current branch onto the merge target before retrying the check.
 - Continue only after mergeability is confirmed or the matching PR is already merged. If repair cannot restore a mergeable state, stop and report the blockage instead of archiving the spec or landing the change.
 
+### Explicit Blocker Override
+
+- When finalization stops on named non-conflict blockers and the user explicitly says to merge or land while ignoring those blockers, treat that response as an auditable override limited to the blockers already reported for the locked target.
+- Restate the target identity and the exact waived blockers before proceeding. Do not infer an override from a generic approval, an earlier broad permission, silence, or a request that does not clearly authorize landing.
+- An override may waive failing or pending checks, review/proof/approval gates, waiting periods, and incomplete-spec landing gates. It does not waive an unmergeable/conflicting target, a target mismatch, unknown commit identity, dirty-worktree preservation, malformed or failed final hooks, missing repository permission, or post-merge verification and cleanup.
+- Keep incomplete specs and milestones active and unarchived. Do not mark them complete merely to satisfy the normal archival-before-landing order. Record the spec exception in the final report.
+- In `gh` context, re-confirm `mergeable: true` for the exact PR head, then use a repository-supported administrator or maintainer override merge. If merge commits are disallowed, retry once with the supported squash method. Never use the override to merge a conflicting or indeterminate head.
+- Preserve the waived state in the final report: who authorized it, which blockers were ignored, whether an administrator merge was used, and which spec artifacts intentionally remained active.
+
+### PR Automation Lookup
+
+- Resolve a matching babysit/watch automation by exact automation id first, then by the locked PR number and head branch.
+- Bound the automation service lookup to one request and at most 30 seconds of waiting. Do not let an unavailable automation service stall finalization indefinitely.
+- If the service lookup errors or times out, search `${CODEX_HOME:-$HOME/.codex}/automations` for the exact automation id, PR number, or head branch. Treat this as read-only fallback evidence; never delete automation files directly.
+- When the fallback finds a persisted automation, retry one service lookup/delete operation using its exact id. If deletion still fails, report automation cleanup as blocked with the id and error.
+- When neither the bounded service lookup nor the exact registry search finds a match, report that no matching persisted automation was present and name the evidence used. Distinguish this from a service-only lookup failure.
+
+### Linear Issue Lookup
+
+- Read `~/.agents/profile` directly. Treat the profile as work only when it contains a trimmed, non-comment line exactly equal to `name=work`. For a non-work profile, skip Linear unless the user or current task context explicitly identifies a Linear issue to finish.
+- For a work profile, resolve the active Codex thread id from the current app/session context, using `dev.llm-session` when needed. Use the installed `linear:linear` connector skill and its connected Linear tools; do not use `linear-cli` or a browser fallback.
+- Search issue descriptions for the exact deep link `codex://threads/<thread-id>`. Accept only an issue whose description contains that exact link, or an issue the user explicitly identified as the ticket for this task. Do not infer linkage from a similar title, branch name, PR number, assignee, or project.
+- Treat statuses with type `backlog`, `unstarted`, or `started` as pending. Treat `completed` and `canceled` issues as terminal and leave them unchanged.
+- When exactly one linked pending issue exists, lock its issue id and team for the rest of the run. When no linked pending issue exists, record that Linear completion is not applicable and continue.
+- When more than one linked pending issue exists, do not update any of them. Record the matching issue ids as a Linear ambiguity blocker and continue landing without guessing.
+- If the connector is unavailable, unauthenticated, or the lookup result is ambiguous, do not retry through another client. Record the exact Linear blocker and continue the landing flow; the final report must describe the result as partial finalization if the task lands but its linked pending issue cannot be verified complete.
+
 2. Resolve the active spec
 - Build an ordered list of candidate docs roots:
   - First, use `DOCS_ROOT` when it is configured.
@@ -95,7 +123,13 @@ Run `fin [context] [target]`.
 - Before running a merge command, check the target PR state with GitHub. If the PR is already `MERGED`, do not run `trigger:merge-pr`; record the merge commit or merged-at details when available and proceed as an already-landed PR.
 - If the PR is not already merged and the target PR belongs to the current branch, run `trigger:merge-pr` immediately after the matching spec has been marked complete and archived.
 - If the PR is not already merged and the explicit target PR does not belong to the current branch, use a target-aware remote merge for that PR, such as `gh pr merge <target>`, after the matching spec has been marked complete and archived. Do not use current-branch merge shortcuts for a different PR.
+- Under an explicit blocker override, skip the archival prerequisite only for incomplete matching specs, leave them active, and use the target-aware override merge defined above.
 - Treat the merge as part of finalization, not a follow-up option.
+- If direct merge is rejected because repository policy requires auto-merge, and checks/reviews are otherwise green, enable repository-supported auto-merge for the locked target PR instead of treating the rejection as a terminal merge failure.
+- After any successful auto-merge enablement, query the target PR for `autoMergeRequest`, `state`, `mergedAt`, `mergeCommit`, `mergeStateStatus`, and status checks.
+- Treat `autoMergeRequest` present with the PR still `OPEN` as `auto-merge pending`, not as `blocked`, while checks remain green and no explicit cancellation or failing required check is present.
+- Poll the locked PR for a bounded window after enabling auto-merge. If it becomes `MERGED`, continue with normal post-merge cleanup. If the bounded window expires with `autoMergeRequest` still present, report `auto-merge pending` with the PR URL and defer local branch/worktree cleanup that requires landed-merge proof.
+- Treat auto-merge as blocked only when GitHub reports the auto-merge request was removed/cancelled, a required check fails, conflicts appear, or the PR is otherwise no longer mergeable.
 - If the merge command reports that the local branch cannot be deleted because it is still attached to a linked worktree, check whether the remote PR actually merged before treating the step as failed.
 - When the PR merged remotely but local branch deletion failed only because of the linked worktree attachment, treat that as a successful merge followed by incomplete cleanup and continue with worktree removal from another checkout.
 - If there is no matching PR to merge, state that explicitly instead of claiming the task fully landed.
@@ -112,7 +146,8 @@ Run `fin [context] [target]`.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
 - If `gh pr merge --delete-branch` already deleted the remote branch but failed local deletion because the branch was still attached to the worktree, finish the cleanup explicitly instead of retrying the merge.
-- Fully remove the worktree, then run `git worktree prune`.
+- Fully remove the worktree. If `git worktree remove` does not return a confirmed exit status promptly, keep that original removal process alive in a persistent terminal session and poll it until it exits; do not start overlapping removal processes for the same path.
+- Before claiming removal or pruning, verify both that the filesystem path no longer exists and that the path is absent from `git worktree list --porcelain`. Then run `git worktree prune`.
 - If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete the merged branch too.
 - If local branch deletion reports that the branch is not merged into current `HEAD`, do not use ancestry alone as the safety check. For squash or rebase merges, verify the GitHub PR is `MERGED`, record the PR head SHA and merge commit, refresh local `main`, confirm local `main` contains the merge commit, and only then delete the local branch when no worktree checks it out.
 - If the PR used a squash or rebase merge and local `main` cannot be refreshed because the non-worktree checkout has unrelated dirty changes, treat the remote PR landing and linked-worktree removal as complete but defer local branch deletion. Report the dirty-main refresh blocker exactly, keep the local branch until local `main` can safely contain the merge commit, and do not force-delete it from GitHub state alone.
@@ -152,7 +187,8 @@ Run `fin [context] [target]`.
   - Leave unrelated named branches and worktrees untouched, even when their names, commits, or paths look adjacent to the finalized task.
 - Run the removal from another checkout such as the main checkout, not from inside the linked worktree itself.
 - After final hooks have run and immediately before removing a linked worktree, discard all remaining changes inside that soon-to-be-deleted worktree with `git -C <worktree> reset --hard` and `git -C <worktree> clean -fdx`. This is intentionally destructive because the worktree is being deleted; do not run it against the non-worktree `main` checkout or any worktree that is not being removed.
-- Fully remove the worktree, then run `git worktree prune`.
+- Fully remove the worktree. If `git worktree remove` does not return a confirmed exit status promptly, keep that original removal process alive in a persistent terminal session and poll it until it exits; do not start overlapping removal processes for the same path.
+- Before claiming removal or pruning, verify both that the filesystem path no longer exists and that the path is absent from `git worktree list --porcelain`. Then run `git worktree prune`.
 - If the merged local branch still exists after the worktree is removed and is no longer checked out anywhere, delete the merged branch too.
 - If a corresponding remote branch still exists and repo policy allows cleanup, delete it explicitly after the local merge is safely on `main`.
 - If there is no linked worktree for the task branch, state that explicitly and continue.
@@ -164,9 +200,20 @@ Run `fin [context] [target]`.
 - If the flow included pushing `main`, confirm the pushed remote ref contains the landed commit too.
 - If the local `main` verification fails, stop and report the exact git error or verification gap instead of claiming the task is fully finalized.
 
+## Linear Completion
+
+7. Complete the linked Linear issue
+- Run this step only after the selected landing flow and its required local `main` refresh or verification have completed. Do not complete the issue while a PR is merely auto-merge pending or while finalization is in a partial local-cleanup state.
+- If the user explicitly instructed that the linked issue remain open, preserve it and report that override.
+- For the single locked pending issue, list the issue team's current statuses through the Linear connector and resolve a status whose type is `completed` live. Prefer the case-insensitive name `Done` when multiple completed statuses exist; if no unique destination can be resolved, leave the issue unchanged and report the ambiguity.
+- Update the locked issue to the resolved completed status, then read it back and verify the issue id, team, and status type `completed` before claiming success.
+- If the update result is ambiguous, read the locked issue once before retrying. Never create an issue during `fin`, never complete an issue that was not locked during lookup, and never bulk-complete multiple matches.
+- If no linked pending issue was found, state that no Linear update was needed. If a linked issue was already completed or canceled, state that it was terminal and unchanged.
+- If lookup, status resolution, update, or read-back verification fails, preserve the successful landing result but report `partial finalization: Linear issue not verified complete` with the issue id when known and the exact blocker.
+
 ## Retrospective And Reporting
 
-7. Run the retrospective
+8. Run the retrospective
 - Run `$ag-learn` after the task lands in the requested context, after any matching spec has been archived, and after any matching repo-specific final hooks from `~/.fin.yaml` have completed.
 - For `gh`, run it after the PR merge or already-merged confirmation, repo-specific final hooks, and local `main` refresh or base-ref containment proof complete.
 - For `local`, run it after the local merge, repo-specific final hooks, and local `main` verification complete.
@@ -174,13 +221,15 @@ Run `fin [context] [target]`.
 - Present these as proposed learnings for follow-up, not mandatory extra scope.
 - If `ag-learn` finds no meaningful improvement opportunities, say that explicitly.
 
-8. Report the finished state
+9. Report the finished state
 - State which context ran: `gh` or `local`.
 - State whether that context was explicitly requested, implied by heartbeat or active task context, or auto-detected from current-branch PR state.
 - For `gh`, state the target identity line with PR number, branch, and source before reporting mergeability, checks, blockers, merge, or cleanup. If another PR was also present in the current checkout, explicitly state that it was not the finalization target.
 - State whether the mergeability check passed directly, was skipped because the PR was already merged, or required `fix-pr-conflict` / `fix-pr` / `sync-branch` / manual repair.
 - State whether a spec was archived and include the source and destination paths when applicable.
+- If an explicit blocker override was used, state the authorizing user instruction, the exact waived blockers, the override merge method, and every incomplete spec or milestone intentionally left active.
 - For `gh`, state whether the PR was already merged and `merge-pr` was skipped, or whether `merge-pr` ran successfully, including whether the remote merge succeeded directly or required separate post-merge worktree cleanup because local branch deletion failed.
+- For `gh`, if auto-merge was enabled but the PR has not merged yet, report `auto-merge pending`, include the PR URL, head SHA, auto-merge method, `autoMergeRequest.enabledAt` when available, and explicitly state that local cleanup requiring merged proof was deferred.
 - For `local`, state whether the branch landed via local merge, was already on `main`, or was blocked before landing.
 - State whether a linked worktree was removed, pruned, and had its merged branch deleted when applicable.
 - For `gh`, state whether any PR babysit/watch automation was found and whether it was deleted, already absent, or blocked.
@@ -190,6 +239,7 @@ Run `fin [context] [target]`.
 - If the remote PR landed but local `main` refresh was blocked by unrelated dirty changes, call that out as `partial local cleanup`: include the merge commit, the dirty-main error, which cleanup steps did complete, and which local branch or verification step was intentionally deferred.
 - State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
 - If `local` pushed `main`, state whether the push succeeded. If it intentionally remained local-only, say that explicitly.
+- State the Linear result: linked issue id and completed status, no linked pending issue, already-terminal issue left unchanged, explicit keep-open override, or the exact partial-finalization blocker.
 - Summarize the proposed learnings as a numbered list so each item can be referenced later.
 - Mention where `ag-learn` saved the learning note.
 - Keep the final report internally consistent with the chosen context: completed task, completed spec archival, requested landing path, reconciled or verified `main`, completed retrospective.
@@ -206,8 +256,9 @@ Run `fin [context] [target]`.
 - Do not run `trigger:merge-pr` when GitHub reports the matching PR is already `MERGED`; use the existing merged state and continue finalization from there.
 - If `gh` repair via `fix-pr-conflict` or `fix-pr` cannot restore a mergeable state, stop and report the blockage instead of continuing the finalization flow.
 - If `local` repair via branch sync or rebase cannot restore a mergeable state, stop and report the blockage instead of continuing the finalization flow.
-- Do not run `merge-pr` in `gh` mode before the matching spec is marked complete and archived.
+- Do not run `merge-pr` in `gh` mode before the matching spec is marked complete and archived, unless an explicit blocker override authorizes landing a mergeable PR while leaving that incomplete spec active and unarchived.
 - Do not require a PR in `local` mode.
+- Do not classify a green PR as terminally blocked only because GitHub still reports `OPEN`/`BLOCKED` shortly after auto-merge was successfully enabled. Use the explicit `auto-merge pending` state unless the auto-merge request disappears, checks fail, or conflicts appear.
 - Do not treat `gh pr merge --delete-branch` local branch-deletion failures caused only by linked worktree attachment as a failed merge when the remote PR already landed.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
 - Do not remove unrelated named worktrees or branches during cleanup. A worktree is cleanup-eligible only when it checks out the landed branch, or, in `gh` mode, when it is a detached temporary PR review worktree tied to the finalized PR by PR number/path or recorded head SHA.
@@ -223,6 +274,8 @@ Run `fin [context] [target]`.
 - Do not try to remove the current live worktree from inside itself; switch to another checkout first.
 - Do not report final success while local `main` or the safely refreshed local base ref still points behind the landed result unless the user explicitly says not to refresh or verify it.
 - Do not reclassify a green PR or passing CI as blocked because a Slack/chat/desktop notification could not be sent. Report notification failures as auxiliary notification blockers with the missing prerequisite.
+- Do not complete a Linear issue before landing and local-main verification succeed, from title/branch/PR similarity alone, or when more than one pending issue matches the active thread.
+- Do not claim full finalization when a linked pending Linear issue was found but could not be verified in a completed state. Preserve the landing result and report partial finalization instead.
 - Do not invent a parallel spec layout; use the `specy` convention already present in the workspace.
 - Do not archive an active parent folder spec just because a milestone sidecar
   inside it landed; leave the parent active while sibling milestones remain.
@@ -244,13 +297,15 @@ Run `fin [context] [target]`.
 - Unrelated active specs remain untouched.
 - `~/.fin.yaml` was checked, parsed or explicitly handled as malformed, and any workspace entry matching the non-worktree checkout root was applied before linked-worktree removal.
 - In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
+- Any explicit blocker override recorded the locked target, exact waived blockers, authorizing user instruction, override merge method, and intentionally unarchived incomplete specs.
 - In `local` mode, the completed branch has been merged into local `main` or verified as already landed there.
 - If a linked worktree was about to be removed, remaining tracked, untracked, and ignored changes in that worktree were discarded with `git reset --hard` and `git clean -fdx` after final hooks ran and before `git worktree remove`.
-- Any linked worktree used for the merged branch was removed afterward, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere; unrelated named worktrees and branches were left untouched.
-- Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked.
+- Any linked worktree used for the merged branch was removed afterward; the removal process reached a confirmed exit status, both filesystem and `git worktree list --porcelain` absence were verified, `git worktree prune` was run, and the merged local branch was deleted when it was no longer checked out anywhere. Unrelated named worktrees and branches were left untouched.
+- Any PR babysit/watch automation found for the merged PR was deleted or reported as blocked; service timeouts used the exact read-only registry fallback and did not silently imply absence.
 - Requested external notifications, if any, were attempted or explicitly skipped with a separate notification blocker; notification failures were not described as CI failures.
-- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` or a safely refreshed local base ref containing the PR merge commit, not branch ancestry alone.
-- The local `main` checkout, or the local base ref when using the non-switching explicit-target path, was refreshed or verified to include the landed work before the task was reported complete.
+- For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
+- The local `main` checkout was checked for concurrent tracked or untracked changes immediately before refresh, then refreshed or verified to include the landed work before the task was reported complete; otherwise the required partial local cleanup state was reported.
+- The active thread's linked Linear issue was checked when applicable; exactly one pending match was moved to a live-resolved completed status and read back successfully, or the no-op/terminal/override/blocker result was reported explicitly.
 - `$ag-learn` has been run.
 - The final report states whether the context was explicit, implied by heartbeat or active task context, or auto-detected.
 - The final report includes the archived spec path change when applicable.

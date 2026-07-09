@@ -40,7 +40,8 @@ changes.
 - Store the checklist in the active spec folder when using `schemas` `specs`.
 - Store the checklist in a temporary folder for all other workflows.
 - Include every required gate: spec, spec review, implementation, review swarm,
-  review fixes, verification, PR push, and any user-requested stopping condition.
+  review fixes, verification, implementation flow doc, PR push, and any
+  user-requested stopping condition.
 - Translate explicit user completion requirements into checklist rows before starting.
   If the user names a live proof suite, negative cases, inline screenshots, CI green,
   a PR push, or a "do not stop until" condition, those are required rows, not optional
@@ -63,8 +64,9 @@ changes.
   code review, slop, documentation review, and dead code cleanup
 - Verification track: run the verify phase of `$dev.loop` in a separate subagent
   after review fixes land.
-- PR push track: after verification succeeds, run `trigger:push-pr` as the final
-  delivery step unless the user explicitly said not to push.
+- PR push track: after verification succeeds and the implementation flow doc is
+  written and validated, run `trigger:push-pr` as the final delivery step unless
+  the user explicitly said not to push.
 
 ## Workflow
 
@@ -125,16 +127,27 @@ or unclear ownership, bubble it up for human review instead of guessing.
   tests, or synthetic debug helpers when the user requested live end-to-end proof.
 - Do not treat verification as implicit. It is a dedicated track with its own owner.
 
-### 6. Push PR
+### 6. Document Implementation Flow
+
+- Before running `trigger:push-pr`, create or update a `$specy` `flow-doc` for
+  the primary logic path exercised by the implementation.
+- Resolve the durable flow-doc target through `$mem` before writing. Store it in
+  the `$mem`-resolved active spec folder when using `schemas` `specs`, otherwise
+  use the resolved base and flow-doc route.
+- The flow doc must describe the changed request path, entry points, key
+  state/config transitions, exit behavior, and validation/proof hooks.
+- Run the `$specy` flow-doc validator and fix failures before continuing.
+- Check off the implementation-flow-doc checklist row before PR push. Do not
+  push until this gate is complete.
+
+### 7. Push PR
 
 - After verification succeeds and review fixes are committed, run `trigger:push-pr`.
 - Treat PR push as required for full execution unless the user explicitly requested
   planning/review only or explicitly said not to push.
 - Include the PR URL in the final handoff. If push or PR creation fails, report
   the exact failure and treat the swarm run as incomplete.
-- Write a flow doc for the implementation. Store it in the `$mem`-resolved active spec folder when using `schemas` `specs`, and report the selected base plus concrete path in the handoff.
 - Kick of $babysit-pr after the PR is pushed
-- Create a flow doc that goes over the primary logic path that this pr exercises using $specy skill
 - $slack-notify me with alert once pr is green
 
 ## Manager Rules

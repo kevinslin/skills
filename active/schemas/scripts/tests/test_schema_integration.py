@@ -565,7 +565,7 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             (out / "pkg.test.api.custom-api.md").read_text(encoding="utf-8"),
         )
 
-    def test_specs_schema_materializes_cook_docs(self) -> None:
+    def test_specs_schema_materializes_cook_and_artifact_docs(self) -> None:
         self.install_prod_schema("integ-proof")
         self.install_prod_schema("specs")
 
@@ -573,8 +573,21 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
 
         self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
         self.assertNotIn("            |-- spec\n", show_result.stdout)
+        self.assertIn("        |-- .archive\n", show_result.stdout)
+        self.assertIn("            |-- artifacts\n", show_result.stdout)
         self.assertIn("            |-- flows\n", show_result.stdout)
         self.assertIn("            |-- cook\n", show_result.stdout)
+
+        describe_result = self.run_schema("describe", "specs")
+        self.assertEqual(describe_result.returncode, 0, msg=describe_result.stderr)
+        self.assertIn(
+            "- specs/.archive: Completed or superseded spec units, including terminal milestone subspecs, moved here without renaming.",
+            describe_result.stdout,
+        )
+        self.assertIn(
+            "- specs/{{spec_number}}-{{spec_slug}}/artifacts: Durable supporting artifacts",
+            describe_result.stdout,
+        )
 
         out = self.root / "out"
         result = self.run_schema(
@@ -589,7 +602,11 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             "--var",
             "spec_slug=pilot",
             "--var",
+            "artifact=run-release",
+            "--var",
             "cook=release-loop",
+            "--include",
+            "specs/1-pilot/artifacts/run-release",
             "--include",
             "specs/1-pilot/cook/release-loop",
         )
@@ -598,6 +615,12 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         self.assertIn(
             "# Release Loop",
             (out / "specs" / "1-pilot" / "cook" / "release-loop.md").read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            "# Run Release",
+            (out / "specs" / "1-pilot" / "artifacts" / "run-release.md").read_text(
+                encoding="utf-8"
+            ),
         )
 
     def test_project_schema_materializes_root_level_docs(self) -> None:

@@ -16,7 +16,7 @@ Use this skill to understand and materialize hierarchical file schemas stored un
 - `global-core`: Reusable global reference and topic namespaces with `ref/{{reference}}` and `t/{{topic}}`. See `./references/global-core/schema.yaml`.
 - `integ-proof`: Integration behavior proof tree with claim, status, scenario summaries, proof-local scripts, and arbitrary raw artifacts. See `./references/integ-proof/schema.yaml`.
 - `project`: Project-level directory tree with `specs/`, root-level flow docs, cookbooks, and reports. See `./references/project/schema.yaml`.
-- `specs`: Agent Project Directory tree with numbered spec directories, per-spec flow docs, cookbooks, milestones, integration proofs, and reports. See `./references/specs/schema.yaml`.
+- `specs`: Agent Project Directory tree with active numbered spec directories, a root `.archive` for completed or superseded spec units, and per-spec artifacts, flow docs, cookbooks, milestones, integration proofs, and reports. See `./references/specs/schema.yaml`.
 
 ## Schema Layout
 

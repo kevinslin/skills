@@ -5,6 +5,15 @@
 
 ---
 
+## TL;DR
+
+- [Target outcome in one sentence]
+- [Scope boundary or non-goal that prevents overreach]
+- [Key implementation path or owner boundary]
+- [Most important dependency, validation proof, or risk]
+
+---
+
 ## Goal and Scope
 
 ### Goal
