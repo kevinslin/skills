@@ -19,7 +19,8 @@ If the runtime has no first-class thread automation API, emulate the loop in the
 
 ## Polling Loop
 
-Poll every 2 minutes until the pass condition or a terminal stop condition is reached.
+Poll every 2 minutes until the heartbeat pass condition, explicit quiet-green
+pass condition, or a terminal stop condition is reached.
 
 At each poll:
 
@@ -42,7 +43,7 @@ At each poll:
    - New actionable comments, requested changes, unresolved review threads, or older still-applicable concrete findings are GitHub issues.
    - PR branch conflicts are conflict issues.
    - Failed, errored, cancelled, or clearly stuck latest checks are build issues only after leaf log evidence shows a concrete failure. If the latest leaf job is still running or logs are unavailable because CI has not produced them yet, keep the check pending/running and continue polling.
-   - Pending/running latest checks are not build issues, but they do not count toward the quiet-green window.
+   - Pending/running latest checks are not build issues, but they prevent the heartbeat CI-green stop condition from passing.
    - Superseded older check failures do not block the quiet-green window unless the current latest run for the same check identity is also failing, missing, or stale.
 
 ## Fix Cycle
@@ -63,24 +64,42 @@ When any GitHub or build issue is found:
 4. Refresh the PR head SHA and reset the quiet-green timer.
 5. Return to the 2-minute polling loop.
 
-Do not mark the babysit loop complete immediately after a fix. Completion requires a fresh quiet-green window.
+Do not mark the babysit loop complete immediately after a fix unless the fresh
+post-fix poll already satisfies the heartbeat CI-green stop condition. A
+quiet-green window is required only when the user explicitly asked to keep
+watching after green.
 
 ## Pass Condition
 
-Complete only after all of these are true:
+For heartbeat automations, complete and delete the heartbeat as soon as all of
+these are true:
 
 1. CI is green for the current head SHA.
 2. No new actionable GitHub issues have appeared.
-3. The PR has stayed in that green/no-new-issues state for at least 10 continuous minutes, checked at the 2-minute cadence.
+3. There are no unresolved actionable review threads, requested changes,
+   branch conflicts, or current-head build failures requiring a fix.
 
-Reset the 10-minute timer whenever a new commit appears, CI stops being green, or new actionable GitHub activity appears.
+Do not keep a heartbeat automation alive only for a quiet-green window,
+codeowner/compliance approval gates, skipped bot-approval triggers, or a blocked
+merge state that is explained solely by approvals. Delete the heartbeat,
+notify/report the green CI result, and mention any remaining non-actionable
+approval gate separately.
+
+If the user explicitly asks to keep watching after green, use a quiet-green pass
+condition instead: the PR must stay in the CI-green/no-new-actionable-issues state
+for at least 10 continuous minutes, checked at the 2-minute cadence. Reset that
+timer whenever a new commit appears, CI stops being green, or new actionable
+GitHub activity appears.
 
 ## Completion And Cleanup
 
-When the pass condition is met:
+When the heartbeat CI-green pass condition or explicit quiet-green pass condition
+is met:
 
 1. Delete or cancel the thread automation that was running the babysit loop.
 2. Use `../gen-notifier/SKILL.md` to send exactly one completion notification.
-3. Report the PR, final head SHA, checks status, quiet-window duration, and automation deletion status.
+3. Report the PR, final head SHA, checks status, automation deletion status, and
+   any remaining non-actionable approval/compliance gate. Include quiet-window
+   duration only when the user explicitly requested a quiet-green watch.
 
 If the loop hits an unrecoverable error, delete or cancel the automation when possible, notify with an error status through `../gen-notifier/SKILL.md`, and report the blocker.
