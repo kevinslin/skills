@@ -45,6 +45,22 @@ Include rows for the relevant approval family and channel states:
 
 For each row, record the exact command or live action, expected result, observed result, raw artifact path, and screenshot/photo path when the user asks for visual proof. Do not summarize the approval suite as complete from unit tests alone.
 
+## Serialized Live-Turn Contract
+
+Treat channel-backed integration as a state machine, not merely an ordered list:
+
+```text
+parent-created -> turn-active -> terminal-reply
+terminal-reply -> approval-pending -> decision-or-expiry -> terminal-reply
+terminal-reply -> direct-side-effect-verification -> next-scenario
+```
+
+- Use the exact first scenario as the top-level bot mention. Do not create a generic starter and immediately add the real scenario as a reply.
+- Keep checklists, progress notes, headings, and summaries in the proof directory while the run is active. Do not post control/report messages into the tested channel or thread until every scenario is terminal.
+- Do not send the next scenario until the prior same-thread turn has a terminal bot reply and no pending approval or active work remains.
+- Persist parent/reply timestamps, nonce, approval ID, expiry, state transition, and direct verification result under `<proof-root>/raw/` as the run progresses.
+- For approval turns, follow the stricter lifecycle and expiry recovery rules in `./references/approvals.md`.
+
 ## Profile Selection
 
 1. Resolve the OpenClaw repo root.
@@ -63,6 +79,17 @@ For each row, record the exact command or live action, expected result, observed
 Treat these as local claw profile selectors, not always as literal `OPENCLAW_PROFILE` values. Before invoking OpenClaw commands, resolve and record the selected profile's concrete OpenClaw runtime environment, including the actual `OPENCLAW_PROFILE`, `OPENCLAW_STATE_DIR`, and `OPENCLAW_CONFIG_PATH` when present. For `.openclaw-dev`, the OpenClaw dev CLI profile is `dev` and the state directory is `~/.openclaw-dev`; do not pass `.openclaw-dev` as `OPENCLAW_PROFILE`.
 
 Profile existence is a local state check: the selected claw profile exists only when its matching local config/state can be found and the resolved OpenClaw config path points at `openclaw.json`. Prefer profile-aware CLI commands for operation, but use the resolved state/config paths for existence checks and redacted summaries.
+
+## Remote Target Routing
+
+This skill's built-in profile contract is local-only. When the user requests a remote gateway or hosted tenant:
+
+1. Do not reinterpret it as `openclaw-codex-dev` or `.openclaw-dev`.
+2. Route to an explicitly available environment-specific remote integration workflow when one exists.
+3. Require that workflow to preserve this skill's proof matrix, serialized live-turn contract, Showboat artifacts, screenshots, direct side-effect verification, and applicable completion criteria.
+4. If no remote workflow is available or the remote target is ambiguous, stop before sending live traffic and record the blocker.
+
+Do not add remote credentials, tenant paths, or provider-specific cluster assumptions to this public skill.
 
 ## Gateway Setup
 
@@ -263,11 +290,12 @@ When the selected local claw profile is missing, ambiguous, or not one of `openc
 
 ## Completion Criteria
 
-The run is complete only when:
+For built-in local-profile runs, the run is complete only when:
 
 - the requested profile was selected from `openclaw-codex-dev` or `.openclaw-dev`
 - the claw gateway for that profile was used
 - the requested behavior was exercised live
+- every channel turn followed the serialized live-turn contract and no control/report message raced a scenario
 - ffmpeg video proof was captured under `raw/`, or a video-capture blocker was saved there
 - a still screenshot of the tested channel surface was saved under `raw/` and shown inline in the conversation, or a screenshot/inline-display blocker was saved and reported
 - the `showboat-v2` proof directory was materialized and filled

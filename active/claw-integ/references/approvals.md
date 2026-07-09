@@ -18,13 +18,46 @@ If the user does not specify the claw profile, infer it using the main skill's P
 Use Computer Use when the approval channel has a desktop or app surface available.
 
 1. Start or focus the requested channel app or surface with Computer Use.
-2. Confirm the relevant conversation or approval surface is visible before sending the simulated approval.
+2. Confirm the exact nonce-bearing conversation is visible before sending the simulated approval. A previously open thread or similarly titled request is insufficient.
 3. Send the approval request through the local CLI.
-4. Use Computer Use to verify the approval request appears in the channel.
-5. Resolve the approval from the channel surface, such as by clicking a button, adding the expected reaction, or sending the documented `/approve` reply.
-6. Capture a screenshot of the channel surface showing the request and the resolved state, then show it inline in the thread as required by the main skill.
+4. Use Computer Use to verify the approval request appears in the channel, record its creation time and expiry, and capture the before-decision screenshot immediately.
+5. Refresh the surface immediately before interaction, re-match the exact approval ID, and obtain any required action-time confirmation while enough of the approval window remains.
+6. Resolve the approval from the channel surface, such as by clicking a button, adding the expected reaction, or sending the documented `/approve` reply.
+7. Wait for the gateway decision acknowledgement and final same-thread result. Capture the resolved-state screenshot, then show it inline in the thread as required by the main skill.
 
 For TUI approval tests, run or focus the TUI and capture the terminal/TUI pane as the tested surface.
+
+## Approval Lifecycle State Machine
+
+Create `<proof-root>/raw/approval-state.md` before the first approval request. Update it after every transition with the scenario nonce, channel parent/thread identifier, request timestamp, approval ID, expiry, terminal reply timestamp, and verification result.
+
+Use these gates for every approval row:
+
+1. `turn-terminal`: no prior turn or approval is active.
+2. `request-created`: the expected nonce-bearing approval exists and the gateway reports it pending.
+3. `surface-focused`: the real channel surface shows the exact thread, nonce, approval ID, and action controls.
+4. `decision-or-expiry`: the authorized decision is observed by the gateway, or the request visibly expires untouched.
+5. `turn-terminal`: the same thread reports the final result.
+6. `side-effect-verified`: a direct read proves the expected write exists exactly once or the unapproved write is absent.
+
+Do not send the next scenario until all applicable gates are recorded. A channel acknowledgement, reaction, typing indicator, or button click alone is not a terminal result.
+
+### Channel Message Discipline
+
+- The exact first test prompt must be the top-level bot mention. Do not send a generic starter followed immediately by the real test in its thread.
+- Keep the checklist and progress reporting local to the proof artifacts during execution. Do not post them into the tested channel or thread until the run finishes.
+- Do not send a second message while the gateway is initializing or answering the current turn.
+
+### Expiry Recovery
+
+Treat approval expiry as terminal for that conversation turn:
+
+1. Capture the expired state and approval ID.
+2. Verify directly that the requested side effect did not occur.
+3. Do not retry the tool in the same thread or reuse the expired approval ID.
+4. Start a fresh conversation/session with a new nonce and unique write title before retrying.
+
+If a same-thread follow-up returns the expired ID, record that as stale-session evidence and stop using that thread.
 
 ## Local CLI Simulation
 
@@ -48,6 +81,8 @@ Approval proof is complete only when all of these are true:
 - the request was visible in the real channel surface
 - the decision was made from the channel surface
 - the gateway observed the expected approval result
+- approval state transitions and expiry metadata were recorded under the proof root
+- expired requests, when tested, were followed by direct zero-side-effect verification and were not retried in the same thread
 - a redacted screenshot of the channel surface was saved under the proof raw artifacts
 - the same screenshot was shown inline in the conversation before final handoff
 
