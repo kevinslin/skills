@@ -12,7 +12,7 @@ dependencies:
 ## Workflow
 
 1. Identify the review type from the user's request and artifact.
-   - Examples: code, docs, design-doc, spec, architecture, ux, skills, integrator, deslop.
+   - Examples: code, docs, design-doc, spec, architecture, ux, skills, integrator, deslop, dead-code.
    - If ambiguous, ask one clarifying question before reviewing.
 2. Load the matching workflow from `./references/workflow-[review-type].md`.
    - If the workflow file does not exist, ask the user for the prompt to add and pause the review.
@@ -49,3 +49,4 @@ dependencies:
 - `./references/workflow-skills.md` for reviewing `SKILL.md` files and bundled skill resources.
 - `./references/workflow-integrator.md` for integrating learnings into skill/code/project changes.
 - `./references/workflow-deslop.md` for anti-slop code review focused on excess complexity, patch size, and unnecessary helper extraction.
+- `./references/workflow-dead-code.md` for dead-code review that accounts for every new class, function, method, variable, constant, option, config field, and other named artifact introduced by a PR.
