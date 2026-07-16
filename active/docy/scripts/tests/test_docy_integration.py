@@ -14,6 +14,8 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / "docy"
 SKILL_ROOT = SCRIPT_PATH.parents[1]
 REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "no-back-compat.md"
 COMMIT_MESSAGES_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "commit-messages.md"
+DEVELOPER_DOCS_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "developer-docs.md"
+OPENCLAW_DOCS_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "openclaw-docs.md"
 VENDOR_REFERENCE_PATH = SKILL_ROOT / "references" / "vendor" / "lerna.md"
 PYTHON_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "python-preferred-modules.md"
 OPENCLAW_PLUGIN_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "openclaw-agent-plugins.md"
@@ -66,6 +68,28 @@ class DocyIntegrationTests(unittest.TestCase):
         )
         self.assertIn("Repo Profiles", result.stdout)
 
+    def test_inject_developer_docs_reference(self) -> None:
+        result = self.run_cli("inject", "ref/developer-docs")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            DEVELOPER_DOCS_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
+        self.assertIn("# Developer Documentation", result.stdout)
+        self.assertIn("## Page patterns", result.stdout)
+        self.assertIn("## Final checklist", result.stdout)
+
+    def test_inject_openclaw_docs_reference(self) -> None:
+        result = self.run_cli("inject", "ref/openclaw-docs")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            OPENCLAW_DOCS_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
+        self.assertIn("Load `ref/developer-docs` before this reference", result.stdout)
+        self.assertIn("## Topic page pattern", result.stdout)
+        self.assertIn("## Docs index and navigation", result.stdout)
+
     def test_inject_python_preferred_modules_doc(self) -> None:
         result = self.run_cli("inject", "ref/python-preferred-modules")
         self.assertEqual(result.returncode, 0, msg=result.stderr)
@@ -108,6 +132,29 @@ class DocyIntegrationTests(unittest.TestCase):
         self.assertIn("## Hard-Cut Product Policy", content)
         self.assertIn("no external installed user base", content)
         self.assertIn("<!-- docy:ref__no-back-compat:end -->", content)
+
+    def test_install_developer_docs_reference(self) -> None:
+        result = self.run_cli("install", "ref/developer-docs")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+        agents_file = self.workspace / "AGENTS.md"
+        content = agents_file.read_text(encoding="utf-8")
+        self.assertIn("<!-- docy:ref__developer-docs:begin -->", content)
+        self.assertIn("## docy: ref/developer-docs", content)
+        self.assertIn("## Page patterns", content)
+        self.assertIn("## Final checklist", content)
+        self.assertIn("<!-- docy:ref__developer-docs:end -->", content)
+
+    def test_install_openclaw_docs_reference(self) -> None:
+        result = self.run_cli("install", "ref/openclaw-docs")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+        agents_file = self.workspace / "AGENTS.md"
+        content = agents_file.read_text(encoding="utf-8")
+        self.assertIn("<!-- docy:ref__openclaw-docs:begin -->", content)
+        self.assertIn("## docy: ref/openclaw-docs", content)
+        self.assertIn("## OpenClaw verification", content)
+        self.assertIn("<!-- docy:ref__openclaw-docs:end -->", content)
 
     def test_install_updates_existing_block_in_place(self) -> None:
         agents_file = self.workspace / "AGENTS.md"

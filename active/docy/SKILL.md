@@ -30,6 +30,10 @@ All managed docs live under `./references/` and follow this layout:
 - ref/
     - commit-messages.md: Repo-aware commit message drafting; inspect local
       history and mirror conventions before writing a subject line
+    - developer-docs.md: Developer documentation writing, editing, and review
+      guidance, including page patterns and an editorial checklist
+    - openclaw-docs.md: OpenClaw-specific page taxonomy, heading, docs-index,
+      editing, and verification conventions layered on developer-docs
     - execution-trace.md: How to write runtime-ordered execution trace docs
     - no-back-compat.md: Hard-cut product policy; no backwards compatibility
     - remove-feature.md: Feature removal hygiene; remove stale docs/tests and
@@ -57,6 +61,8 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 
 ```bash
 docy inject ref/commit-messages
+docy inject ref/developer-docs
+docy inject ref/openclaw-docs
 docy inject ref/no-back-compat
 docy inject ref/remove-feature
 docy inject ref/openclaw-agent-plugins
@@ -64,6 +70,8 @@ docy inject ref/execution-trace
 docy inject vendor/lerna
 
 docy install ref/commit-messages
+docy install ref/developer-docs
+docy install ref/openclaw-docs
 docy install ref/no-back-compat
 docy install ref/remove-feature
 docy install ref/openclaw-agent-plugins
@@ -86,6 +94,12 @@ Command behavior:
 - `./references/ref/commit-messages.md`: Repo-aware commit message drafting. Use
   before writing a commit message so the subject mirrors recent local history
   instead of forcing one universal style.
+- `./references/ref/developer-docs.md`: Developer documentation guidance. Use
+  before creating, editing, or reviewing READMEs, quickstarts, guides, API, SDK,
+  CLI, testing, troubleshooting, architecture, or internals documentation.
+- `./references/ref/openclaw-docs.md`: OpenClaw developer documentation overlay.
+  Load it after `ref/developer-docs` when creating, editing, or reviewing
+  OpenClaw topic pages, guides, references, or troubleshooting documentation.
 - `./references/ref/python-preferred-modules.md`: Python dependency preferences. Use before building runtime validation or CLI behavior from scratch in Python projects.
 - `./references/ref/typescript-preferred-modules.md`: TypeScript dependency preferences. Use before building runtime validation or CLI behavior from scratch in TypeScript projects.
 - `./references/ref/openclaw-agent-plugins.md`: OpenClaw plugin authoring guidance. Use before creating or expanding an OpenClaw plugin so capability ownership, entrypoint shape, SDK imports, and route/setup boundaries stay aligned with the architecture docs.

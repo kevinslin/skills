@@ -4,7 +4,7 @@ description: Refactor an existing OpenClaw docs page with source-audited preserv
   restructuring, and verification.
 dependencies:
 - docs-audit-v2
-- docs-write-v2
+- docy
 ---
 
 # OpenClaw Refactor Docs
@@ -14,17 +14,16 @@ dependencies:
 Use this skill when the user gives a target OpenClaw docs page and asks to
 rewrite, refactor, reorganize, split, shorten, or improve it.
 
-This skill builds on `docs-write-v2`: use that skill for style, page types,
-structure, examples, discoverability, and verification. This skill adds the
-rewrite workflow needed to avoid losing accurate behavior during a major docs
-refactor.
+This skill builds on docy's `ref/developer-docs` and `ref/openclaw-docs`
+references for style, page types, structure, examples, discoverability, and
+verification. This skill adds the rewrite workflow needed to avoid losing
+accurate behavior during a major docs refactor.
 
 For major rewrites, moved-section audits, migration maps, or line-by-line
-preservation requests, use `docs-audit-v2` as the audit engine. Read
-`../docs-audit-v2/references/refactor-integration.md` for the generic contract:
-this skill owns the rewrite and semantic mapping decisions; `docs-audit-v2`
-owns the schema, CLI implementation, hydration, validation, report rendering,
-and viewer.
+preservation requests, invoke `$docs-audit-v2` as the audit engine and load its
+`refactor-integration` reference. This skill owns the rewrite and semantic
+mapping decisions; `$docs-audit-v2` owns the schema, CLI implementation,
+hydration, validation, report rendering, and viewer.
 
 ## Inputs
 
@@ -84,10 +83,10 @@ that asks for audit-grade preservation:
    workflows. Run `pnpm docs:list` when available so the target and related
    pages are discoverable.
 2. Start the refactor and audit together.
-   Load `docs-write-v2`, then use `docs-audit-v2` to scaffold the source and
-   destination set. Record the audit artifact paths, source base ref, source doc
-   order, destination doc order, and `mapping-patch.json` location before
-   rewriting.
+   Load docy's `ref/developer-docs` and `ref/openclaw-docs`, then use
+   `$docs-audit-v2` to scaffold the source and destination set. Record the audit
+   artifact paths, source base ref, source doc order, destination doc order, and
+   `mapping-patch.json` location before rewriting.
 3. Rewrite while maintaining mappings.
    Edit the docs according to the refactor plan and update
    `mapping-patch.json` as material moves, merges, or becomes intentionally
@@ -123,15 +122,23 @@ per-source-page line review has no actionable findings.
 
 ### 1. Load the doc standard
 
-Read `../docs-write-v2/SKILL.md` first. Apply its page-type, style,
-examples, navigation, and verification guidance throughout the refactor.
+Invoke `$docy`, then load the general documentation standard followed by the
+OpenClaw overlay:
+
+```bash
+docy inject ref/developer-docs
+docy inject ref/openclaw-docs
+```
+
+Apply their page-type, style, examples, navigation, and verification guidance
+throughout the refactor.
 
 Run `pnpm docs:list` when available, then read only the target page and the
 likely entry points, references, or related pages needed for the refactor.
 
 ### 2. Classify the page
 
-Before editing, decide the intended page type from `docs-write-v2`.
+Before editing, decide the intended page type from the injected docy references.
 
 If the current page mixes page types, choose the main page type and plan where
 the other material belongs:
