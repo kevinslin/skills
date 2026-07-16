@@ -35,7 +35,7 @@
 ### Current State
 [How the system behaves today, including the key code paths or architectural reality]
 
-### Context
+### Related
 - [relative/path/to/context-item.md](docs/or/src/path): [what this context is for and when it is useful]
 
 ### Constraints

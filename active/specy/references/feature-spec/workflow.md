@@ -24,7 +24,7 @@
 5. Fill the required sections with concrete, source-backed details from the repository and current task context. Omit optional subsections when they would only add boilerplate.
 6. Use `./references/feature-spec/effective-planning.md` for planning quality standards.
 7. Include a concise `## TL;DR` section near the top of the spec, before `## Goal and Scope`. Use bullets that state the target outcome, scope boundaries, key implementation path, major dependencies, and highest-risk proof requirements for a reader with very little time.
-8. Include a concrete `## Context` section with project-root-relative markdown links and a short explanation of what each item is for, so the agent can decide what to read based on need instead of following a blind pre-read checklist.
+8. Include a concrete `## Context` section. Put project-root-relative markdown links under `### Related`, with a short explanation of what each item is for, so the agent can decide what to read based on need instead of following a blind pre-read checklist.
 9. If the spec changes data/API/CLI/config/migration output, fill `Existing Contract Snapshot` before proposing new types or output fields. If no existing contract exists, state what was checked and why the new surface is needed.
 10. If behavior depends on multiple states or source facts, fill `Target Decision Table` before implementation phases. Use it to separate raw input facts from final observable outputs.
 11. If the spec adds fields, types, statuses, reasons, or config, fill `Minimal Model Check`. Keep a new field/type only when it has a named consumer or a clear persistence/interoperability reason.
