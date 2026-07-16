@@ -33,7 +33,7 @@ The integration repo is for harness code, fixtures, runner scripts, and proof ar
 3. Bootstrap or refresh the integration repo with:
 
 ```sh
-python3 /Users/kevinlin/code/skills-public/active/integ/scripts/bootstrap_integ_repo.py \
+python3 ./scripts/bootstrap_integ_repo.py \
   <project> \
   --associated-path /absolute/path/to/source/repo \
   [--test-command '<integration command>']
