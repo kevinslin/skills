@@ -99,18 +99,15 @@ Success criteria should be:
 - Measurable and verifiable
 - Include functional requirements (features work correctly)
 - Include non-functional requirements (performance, security)
-- Include testing completion
-- Include documentation needs
 
-For `specy` feature specs, keep three related sections distinct:
+For `specy` feature specs, keep the behavioral contract separate from proof:
 - **Acceptance Criteria**: what must be true about the finished behavior or invariant
-- **Validation Plan**: how those criteria will be proven (tests, checks, manual review)
-- **Done Criteria**: what must be complete before handoff or closeout
+- **Validation Plan**: how those criteria will be proven with automated or manual checks
 
 **Compact example:**
 - Acceptance criterion: "Users can retry a failed upload without creating duplicate records."
-- Validation plan item: "Add an integration test covering retry after timeout and a manual check for duplicate record count."
-- Done criterion: "Implementation merged, validation results recorded, and rollout notes updated."
+- Automated validation: "Add an integration test covering retry after timeout."
+- Manual validation: "Check the resulting record count after a retry."
 
 ## When to Update the Plan
 

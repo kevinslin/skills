@@ -29,7 +29,7 @@
 10. If behavior depends on multiple states or source facts, fill `Target Decision Table` before implementation phases. Use it to separate raw input facts from final observable outputs.
 11. If the spec adds fields, types, statuses, reasons, or config, fill `Minimal Model Check`. Keep a new field/type only when it has a named consumer or a clear persistence/interoperability reason.
 12. Record resolved ambiguities and explicit decisions in the spec as they are discovered; do not leave important pivots buried in chat history.
-13. Include explicit acceptance criteria, validation plan, and done criteria. Acceptance criteria answer "what must be true," validation answers "how it is proven," and done criteria answer "what must be complete before handoff." If a dedicated validation spec is created, link it instead of duplicating a large matrix in the feature spec.
+13. Include explicit acceptance criteria and a `Validation Plan`. Acceptance criteria answer "what must be true," and validation states how those criteria will be proven. If a dedicated validation spec is created, link it instead of duplicating a large matrix in the feature spec.
 14. If the repository uses beads for tracking, follow `./references/feature-spec/beads.md`.
 15. Present a concise summary plus unresolved questions, unless the user asked to proceed without waiting.
 16. If the user asked to proceed without waiting, answer outstanding questions with best judgment and record assumptions in the spec.
@@ -40,14 +40,13 @@
 
 ## Authoring Requirements
 
-- Required sections: `TL;DR`, `Goal and Scope`, `Context`, `Approach and Touchpoints`, `Acceptance Criteria`, `Phases and Dependencies`, `Validation Plan`, `Done Criteria`, `Open Items and Risks`, `Manual Notes`, `Changelog`.
+- Required sections: `TL;DR`, `Goal and Scope`, `Context`, `Approach and Touchpoints`, `Acceptance Criteria`, `Phases and Dependencies`, `Validation Plan`, `Open Items and Risks`, `Manual Notes`, `Changelog`.
 - Optional subsections should be omitted when empty or generic (for example, `Non-obvious Dependencies or Access`, `Important Implementation Notes`, `Unit tests`, `Separate Validation Spec`, `Simplifications and Assumptions`).
 - `Existing Contract Snapshot`, `Target Decision Table`, and `Minimal Model Check` are optional for simple specs but required when their trigger applies. Keep them concise; one small table is better than a broad flow doc when only the output contract is at risk.
 - Create or link a separate flow doc only when ordering, state propagation, cache/snapshot boundaries, or cross-component handoff is central to correctness.
 - Use project-root-relative links in spec bodies. Do not use absolute filesystem paths in feature-spec links or citations.
 - `Acceptance Criteria` is required and feature-level, not per-phase. Use it for observable outcomes and important invariants, not test commands, implementation tasks, or completion/admin items such as "docs updated."
-- `Validation Plan` is required. Use it for automated and manual checks that prove the acceptance criteria, and link a separate validation spec when a larger matrix would be redundant here.
-- `Done Criteria` is required, but keep it short and process-oriented (for example: implementation complete, validation reviewed, docs/specs updated, rollout or handoff complete where applicable). It may reference acceptance or validation completion, but must not restate the acceptance bullets or validation checklist.
+- `Validation Plan` is required. Use it for the automated and manual checks that prove the acceptance criteria, and link a separate validation spec when a larger matrix would be redundant here.
 - Break implementation into milestones or phases with explicit dependencies.
 - Each milestone must ship a verifiable outcome.
 - Risks must include concrete mitigations.

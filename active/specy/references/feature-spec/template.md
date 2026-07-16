@@ -106,10 +106,7 @@
 
 ## Validation Plan
 
-Integration tests:
-- [explicit test cases]
-
-Unit tests (Optional):
+Automated validation:
 - [explicit test cases]
 
 Manual validation:
@@ -117,14 +114,6 @@ Manual validation:
 
 ### Separate Validation Spec (Optional)
 - [Path to validation spec, if this feature needs a dedicated validation document]
-
----
-
-## Done Criteria
-
-- [ ] [Implementation is complete and matches the acceptance criteria]
-- [ ] [Validation results are reviewed or linked, and any required follow-up is captured]
-- [ ] [Relevant docs, specs, or rollout/handoff steps are complete]
 
 ---
 

@@ -7,6 +7,7 @@ dependencies:
 - dev.llm-session
 - docy
 - mem
+- statsig
 - sudocode
 ---
 
@@ -40,7 +41,7 @@ Only the `flow-doc` doc type is supported for flow docs. Do not route to old pha
 All filepaths in this skill are relative to `$DOCS_ROOT` unless noted otherwise.
 Default `$DOCS_ROOT` is `./docs` (relative to the project root directory).
 
-When creating or updating a durable artifact such as a spec, flow doc, design doc, architecture doc, validation doc, recipe, runbook, or long-lived project note, invoke `../mem/SKILL.md` before choosing `$DOCS_ROOT`. Use the selected `$mem` base root, schemas, optional base skill, and path style when the artifact belongs in persistent knowledge. Do this by artifact intent, not by whether the path contains `.mem`; memory roots may be any configured folder. Only use the default `./docs` root when the artifact is repo-owned documentation or the user names a concrete non-memory destination.
+When creating or updating a durable artifact such as a spec, flow doc, design doc, architecture doc, validation doc, recipe, runbook, or long-lived project note, invoke `$mem` before choosing `$DOCS_ROOT`. Use the selected `$mem` base root, schemas, optional base skill, and path style when the artifact belongs in persistent knowledge. Do this by artifact intent, not by whether the path contains `.mem`; memory roots may be any configured folder. Only use the default `./docs` root when the artifact is repo-owned documentation or the user names a concrete non-memory destination.
 When `$mem` selects a schema node, that node owns the destination path and required file shape. `specy` may adapt its document content to fit that node, but it must not override the chosen filename, folder layout, or template because a doc type would normally live somewhere else.
 
 ## Available Document Types
@@ -101,7 +102,7 @@ Use `flow-doc` when the goal is to give a developer a balanced understanding
 of specified code logic with pointers for deeper investigation. Flow docs are
 not line-by-line code descriptions. They combine:
 
-1. A general-flow diagram drafted with $dev.diagram.
+1. A general-flow diagram drafted with `$dev.diagram`.
 2. An execution trace shaped by $docy `ref/execution-trace`.
 3. Additional notes, observability pointers, related docs, and code/log pointers.
 
@@ -111,9 +112,9 @@ Use `./references/flow-doc/workflow.md` and
 ## Shared References
 
 - Whenever you need to write sudocode, use `$sudocode`.
-- Use [$dev.diagram](../dev.diagram/SKILL.md) to draft or revise flow diagrams.
-- Use [$docy](../docy/SKILL.md) `ref/execution-trace` before writing flow-doc execution traces.
-- Source path for this workspace: [$sudocode](../sudocode/SKILL.md).
+- Use `$dev.diagram` to draft or revise flow diagrams.
+- Use `$docy` `ref/execution-trace` before writing flow-doc execution traces.
+- Use `$sudocode` as the source path for this workspace.
 
 ## Flow-Doc Quality Gate (Required)
 
