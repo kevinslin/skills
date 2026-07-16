@@ -13,14 +13,11 @@ import yaml
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9.-]*$")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)
 
-# Keep patterns conservative to avoid accidental placeholder dependencies.
+# `$skill-name` is the canonical cross-skill reference syntax.
 DEPENDENCY_PATTERNS = [
-    re.compile(r"/active/([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
-    re.compile(r"/draft/([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
-    re.compile(r"/drafts/([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
-    re.compile(r"\.\./([a-z0-9][a-z0-9.-]*)/SKILL\.md"),
-    re.compile(r"\.\./([a-z0-9][a-z0-9.-]*)/skill\.md"),
+    re.compile(r"(?<![A-Za-z0-9.-])\$([a-z0-9][a-z0-9.-]*)(?![A-Za-z0-9.-])"),
 ]
+DEPENDENCY_REFERENCE_PLACEHOLDERS = {"skill", "skill-name"}
 
 NONRELATIVE_BUNDLED_FILE_PATTERNS = [
     re.compile(r"(?<![A-Za-z0-9._/-])scripts/[A-Za-z0-9][A-Za-z0-9._/-]*"),
@@ -32,6 +29,11 @@ ABSOLUTE_SKILL_LINK_PATTERNS = [
     re.compile(r"/active/[a-z0-9][a-z0-9.-]*/SKILL\.md"),
     re.compile(r"/draft/[a-z0-9][a-z0-9.-]*/SKILL\.md"),
     re.compile(r"/drafts/[a-z0-9][a-z0-9.-]*/SKILL\.md"),
+]
+
+CROSS_SKILL_FILE_PATTERNS = [
+    re.compile(r"\.\./[a-z0-9][a-z0-9.-]*/SKILL\.md"),
+    re.compile(r"\.\./[a-z0-9][a-z0-9.-]*/skill\.md"),
 ]
 
 
@@ -85,10 +87,23 @@ def extract_skill_dependencies_from_body(body: str) -> set[str]:
     for pattern in DEPENDENCY_PATTERNS:
         for match in pattern.findall(body):
             if isinstance(match, tuple):
-                deps.update([m for m in match if m])
-            else:
+                deps.update(
+                    m for m in match if m and m not in DEPENDENCY_REFERENCE_PLACEHOLDERS
+                )
+            elif match not in DEPENDENCY_REFERENCE_PLACEHOLDERS:
                 deps.add(match)
     return deps
+
+
+def collect_skill_dependency_text(skill_path: Path, body: str) -> str:
+    """Collect dependency-bearing text from SKILL.md and bundled Markdown references."""
+    parts = [body]
+    skill_md = skill_path / "SKILL.md"
+    for md_path in sorted(skill_path.rglob("*.md")):
+        if md_path == skill_md:
+            continue
+        parts.append(md_path.read_text(encoding="utf-8"))
+    return "\n".join(parts)
 
 
 def find_nonrelative_skill_file_references(text: str) -> list[str]:
@@ -97,6 +112,8 @@ def find_nonrelative_skill_file_references(text: str) -> list[str]:
     for pattern in NONRELATIVE_BUNDLED_FILE_PATTERNS:
         refs.update(match.group(0) for match in pattern.finditer(text))
     for pattern in ABSOLUTE_SKILL_LINK_PATTERNS:
+        refs.update(match.group(0) for match in pattern.finditer(text))
+    for pattern in CROSS_SKILL_FILE_PATTERNS:
         refs.update(match.group(0) for match in pattern.finditer(text))
     return sorted(refs)
 

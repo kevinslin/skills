@@ -63,16 +63,13 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertFalse(dependency_tools.is_valid_skill_name("sc..helper"))
         self.assertFalse(dependency_tools.is_valid_skill_name("sc-"))
 
-    def test_normalize_dependencies_merges_detected_links(self) -> None:
+    def test_normalize_dependencies_merges_named_skill_references(self) -> None:
         frontmatter = {
             "name": "consumer",
             "description": "test",
             "dependencies": ["dev.llm-session"],
         }
-        body = (
-            "Use /Users/kevinlin/code/skills/active/specy/SKILL.md and "
-            "ignore self /Users/kevinlin/code/skills/active/consumer/SKILL.md."
-        )
+        body = "Use `$specy`, ignore the self-reference `$consumer`, and treat `$skill` as a placeholder."
 
         updated, merged, added, changed = dependency_tools.normalize_dependencies(
             frontmatter,
@@ -85,12 +82,12 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertEqual(added, ["specy"])
         self.assertEqual(updated["dependencies"], ["dev.llm-session", "specy"])
 
-    def test_sync_dependencies_updates_skill_file_from_body_links(self) -> None:
+    def test_sync_dependencies_updates_skill_file_from_named_reference(self) -> None:
         skill_dir = self.root / "sync-skill"
         _write_skill(
             skill_dir,
             name="sync-skill",
-            body="See /Users/kevinlin/code/skills/active/specy/SKILL.md.",
+            body="Use `$specy`.",
         )
 
         changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=True)
@@ -102,13 +99,26 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         frontmatter, _ = dependency_tools.parse_skill_markdown(skill_dir / "SKILL.md")
         self.assertEqual(frontmatter["dependencies"], ["specy"])
 
+    def test_sync_dependencies_reads_bundled_markdown_references(self) -> None:
+        skill_dir = self.root / "reference-dependency-skill"
+        _write_skill(skill_dir, name="reference-dependency-skill")
+        references_dir = skill_dir / "references"
+        references_dir.mkdir()
+        (references_dir / "workflow.md").write_text("Use `$dev.review`.", encoding="utf-8")
+
+        changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=True)
+
+        self.assertTrue(changed)
+        self.assertEqual(merged, ["dev.review"])
+        self.assertEqual(added, ["dev.review"])
+
     def test_sync_dependencies_respects_no_ensure_field(self) -> None:
         skill_dir = self.root / "no-ensure-skill"
         _write_skill(
             skill_dir,
             name="no-ensure-skill",
             dependencies_line=None,
-            body="No explicit skill path links here.",
+            body="No explicit named skill references here.",
         )
 
         changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=False)
@@ -145,6 +155,33 @@ class ScScriptsIntegrationTests(unittest.TestCase):
 
         self.assertFalse(valid)
         self.assertIn("cannot list itself", message)
+
+    def test_quick_validate_rejects_cross_skill_file_reference(self) -> None:
+        skill_dir = self.root / "cross-skill-path"
+        _write_skill(
+            skill_dir,
+            name="cross-skill-path",
+            body="Follow ../specy/SKILL.md.",
+        )
+
+        valid, message = quick_validate.validate_skill(skill_dir)
+
+        self.assertFalse(valid)
+        self.assertIn("$skill-name", message)
+
+    def test_quick_validate_rejects_missing_named_dependency(self) -> None:
+        skill_dir = self.root / "missing-named-dependency"
+        _write_skill(
+            skill_dir,
+            name="missing-named-dependency",
+            body="Use `$specy`.",
+        )
+
+        valid, message = quick_validate.validate_skill(skill_dir)
+
+        self.assertFalse(valid)
+        self.assertIn("Missing frontmatter dependencies", message)
+        self.assertIn("specy", message)
 
     def test_init_skill_default_template_creates_example_resources(self) -> None:
         skill_dir = init_skill.init_skill("default-skill", self.root)
@@ -248,7 +285,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
             old_skill_dir,
             name="old-skill",
             dependencies_line="dependencies: [specy]",
-            body="Use $old-skill and /active/old-skill/SKILL.md and `old-skill`.",
+            body="Use $old-skill and `old-skill`.",
         )
         _write_skill(
             consumer_dir,
@@ -274,7 +311,6 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(renamed_frontmatter["name"], "new-skill")
         self.assertIn("$new-skill", renamed_body)
-        self.assertIn("/active/new-skill/SKILL.md", renamed_body)
 
         consumer_frontmatter, consumer_body = dependency_tools.parse_skill_markdown(
             self.root / "active" / "consumer" / "SKILL.md"
@@ -324,7 +360,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         _write_skill(
             skill_dir,
             name="pkg-skill",
-            body="Use ../specy/SKILL.md.",
+            body="Use `$specy`.",
         )
         output_dir = self.root / "dist"
 

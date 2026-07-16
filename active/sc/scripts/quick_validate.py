@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dependency_tools import (
     FRONTMATTER_RE,
+    collect_skill_dependency_text,
     find_nonrelative_skill_file_references,
     is_valid_skill_name,
     normalize_dependencies,
@@ -109,9 +110,20 @@ def validate_skill(skill_path):
     # Ensure dependency inference utility can parse and normalize this file.
     # This catches invalid dependency field types early with a clear message.
     try:
-        normalize_dependencies(frontmatter, body, ensure_field=False)
+        dependency_text = collect_skill_dependency_text(skill_path, body)
+        _, _, missing_dependencies, _ = normalize_dependencies(
+            frontmatter,
+            dependency_text,
+            ensure_field=False,
+        )
     except ValueError as exc:
         return False, str(exc)
+    if missing_dependencies:
+        return False, (
+            "Missing frontmatter dependencies for named skill references: "
+            + ", ".join(missing_dependencies)
+            + ". Run ./scripts/sync_dependencies.py for this skill."
+        )
 
     # Ensure markdown docs use skill-local file references rooted at the SKILL.md directory.
     for md_path in sorted(skill_path.rglob("*.md")):
@@ -121,8 +133,8 @@ def validate_skill(skill_path):
             rel_path = md_path.relative_to(skill_path)
             sample = ", ".join(bad_refs[:3])
             return False, (
-                f"{rel_path} contains non-relative skill file references: {sample}. "
-                "Use paths rooted at the SKILL.md directory, for example ./scripts/foo.py."
+                f"{rel_path} contains invalid skill file references: {sample}. "
+                "Use ./ paths for bundled files and $skill-name for another skill."
             )
 
     # Extract and validate description

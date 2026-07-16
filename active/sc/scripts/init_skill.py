@@ -71,7 +71,9 @@ Delete this entire "Structuring This Skill" section when done - it's just guidan
 When referencing bundled files from this skill, always use paths relative to the directory containing `SKILL.md`.
 
 - Use `./scripts/...`, `./references/...`, and `./assets/...`.
+- Reference another skill by name with `$<skill-name>` and list it in frontmatter `dependencies`.
 - Do not use absolute filesystem paths for bundled skill content.
+- Do not reference another skill through its `SKILL.md` file path.
 
 ## Resources
 
@@ -419,15 +421,15 @@ def init_skill(skill_name, path, template=DEFAULT_TEMPLATE_NAME):
     print("1. Edit SKILL.md to complete the TODO items and update the description")
     if template == SUBCOMMANDS_TEMPLATE_NAME:
         print("2. Replace the placeholder subcommand names with real command names and keep each command in references/<command>.md")
-        print("3. Add dependency references in the body, then run ./scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("3. Reference dependencies as $<skill-name> in the body, then run ./scripts/sync_dependencies.py to update frontmatter dependencies")
         print("4. Run the validator when ready to check the skill structure")
     elif template == TEMPLATES_TEMPLATE_NAME:
         print("2. Replace the placeholder template names with real template names and keep each template in references/<template>.md")
         print("3. Teach the main SKILL.md to route positional template invocations to the matching reference")
-        print("4. Add dependency references in the body, then run ./scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("4. Reference dependencies as $<skill-name> in the body, then run ./scripts/sync_dependencies.py to update frontmatter dependencies")
         print("5. Run the validator when ready to check the skill structure")
     else:
-        print("2. Add dependency references in the body, then run ./scripts/sync_dependencies.py to auto-populate frontmatter dependencies")
+        print("2. Reference dependencies as $<skill-name> in the body, then run ./scripts/sync_dependencies.py to update frontmatter dependencies")
         print("3. Customize or delete the example files in scripts/, references/, and assets/")
         print("4. Run the validator when ready to check the skill structure")
 

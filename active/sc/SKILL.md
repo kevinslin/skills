@@ -1,6 +1,6 @@
 ---
 name: sc
-description: Create or update skills and SKILL.md content.
+description: Create, update, or optimize skills and SKILL.md content.
 dependencies: []
 license: Complete terms in LICENSE.txt
 ---
@@ -47,6 +47,10 @@ Supported templates:
 - `subcommands`: Use for skills that primarily route to multiple subcommands. Put each subcommand's full usage in `./references/{{command}}.md`. Keep the main `SKILL.md` as a router only: list each subcommand, give a one-line hint for when to lead with it, and point to the matching reference file.
 - `template`: Use for skills that primarily route to multiple named templates. Put each template's full usage in `./references/{{template}}.md`. Keep the main `SKILL.md` as a router only: list each template, explain when a user invoking the skill with that template as the positional command should route there, and point to the matching reference file.
 
+### Optimize an existing skill
+
+When the user asks to optimize, streamline, simplify, or clean up an existing skill, read `./references/optimize.md` and apply its workflow. Treat a direct edit request as authorization for in-scope changes. Ask for clarification when the canonical source is ambiguous or when different interpretations would materially change behavior or scope.
+
 Before editing, run a deterministic source preflight:
 
 1. Resolve the real editable root under `~/code/skills/active`, `~/code/skills-private`, or `./.agents/skills`.
@@ -78,8 +82,9 @@ Do not overload `DOCS_ROOT` to mean both "where docs are written" and "all possi
 When a skill references a bundled file, write the path relative to the directory containing `SKILL.md`.
 
 - Use `./scripts/...`, `./references/...`, and `./assets/...` for bundled resources.
-- Use `../<skill-name>/SKILL.md` for explicit sibling-skill references when dependency sync needs to detect another skill.
+- Reference another skill by name with `$<skill-name>` and add that name to frontmatter `dependencies`.
 - Do not use absolute filesystem paths or repo-root-anchored skill paths for packaged skill content.
+- Do not use another skill's `SKILL.md` file path as a cross-skill reference.
 
 ## Core Principles
 
@@ -380,7 +385,7 @@ Any example files and directories not needed for the skill should be deleted. Th
 
 Before editing, inspect dependency impact:
 
-- If the change adds or removes explicit skill usage, update body references and frontmatter `dependencies`.
+- If the change adds or removes a `$<skill-name>` reference, update frontmatter `dependencies` to match.
 - If the change alters a contract used by dependent skills, search for affected skill references and update those dependent skills when they live in an allowed editable root.
 - If dependency-related scripts, references, or packaging behavior are affected, inspect and update those bundled resources in the same change.
 - After edits that affect dependencies, run `./scripts/sync_dependencies.py <path/to/skill-folder>` and report any dependency/body-reference files that changed.
@@ -393,11 +398,12 @@ Write the YAML frontmatter with `name`, `description`, and `dependencies`:
 - `description`: Keep this short. Include only the information needed for the model to decide whether to trigger the skill.
   - Prefer one short sentence with the skill's domain and the strongest trigger.
   - Put workflow details, configuration formats, file types, edge cases, and examples in the body, not the description.
-  - Bad: `Add, find, read, update, or delete knowledge in configured knowledge kernels using configured base skills and kernel schemas. Use when the user invokes $mem, asks to add a finding to a memory or kernel, asks to look in a knowledge kernel, or wants persistent knowledge routed through a .mem.yaml knowledge-base configuration.`
-  - Good: `Manage user-defined knowledge kernels. Use when directly invoked via $mem.`
+  - Bad: `Add, find, read, update, or delete knowledge in configured knowledge kernels using configured base skills and kernel schemas, including persistent routing and configuration details.`
+  - Good: `Manage user-defined knowledge kernels. Use when directly invoked.`
 - `dependencies`: YAML list of skill names this skill depends on (example: `dependencies: [specy, dev.llm-session]`).
   - Use `dependencies: []` when there are no dependencies.
-- When skill body references other skills through explicit relative skill-path links (for example `../<skill-name>/SKILL.md`), automatically sync dependencies with:
+- Reference other skills in the body by name using `$<skill-name>`.
+- Automatically synchronize named skill references into frontmatter dependencies with:
     - `./scripts/sync_dependencies.py <path/to/skill-folder>`
 
 Do not include unapproved fields in YAML frontmatter (approved: `name`, `description`, `dependencies`, and repository-specific optional fields such as `version`, `license`, `allowed-tools`, `metadata`).
@@ -424,7 +430,7 @@ The packaging script will:
 
 1. **Sync + Validate** the skill automatically, checking:
 
-   - dependency metadata is synchronized from explicit skill references in body content
+   - dependency metadata is synchronized from `$<skill-name>` references in body content
    - YAML frontmatter format and required fields
    - Skill naming conventions and directory structure
    - Description completeness and quality

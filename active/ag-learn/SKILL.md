@@ -39,8 +39,8 @@ Use this skill to turn agent mistakes, repeated friction, or useful workflow dis
    - Propose a new skill when repeated work has no clean home.
    - Use `none` when the lesson is too situational or not skill-shaped.
 6. Read the target skill or shortcut source before judging the gap.
-   - For skill changes, follow `../sc/SKILL.md` and edit only the canonical source tree.
-   - For `trigger:<shortcut>` cases, resolve the shortcut through `../dev.shortcuts/SKILL.md` before classifying the mistake.
+   - For skill changes, follow `$sc` and edit only the canonical source tree.
+   - For `trigger:<shortcut>` cases, resolve the shortcut through `$dev.shortcuts` before classifying the mistake.
 7. Produce 1-3 high-signal improvements. Do not pad with weak lessons.
    - When the user asks to scan an entire conversation or session, include a short candidate-friction ranking in the saved note coverage so the selected issues are auditable.
    - If a selected improvement is already covered by an existing skill, report it as already addressed and do not create a duplicate proposed change.
@@ -54,8 +54,9 @@ Use this skill to turn agent mistakes, repeated friction, or useful workflow dis
 - Default/current session: use the Core Workflow, including the active rollout scan in `./references/session-forensics.md`.
 - `review [time interval] [path]`: read `./references/review-mode.md`.
 - `code`: read `./references/code-mode.md`.
+- Evidence-based skill optimization: use the Core Workflow to inspect evidence, rank friction, and select improvements; route canonical edits, validation, packaging, and sync through `$sc`.
 - Formal saved note or durable routing: read `./references/templates.md`.
-- Session lookup, parent/fork tracing, or ledger logging: read `./references/session-forensics.md` and `./references/ledger.md`; use `../ag-ledger/SKILL.md` and `../dev.llm-session/SKILL.md` as needed.
+- Session lookup, parent/fork tracing, or ledger logging: read `./references/session-forensics.md` and `./references/ledger.md`; use `$ag-ledger` and `$dev.llm-session` as needed.
 
 ## Output
 

@@ -64,6 +64,6 @@ When the session includes an explicit `$skill` mention, named skill request, or 
 
 For bundled shortcuts:
 
-1. Resolve the shortcut through `../dev.shortcuts/SKILL.md`.
+1. Resolve the shortcut through `$dev.shortcuts`.
 2. Read the matching file under that skill's `./references/shortcuts/` directory.
 3. Compare the shortcut contract and the wrapped skill contract together.

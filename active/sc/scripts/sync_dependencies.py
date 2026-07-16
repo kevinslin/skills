@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from dependency_tools import (
+    collect_skill_dependency_text,
     normalize_dependencies,
     parse_skill_markdown,
     render_skill_markdown,
@@ -21,9 +22,10 @@ def sync_dependencies(skill_path: Path, *, ensure_field: bool = True) -> tuple[b
         raise FileNotFoundError(f"SKILL.md not found in {skill_path}")
 
     frontmatter, body = parse_skill_markdown(skill_md)
+    dependency_text = collect_skill_dependency_text(skill_path, body)
     updated_frontmatter, merged, added, changed = normalize_dependencies(
         frontmatter,
-        body,
+        dependency_text,
         ensure_field=ensure_field,
     )
 
