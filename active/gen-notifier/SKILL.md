@@ -2,7 +2,7 @@
 name: gen-notifier
 description: "Top-level agents only: send exactly one final-state desktop notification before the final report."
 dependencies: []
-version: 1.1.1
+version: 1.2.0
 ---
 
 # Task Completion Notifier
@@ -43,10 +43,21 @@ This suppression overrides the default "notify for all jobs" behavior, including
 When a job reaches a finalized terminal state (`completed`, `needs_input`, or `errors`), send a notification using:
 
 ```bash
-terminal-notifier -title "{DESCRIPTION OF JOB}" -message "{STATUS_OF_JOB}" -sound default
+terminal-notifier -title "{DESCRIPTION OF JOB}" -message "{STATUS_OF_JOB} — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 ```
 
 The `-sound default` parameter makes a beeping sound to alert the user audibly.
+
+### Click-to-open task
+
+When the thread ID for the Codex task receiving the final report is available, make the entire notification clickable with `-open "codex://threads/{THREAD_ID}"`.
+
+- Use the top-level recipient task's thread ID, never a delegated worker's thread ID
+- Accept only a canonical UUID matching `^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`
+- If the thread ID is unavailable or invalid, omit `-open` and keep the original status-only message
+- Do not use `-execute`; it invokes a shell when clicked and creates avoidable injection risk
+- Do not add `-sender` or `-activate`; they change app identity or only bring an app forward instead of opening the task
+- Treat the whole notification as the click target; terminal-notifier cannot render an inline hyperlink
 
 ### Status Values
 
@@ -74,17 +85,17 @@ The title should be a concise description of the job (3-8 words):
 
 ### Successful Completion
 ```bash
-terminal-notifier -title "API Integration Implementation" -message "completed" -sound default
+terminal-notifier -title "API Integration Implementation" -message "completed — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 ```
 
 ### Needs User Input
 ```bash
-terminal-notifier -title "Database Migration Setup" -message "needs_input" -sound default
+terminal-notifier -title "Database Migration Setup" -message "needs_input — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 ```
 
 ### Encountered Errors
 ```bash
-terminal-notifier -title "Build and Test Suite" -message "errors" -sound default
+terminal-notifier -title "Build and Test Suite" -message "errors — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 ```
 
 ## Notification Timing
@@ -133,7 +144,7 @@ Assistant steps:
 2. Adds tests
 3. Runs tests (all pass)
 4. Finalizes the result and prepares the handoff
-5. Sends notification: terminal-notifier -title "Authentication Feature" -message "completed" -sound default
+5. Sends notification with a verified thread ID: terminal-notifier -title "Authentication Feature" -message "completed — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 6. Generates the final user-facing report
 
 ### Needs User Input
@@ -145,7 +156,7 @@ Assistant steps:
 2. Discovers multiple valid approaches for schema design
 3. Determines it cannot proceed without a user decision
 4. Finalizes the blocked state and prepares the handoff
-5. Sends notification: terminal-notifier -title "Database Migration Setup" -message "needs_input" -sound default
+5. Sends notification with a verified thread ID: terminal-notifier -title "Database Migration Setup" -message "needs_input — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 6. Generates the final user-facing report
 
 ### Encountered Errors
@@ -157,7 +168,7 @@ Assistant steps:
 2. Encounters 5 failing tests
 3. Attempts to fix but determines the task cannot be completed within scope
 4. Finalizes the error state and prepares the handoff
-5. Sends notification: terminal-notifier -title "Test Suite Execution" -message "errors" -sound default
+5. Sends notification with a verified thread ID: terminal-notifier -title "Test Suite Execution" -message "errors — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 6. Generates the final user-facing report
 
 ## Implementation Notes
@@ -199,7 +210,7 @@ For multiple sub-tasks within a larger job, only send ONE notification for the e
 
 ✅ **Good - single notification:**
 ```
-- Notification: "Authentication Feature" -message "completed" -sound default
+- Notification: "Authentication Feature" -message "completed — click to open task" -sound default -open "codex://threads/{THREAD_ID}"
 ```
 
 ## Requirements
