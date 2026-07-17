@@ -5,6 +5,7 @@ dependencies:
 - ag-learn
 - dev.llm-session
 - dev.shortcuts
+- dev.worktrees
 - mem
 - specy
 ---
@@ -122,34 +123,16 @@ Run `fin [context] [target]`.
 
 ### Deterministic Local Cleanup
 
-- Resolve the bundled cleanup script relative to this `SKILL.md` as `./scripts/cleanup_worktree.py`. This script is the only supported executor for destructive local worktree and local-branch cleanup during `fin`; do not reproduce its Git or filesystem steps manually.
-- Record `--expected-head` and `--landed-commit` as full commit OIDs in the repository's object format. The script accepts full SHA-1 or SHA-256 OIDs as appropriate and rejects branch names, tags, abbreviated SHAs, and other mutable or ambiguous values for these identity locks.
-- Pass a refreshed local branch as `--base-ref`. The script rejects raw commit OIDs and remote-tracking refs as the cleanup base, and refuses to delete the selected base or a discovered default branch.
+- Use `$dev.worktrees cleanup-landed` as the only executor for destructive local worktree and local-branch cleanup during `fin`. Do not reproduce its reset, clean, removal, orphan recovery, or branch deletion steps manually.
 - Before invoking it:
   1. confirm the PR or local change actually landed;
   2. run every matching `~/.fin.yaml` final hook;
   3. refresh or verify the local base ref and prove it contains the landed commit; and
   4. record the exact target worktree path, branch or detached state, and expected pre-cleanup HEAD.
-- The script defaults to a non-mutating dry run. Invoke it once without `--execute` and require JSON `status` `ready` or `noop`. Then rerun the exact same arguments with `--execute`. Pass `--final-hooks-complete` only after the hooks actually succeeded.
-- For a named linked worktree, use:
-
-```bash
-python3 <fin-skill-root>/scripts/cleanup_worktree.py \
-  --repo <retained-checkout> \
-  --worktree <exact-absolute-worktree-path> \
-  --expected-branch <branch> \
-  --expected-head <full-recorded-head-oid> \
-  --base-ref <refreshed-local-base-branch> \
-  --landed-commit <full-verified-landed-commit-oid> \
-  --merge-mode <merge|squash|rebase> \
-  --final-hooks-complete
-```
-
-- For a detached cleanup-eligible review worktree, replace `--expected-branch <branch>` with `--detached`. Exact registered HEAD is required; a path name containing a PR number is not identity proof.
-- If the landed branch is checked out nowhere, replace `--worktree <path>` with `--no-worktree`; detached cleanup is not valid in this mode.
-- The script locks and journals the exact transaction under the Git common directory, performs one reset/clean sequence, rechecks tracked state, permits one recovery reset if clean exposes tracked deletions, and classifies filesystem presence independently from worktree registration. It can resume only a matching journaled orphan. It never globally prunes worktrees or mutates a remote branch.
-- Treat JSON `status` `blocked` or `partial`, any nonzero exit, identity drift, or failed postconditions as a finalization blocker. Preserve the journal and rerun the exact command after resolving the reported condition; do not improvise `rm`, `git worktree prune`, overlapping removal processes, or branch deletion.
-- Require final JSON `status` `complete` or `noop`, with `final_state.path_present=false`, `final_state.registered=false`, `final_state.branch_present=false`, and `final_state.base_contains_landed_commit=true` before claiming local cleanup complete.
+- Pass the exact full commit OIDs, refreshed local base branch, target identity, and actual merge mode to `$dev.worktrees cleanup-landed`.
+- Require its dry run to report `ready` or `noop`, then rerun the exact command in execute mode.
+- Treat `blocked`, `partial`, a nonzero exit, identity drift, or failed postconditions as a finalization blocker. Preserve its journal and rerun the exact command after resolving the blocker.
+- Require final status `complete` or `noop`, with the target path, worktree registration, and local branch absent and the base still containing the landed commit.
 
 ## `gh` Context Workflow
 
@@ -183,8 +166,8 @@ python3 <fin-skill-root>/scripts/cleanup_worktree.py \
 - If the local `main` refresh fails for any other reason, stop and report the exact git error instead of claiming the task is fully finalized.
 
 6. Run deterministic local cleanup
-- If the PR head branch has a linked worktree, invoke the shared cleanup script with that exact path, PR head branch, PR head SHA, refreshed base ref, merge commit, and actual merge mode.
-- If the local PR branch exists but is checked out nowhere, invoke the script with `--no-worktree` and the same branch/head/base/landing proof.
+- If the PR head branch has a linked worktree, invoke `$dev.worktrees cleanup-landed` with that exact path, PR head branch, PR head SHA, refreshed base ref, merge commit, and actual merge mode.
+- If the local PR branch exists but is checked out nowhere, invoke `$dev.worktrees cleanup-landed` in branch-only mode with the same branch/head/base/landing proof.
 - If an explicit target PR has no matching local worktree or local branch, report that local cleanup is not applicable; do not manufacture a path or delete a similarly named branch.
 - If `gh pr merge --delete-branch` already removed the remote branch but could not remove a linked local branch, do not retry the merge. The cleanup script owns the remaining local transaction.
 - Remote branch verification or deletion remains a separate GitHub/Git transport step. Do not add network mutations to the local cleanup script.
@@ -208,8 +191,8 @@ python3 <fin-skill-root>/scripts/cleanup_worktree.py \
 - Run any matching repo-specific final hooks from `~/.fin.yaml`. If verification or a hook fails, preserve the worktree and branch and report the exact blocker.
 
 6. Run deterministic local cleanup
-- If the completed branch has a linked worktree, invoke the shared cleanup script with its exact path, branch, recorded head, local base ref, landed commit, and actual merge mode.
-- If the completed local branch exists but is checked out nowhere, invoke the script with `--no-worktree`.
+- If the completed branch has a linked worktree, invoke `$dev.worktrees cleanup-landed` with its exact path, branch, recorded head, local base ref, landed commit, and actual merge mode.
+- If the completed local branch exists but is checked out nowhere, invoke `$dev.worktrees cleanup-landed` in branch-only mode.
 - The script deletes only the proven local branch. If a corresponding remote branch still exists and repository policy permits cleanup, delete it separately only after local base verification and successful local cleanup.
 - If neither a matching linked worktree nor local branch exists, require a cleanup dry run to report `noop` or state that no local cleanup was applicable.
 

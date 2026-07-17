@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Integration tests for fin's deterministic worktree cleanup."""
+"""Integration tests for deterministic landed-worktree cleanup."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "cleanup_worktree.py"
-SPEC = importlib.util.spec_from_file_location("fin_cleanup_worktree", SCRIPT)
+SPEC = importlib.util.spec_from_file_location("dev_worktrees_cleanup", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 cleanup = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = cleanup
@@ -44,8 +44,8 @@ class CleanupWorktreeTests(unittest.TestCase):
         self.repo = self.root / "retained checkout"
         self.repo.mkdir()
         git(self.repo, "init", "-b", "main")
-        git(self.repo, "config", "user.email", "fin-tests@example.com")
-        git(self.repo, "config", "user.name", "Fin Tests")
+        git(self.repo, "config", "user.email", "worktree-tests@example.com")
+        git(self.repo, "config", "user.name", "Worktree Tests")
         (self.repo / ".gitignore").write_text("ignored.txt\n", encoding="utf-8")
         (self.repo / "tracked.txt").write_text("base\n", encoding="utf-8")
         git(self.repo, "add", ".gitignore", "tracked.txt")
@@ -107,7 +107,6 @@ class CleanupWorktreeTests(unittest.TestCase):
             landed_commit or self.base_commit,
             "--merge-mode",
             merge_mode,
-            "--final-hooks-complete",
         ]
         if branch is None:
             command.append("--detached")
@@ -157,7 +156,6 @@ class CleanupWorktreeTests(unittest.TestCase):
             landed_commit or self.base_commit,
             "--merge-mode",
             merge_mode,
-            "--final-hooks-complete",
         ]
         if execute:
             command.append("--execute")
@@ -348,6 +346,69 @@ class CleanupWorktreeTests(unittest.TestCase):
         self.assertEqual(payload["status"], "complete")
         self.assertFalse(orphan.exists())
         self.assertFalse(journal_path.exists())
+
+    def test_legacy_fin_journal_is_resumed_in_place(self) -> None:
+        git(self.repo, "branch", "feature", self.base_commit)
+        orphan = self.root / "legacy journaled orphan"
+        orphan.mkdir()
+        (orphan / "disposable.txt").write_text("remove\n", encoding="utf-8")
+        common = cleanup._git_common_dir(self.repo)
+        journal_path = cleanup._legacy_journal_path(common, orphan.resolve())
+        cleanup._write_journal(
+            journal_path,
+            {
+                "schema_version": cleanup.SCHEMA_VERSION,
+                "repo": str(self.repo.resolve()),
+                "worktree": str(orphan.resolve()),
+                "expected_head": self.base_commit,
+                "branch_ref": "refs/heads/feature",
+                "detached": False,
+                "base_branch_ref": "refs/heads/main",
+                "landed_commit": self.base_commit,
+                "merge_mode": "merge",
+                "path_identity": cleanup._path_identity(orphan),
+                "phase": "remove_returned",
+            },
+        )
+
+        result, payload = self.invoke(orphan, self.base_commit, execute=True)
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(payload["status"], "complete")
+        self.assertEqual(payload["journal_path"], str(journal_path))
+        self.assertFalse(orphan.exists())
+        self.assertFalse(journal_path.exists())
+
+    def test_current_and_legacy_journals_fail_closed(self) -> None:
+        git(self.repo, "branch", "feature", self.base_commit)
+        orphan = self.root / "ambiguous journaled orphan"
+        orphan.mkdir()
+        (orphan / "preserve.txt").write_text("preserve\n", encoding="utf-8")
+        common = cleanup._git_common_dir(self.repo)
+        journal = {
+            "schema_version": cleanup.SCHEMA_VERSION,
+            "repo": str(self.repo.resolve()),
+            "worktree": str(orphan.resolve()),
+            "expected_head": self.base_commit,
+            "branch_ref": "refs/heads/feature",
+            "detached": False,
+            "base_branch_ref": "refs/heads/main",
+            "landed_commit": self.base_commit,
+            "merge_mode": "merge",
+            "path_identity": cleanup._path_identity(orphan),
+            "phase": "remove_returned",
+        }
+        cleanup._write_journal(cleanup._journal_path(common, orphan.resolve()), journal)
+        cleanup._write_journal(
+            cleanup._legacy_journal_path(common, orphan.resolve()), journal
+        )
+
+        result, payload = self.invoke(orphan, self.base_commit, execute=True)
+
+        self.assertEqual(result.returncode, cleanup.EXIT_PARTIAL)
+        self.assertEqual(payload["status"], "partial")
+        self.assertIn("multiple cleanup journals", payload["blockers"][0])
+        self.assertTrue((orphan / "preserve.txt").exists())
 
     def test_detached_cleanup_uses_exact_head_and_keeps_branches(self) -> None:
         worktree, head = self.make_worktree(detached=True)
@@ -691,8 +752,8 @@ class CleanupWorktreeTests(unittest.TestCase):
         )
         if initialized.returncode != 0:
             self.skipTest("installed Git does not support SHA-256 repositories")
-        git(repo, "config", "user.email", "fin-tests@example.com")
-        git(repo, "config", "user.name", "Fin Tests")
+        git(repo, "config", "user.email", "worktree-tests@example.com")
+        git(repo, "config", "user.name", "Worktree Tests")
         (repo / "tracked.txt").write_text("sha256\n", encoding="utf-8")
         git(repo, "add", "tracked.txt")
         git(repo, "commit", "-m", "sha256 base")
@@ -718,7 +779,6 @@ class CleanupWorktreeTests(unittest.TestCase):
             head,
             "--merge-mode",
             "merge",
-            "--final-hooks-complete",
         ]
 
         result = subprocess.run(

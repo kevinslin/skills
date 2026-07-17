@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Deterministically remove one landed Git worktree and its local branch.
 
-The command is dry-run by default. Mutating execution requires both
-``--final-hooks-complete`` and ``--execute``. A journal under the Git common
-directory makes an interrupted or partially completed removal resumable without
-guessing whether an unregistered filesystem path is safe to delete.
+The command is dry-run by default. Mutating execution requires ``--execute``.
+A journal under the Git common directory makes an interrupted or partially
+completed removal resumable without guessing whether an unregistered filesystem
+path is safe to delete. New transactions use ``worktree-cleanup`` while legacy
+``fin-cleanup`` journals remain resumable in place.
 """
 
 from __future__ import annotations
@@ -25,6 +26,8 @@ from typing import Any, Sequence
 
 
 SCHEMA_VERSION = 1
+JOURNAL_DIRECTORY = "worktree-cleanup"
+LEGACY_JOURNAL_DIRECTORY = "fin-cleanup"
 EXIT_USAGE = 2
 EXIT_VALIDATION = 3
 EXIT_GIT = 4
@@ -351,13 +354,43 @@ def _ref_oid(repo: Path, ref: str) -> str | None:
     return result.stdout.strip()
 
 
-def _transaction_path(common_dir: Path, identity: str) -> Path:
+def _transaction_path(
+    common_dir: Path,
+    identity: str,
+    *,
+    directory: str = JOURNAL_DIRECTORY,
+) -> Path:
     digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:24]
-    return common_dir / "fin-cleanup" / f"{digest}.json"
+    return common_dir / directory / f"{digest}.json"
 
 
 def _journal_path(common_dir: Path, target: Path) -> Path:
     return _transaction_path(common_dir, f"worktree:{target}")
+
+
+def _legacy_journal_path(common_dir: Path, target: Path) -> Path:
+    return _transaction_path(
+        common_dir,
+        f"worktree:{target}",
+        directory=LEGACY_JOURNAL_DIRECTORY,
+    )
+
+
+def _select_transaction_path(common_dir: Path, identity: str) -> Path:
+    current = _transaction_path(common_dir, identity)
+    legacy = _transaction_path(
+        common_dir,
+        identity,
+        directory=LEGACY_JOURNAL_DIRECTORY,
+    )
+    existing = [path for path in (current, legacy) if path.exists()]
+    if len(existing) > 1:
+        raise CleanupError(
+            "multiple cleanup journals exist for the same target",
+            code=EXIT_PARTIAL,
+            status="partial",
+        )
+    return existing[0] if existing else current
 
 
 def _read_journal(path: Path) -> dict[str, Any] | None:
@@ -811,7 +844,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--final-hooks-complete",
         action="store_true",
-        help="Assert matching fin hooks have completed",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--execute", action="store_true", help="Perform destructive cleanup"
@@ -901,11 +934,6 @@ def run(args: argparse.Namespace, report: Report | None = None) -> tuple[Report,
         "merge_mode": args.merge_mode,
     }
 
-    if not args.final_hooks_complete:
-        raise CleanupError(
-            "--final-hooks-complete is required before cleanup",
-            code=EXIT_VALIDATION,
-        )
     if args.timeout_seconds < 1:
         raise CleanupError("--timeout-seconds must be positive", code=EXIT_USAGE)
     if branch_ref and branch_ref in _protected_base_refs(repo, base_branch_ref):
@@ -959,11 +987,10 @@ def run(args: argparse.Namespace, report: Report | None = None) -> tuple[Report,
                 code=EXIT_VALIDATION,
             )
 
-    journal_path = (
-        _journal_path(common_dir, target)
-        if target is not None
-        else _transaction_path(common_dir, f"branch:{branch_ref}")
+    transaction_identity = (
+        f"worktree:{target}" if target is not None else f"branch:{branch_ref}"
     )
+    journal_path = _select_transaction_path(common_dir, transaction_identity)
     report.journal_path = str(journal_path)
     journal = _read_journal(journal_path) if target is not None else None
     if target is not None and record is None and path_present:
