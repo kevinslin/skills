@@ -62,6 +62,7 @@ For coding-related tasks, use this loading order:
 Run the bundled CLI directly or put `scripts/` on `PATH`.
 
 ```bash
+docy inject core/main
 docy inject ref/commit-messages
 docy inject ref/developer-docs
 docy inject ref/spec
@@ -72,6 +73,7 @@ docy inject ref/openclaw-agent-plugins
 docy inject ref/execution-trace
 docy inject vendor/lerna
 
+docy install core/main
 docy install ref/commit-messages
 docy install ref/developer-docs
 docy install ref/spec
@@ -85,9 +87,11 @@ docy install vendor/lerna
 
 Command behavior:
 
-- `inject`: Print the referenced doc to stdout for immediate context injection.
-- `install`: Add or update a managed block in the nearest `AGENTS.md` so the rule
-  remains durable for later sessions.
+- `inject`: Discover Markdown files under `./references/` and print the selected
+  doc to stdout for immediate context injection.
+- `install`: Discover the same reference files and add or update the selected
+  doc as a managed block in the nearest `AGENTS.md` so the rule remains durable
+  for later sessions.
 
 ## Available Docs
 

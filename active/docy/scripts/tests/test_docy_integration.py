@@ -12,6 +12,7 @@ from pathlib import Path
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "docy"
 SKILL_ROOT = SCRIPT_PATH.parents[1]
+CORE_REFERENCE_PATH = SKILL_ROOT / "references" / "core" / "main.md"
 REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "no-back-compat.md"
 COMMIT_MESSAGES_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "commit-messages.md"
 DEVELOPER_DOCS_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "developer-docs.md"
@@ -44,6 +45,14 @@ class DocyIntegrationTests(unittest.TestCase):
         result = self.run_cli("inject", "ref/no-back-compat")
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertEqual(result.stdout, REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n")
+
+    def test_inject_discovers_core_doc_without_a_registry_entry(self) -> None:
+        result = self.run_cli("inject", "core/main")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            CORE_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
 
     def test_inject_accepts_alias(self) -> None:
         result = self.run_cli("inject", "ref/no-backward-compat")
@@ -145,6 +154,16 @@ class DocyIntegrationTests(unittest.TestCase):
         self.assertIn("no external installed user base", content)
         self.assertIn("<!-- docy:ref__no-back-compat:end -->", content)
 
+    def test_install_discovers_core_doc_without_a_registry_entry(self) -> None:
+        result = self.run_cli("install", "core/main")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+        content = (self.workspace / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("<!-- docy:core__main:begin -->", content)
+        self.assertIn("## docy: core/main", content)
+        self.assertIn("# Core documentation hygiene", content)
+        self.assertIn("<!-- docy:core__main:end -->", content)
+
     def test_install_developer_docs_reference(self) -> None:
         result = self.run_cli("install", "ref/developer-docs")
         self.assertEqual(result.returncode, 0, msg=result.stderr)
@@ -226,6 +245,18 @@ class DocyIntegrationTests(unittest.TestCase):
 
     def test_unknown_doc_returns_error(self) -> None:
         result = self.run_cli("inject", "ref/unknown")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Unknown doc", result.stderr)
+        self.assertIn("core/main", result.stderr)
+        self.assertIn("ref/remove-feature", result.stderr)
+
+    def test_inject_rejects_paths_outside_references(self) -> None:
+        result = self.run_cli("inject", "../SKILL")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Unknown doc", result.stderr)
+
+    def test_install_rejects_paths_outside_references(self) -> None:
+        result = self.run_cli("install", "../SKILL")
         self.assertEqual(result.returncode, 2)
         self.assertIn("Unknown doc", result.stderr)
 

@@ -18,7 +18,6 @@ BLOCK_END_TEMPLATE = "<!-- docy:{slug}:end -->"
 class DocSpec:
     slug: str
     rel_path: str
-    description: str
 
 
 SCRIPT_PATH = Path(__file__).resolve()
@@ -26,58 +25,6 @@ SKILL_ROOT = SCRIPT_PATH.parents[1]
 DOCS_ROOT = SKILL_ROOT / "references"
 ALIASES = {
     "ref/no-backward-compat": "ref/no-back-compat",
-}
-DOCS = {
-    "vendor/lerna": DocSpec(
-        slug="vendor/lerna",
-        rel_path="vendor/lerna.md",
-        description="Modern Lerna operating guidance for agents.",
-    ),
-    "ref/commit-messages": DocSpec(
-        slug="ref/commit-messages",
-        rel_path="ref/commit-messages.md",
-        description="Repo-aware commit message drafting.",
-    ),
-    "ref/developer-docs": DocSpec(
-        slug="ref/developer-docs",
-        rel_path="ref/developer-docs.md",
-        description="Developer documentation writing, editing, and review guidance.",
-    ),
-    "ref/spec": DocSpec(
-        slug="ref/spec",
-        rel_path="ref/spec.md",
-        description="Architecture and design specification writing and review guidance.",
-    ),
-    "ref/openclaw-docs": DocSpec(
-        slug="ref/openclaw-docs",
-        rel_path="ref/openclaw-docs.md",
-        description="OpenClaw-specific developer documentation conventions.",
-    ),
-    "ref/python-preferred-modules": DocSpec(
-        slug="ref/python-preferred-modules",
-        rel_path="ref/python-preferred-modules.md",
-        description="Python dependency preferences for runtime validation and CLIs.",
-    ),
-    "ref/typescript-preferred-modules": DocSpec(
-        slug="ref/typescript-preferred-modules",
-        rel_path="ref/typescript-preferred-modules.md",
-        description="TypeScript dependency preferences for runtime validation and CLIs.",
-    ),
-    "ref/openclaw-agent-plugins": DocSpec(
-        slug="ref/openclaw-agent-plugins",
-        rel_path="ref/openclaw-agent-plugins.md",
-        description="OpenClaw agent plugin authoring guidance rooted in capability ownership and focused SDK imports.",
-    ),
-    "ref/execution-trace": DocSpec(
-        slug="ref/execution-trace",
-        rel_path="ref/execution-trace.md",
-        description="Execution trace writing guidance for runtime-ordered flow documentation.",
-    ),
-    "ref/no-back-compat": DocSpec(
-        slug="ref/no-back-compat",
-        rel_path="ref/no-back-compat.md",
-        description="Hard-cut product policy; no backwards compatibility.",
-    ),
 }
 
 
@@ -88,13 +35,30 @@ def clean_slug(value: str) -> str:
     return normalized
 
 
-def resolve_doc(value: str) -> DocSpec:
+def discover_reference_docs() -> dict[str, DocSpec]:
+    docs: dict[str, DocSpec] = {}
+    root = DOCS_ROOT.resolve()
+    for path in DOCS_ROOT.rglob("*.md"):
+        if not path.is_file():
+            continue
+        try:
+            path.resolve().relative_to(root)
+        except ValueError:
+            continue
+        relative = path.relative_to(DOCS_ROOT)
+        slug = relative.with_suffix("").as_posix()
+        docs[slug] = DocSpec(slug=slug, rel_path=relative.as_posix())
+    return docs
+
+
+def resolve_doc(value: str, docs: dict[str, DocSpec]) -> DocSpec:
     slug = clean_slug(value)
     canonical = ALIASES.get(slug, slug)
-    if canonical not in DOCS:
-        supported = ", ".join(sorted([*DOCS.keys(), *ALIASES.keys()]))
+    if canonical not in docs:
+        aliases = [alias for alias, target in ALIASES.items() if target in docs]
+        supported = ", ".join(sorted([*docs.keys(), *aliases]))
         raise ValueError(f"Unknown doc '{value}'. Supported docs: {supported}")
-    return DOCS[canonical]
+    return docs[canonical]
 
 
 def doc_path(doc: DocSpec) -> Path:
@@ -168,7 +132,7 @@ def install_doc(doc: DocSpec, agents_file: Path) -> None:
 
 def cmd_inject(args: argparse.Namespace) -> int:
     try:
-        doc = resolve_doc(args.doc)
+        doc = resolve_doc(args.doc, discover_reference_docs())
         sys.stdout.write(load_doc_text(doc))
         return 0
     except (ValueError, FileNotFoundError) as exc:
@@ -178,7 +142,7 @@ def cmd_inject(args: argparse.Namespace) -> int:
 
 def cmd_install(args: argparse.Namespace) -> int:
     try:
-        doc = resolve_doc(args.doc)
+        doc = resolve_doc(args.doc, discover_reference_docs())
         agents_file = (
             Path(args.agents_file).expanduser().resolve()
             if args.agents_file
