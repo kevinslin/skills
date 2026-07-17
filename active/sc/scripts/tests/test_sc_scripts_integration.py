@@ -82,6 +82,14 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         self.assertEqual(added, ["specy"])
         self.assertEqual(updated["dependencies"], ["dev.llm-session", "specy"])
 
+    def test_dependency_inference_ignores_numeric_replacement_tokens(self) -> None:
+        body = "Map Jest output with `'$1'`, read shell `$2`, and use `$dev.code`."
+
+        self.assertEqual(
+            dependency_tools.extract_skill_dependencies_from_body(body),
+            {"dev.code"},
+        )
+
     def test_sync_dependencies_updates_skill_file_from_named_reference(self) -> None:
         skill_dir = self.root / "sync-skill"
         _write_skill(

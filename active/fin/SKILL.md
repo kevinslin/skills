@@ -1,6 +1,6 @@
 ---
 name: fin
-description: Finalize completed PR or local checkout work.
+description: Finalize completed PR or local checkout work. Use when explicitly invoked
 dependencies:
 - ag-learn
 - dev.llm-session

@@ -15,7 +15,12 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)
 
 # `$skill-name` is the canonical cross-skill reference syntax.
 DEPENDENCY_PATTERNS = [
-    re.compile(r"(?<![A-Za-z0-9.-])\$([a-z0-9][a-z0-9.-]*)(?![A-Za-z0-9.-])"),
+    # Named skill references contain at least one lowercase letter. Exclude
+    # positional/replacement tokens such as shell `$1` and Jest's `'$1'`.
+    re.compile(
+        r"(?<![A-Za-z0-9.-])\$((?=[a-z0-9.-]*[a-z])[a-z0-9][a-z0-9.-]*)"
+        r"(?![A-Za-z0-9.-])"
+    ),
 ]
 DEPENDENCY_REFERENCE_PLACEHOLDERS = {"skill", "skill-name"}
 
