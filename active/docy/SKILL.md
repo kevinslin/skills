@@ -32,6 +32,8 @@ All managed docs live under `./references/` and follow this layout:
       history and mirror conventions before writing a subject line
     - developer-docs.md: Developer documentation writing, editing, and review
       guidance, including page patterns and an editorial checklist
+    - spec.md: Architecture and design specification writing, examples, and
+      review guidance
     - openclaw-docs.md: OpenClaw-specific page taxonomy, heading, docs-index,
       editing, and verification conventions layered on developer-docs
     - execution-trace.md: How to write runtime-ordered execution trace docs
@@ -62,6 +64,7 @@ Run the bundled CLI directly or put `scripts/` on `PATH`.
 ```bash
 docy inject ref/commit-messages
 docy inject ref/developer-docs
+docy inject ref/spec
 docy inject ref/openclaw-docs
 docy inject ref/no-back-compat
 docy inject ref/remove-feature
@@ -71,6 +74,7 @@ docy inject vendor/lerna
 
 docy install ref/commit-messages
 docy install ref/developer-docs
+docy install ref/spec
 docy install ref/openclaw-docs
 docy install ref/no-back-compat
 docy install ref/remove-feature
@@ -87,9 +91,9 @@ Command behavior:
 
 ## Available Docs
 
-- `./references/core/main.md`: Core documentation hygiene. Use to keep adjacent
-  specs, flows, and other durable docs synchronized when an architectural change
-  invalidates older guidance.
+- `./references/core/main.md`: Core documentation and technical-writing hygiene.
+  Always load it to keep adjacent durable docs synchronized and apply universal
+  rules for terminology, scope, examples, reviews, and diagrams.
 - `./references/vendor/lerna.md`: Modern Lerna operating guidance for agents. Use before changing, validating, or releasing code in a Lerna-managed monorepo.
 - `./references/ref/commit-messages.md`: Repo-aware commit message drafting. Use
   before writing a commit message so the subject mirrors recent local history
@@ -97,6 +101,10 @@ Command behavior:
 - `./references/ref/developer-docs.md`: Developer documentation guidance. Use
   before creating, editing, or reviewing READMEs, quickstarts, guides, API, SDK,
   CLI, testing, troubleshooting, architecture, or internals documentation.
+- `./references/ref/spec.md`: Design specification guidance. Use before creating,
+  editing, or reviewing architecture and design specifications so scope,
+  ownership, interfaces, examples, failure paths, and implementation detail stay
+  decision-complete without becoming implementation-exhaustive.
 - `./references/ref/openclaw-docs.md`: OpenClaw developer documentation overlay.
   Load it after `ref/developer-docs` when creating, editing, or reviewing
   OpenClaw topic pages, guides, references, or troubleshooting documentation.

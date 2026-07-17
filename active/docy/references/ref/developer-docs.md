@@ -72,6 +72,9 @@ Write documentation that is:
 
 ## Writing and editorial rules
 
+Apply the core universal technical-writing rules. The rules below specialize
+that baseline for developer-facing pages.
+
 - Use present tense, active voice, and concrete nouns.
 - Address the reader as "you" for instructions.
 - Use sentence case for headings and `Quickstart` as one word when naming that
@@ -82,15 +85,12 @@ Write documentation that is:
   the default path, and `avoid` for known footguns.
 - Explain why when it changes a decision, prevents a failure, or clarifies a
   nonstandard contract.
-- Remove repetition, generic benefits, hype, meta-commentary, and explanations
-  the target reader does not need.
-- Define unfamiliar abbreviations and product jargon at first use.
+- Expand unfamiliar abbreviations at first use.
+- Remove generic benefits and hype.
 - Use descriptive link text instead of "click here" or "this page."
 - Avoid jokes, idioms, and condescension that make instructions less portable.
 - Preserve limiting emphasis such as **only**, **must**, and **not** when it
   carries a real constraint.
-- Keep canonical truth in one place. Link to it instead of copying field lists,
-  defaults, or behavior across pages.
 
 Open with what the reader can accomplish. Mention implementation first only for
 architecture or internals documentation where implementation is the reader's
@@ -279,11 +279,9 @@ remain useful, but implementation depth is the point of the page.
 When reviewing rather than rewriting:
 
 1. Lead with findings ordered by user impact.
-2. Cite the exact section, line, command, or claim when possible.
-3. Name the failed criterion and explain its effect on the reader.
-4. Give the smallest concrete fix.
-5. State what evidence was checked and what remains unverified.
-6. Say clearly when no issues were found.
+2. Apply the core self-contained finding format.
+3. State what evidence was checked and what remains unverified.
+4. Say clearly when no issues were found.
 
 Prioritize inaccurate, unsafe, or unusable instructions over local copy edits.
 

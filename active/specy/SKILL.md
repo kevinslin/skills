@@ -63,6 +63,23 @@ Document types are listed here. Use the parenthesized doc-type key with the comm
 - FAQ Specs (`faq-spec`): In-place FAQ additions that append a focused Q&A to the most recent research document type mentioned in the conversation.
 - Vendor Docs (`vendor-doc`): Project-focused third-party library documentation summaries and topic references.
 
+## Specification Style Ownership
+
+Before creating, revising, or reviewing an `architecture`,
+`service-design-doc`, `design-spec`, or `feature-spec`, invoke `$docy` and inject
+`ref/spec`.
+
+Docy owns specification prose, decision completeness, ownership and interface
+clarity, example and diagram semantics, and review style. Specy owns doc-type
+selection, source gathering, output paths, template shape, required sections,
+execution details, preservation and lifecycle, and handoff artifacts. For
+feature specs, retain repository touchpoints, tasks, and validation detail
+needed to make each phase executable and verifiable; omit only incidental
+implementation detail.
+
+Do not copy Docy style rules into Specy workflows or templates. Keep Specy
+instructions limited to artifact-specific requirements and mechanics.
+
 ## Common Instructions (All Doc Types)
 
 0. For durable knowledge artifacts, resolve `$mem` first and report the selected base name, resolved root, and concrete output path. If no `$mem` base clearly matches and the user did not name a concrete non-memory destination, ask instead of guessing.

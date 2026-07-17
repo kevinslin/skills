@@ -39,7 +39,7 @@
 
 **High-Level Diagram**
 
-> Boxes + arrows is enough (ASCII encouraged)
+[High-level architecture diagram]
 
 ### Key Components
 
@@ -106,8 +106,6 @@ POST /v1/...
 
 ## 10. Planning & Milestones
 
-Every milestone must ship a significant and verifiable piece of functionality.
-
 ### Milestone 1: {name}
 
 **Shipped functionality:** [one sentence]
@@ -147,7 +145,7 @@ Verification:
 
 ## Additional Sections (Optional - only include this if user has asked for it )
 
-### Scale & Reliability (Answer honestly) 
+### Scale & Reliability
 
 * Expected QPS (now / 6 months)
 * Latency target (p95)

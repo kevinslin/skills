@@ -56,7 +56,7 @@
 ### Integration Points / Touchpoints
 - [File / service / endpoint and why it matters]
 
-### Resolved Ambiguities / Decisions
+### Design Decisions
 - [Decision]: [Resolution and rationale]
 
 ### Important Implementation Notes (Optional)
@@ -93,6 +93,9 @@
 
 ## Phases and Dependencies
 
+[If a task tracker owns mutable status, replace the task checkboxes below with
+plain task-ID or link bullets.]
+
 ### Phase 1: [Name]
 - [ ] Step 1
 - [ ] Step 2
@@ -120,7 +123,12 @@ Manual validation:
 ## Open Items and Risks
 
 ### Open Items
-- [ ] [Open technical decision, clarification, or research task]
+[If a task tracker owns mutable status, use plain task-ID or link bullets instead
+of checkboxes.]
+
+- [ ] [Open technical decision, clarification, or research task; for a blocking
+  item, include owner/source, next action, blocking phase, and either status or
+  the authoritative task link]
 
 ### Risks and Mitigations
 

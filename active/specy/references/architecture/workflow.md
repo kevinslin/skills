@@ -31,16 +31,14 @@
    - existing design docs, ADRs, or runbooks
 4. Fill the document from top to bottom with repository-specific content.
    - Replace placeholders with concrete paths, components, and invariants.
-   - Remove sections that are not relevant instead of leaving empty headings.
    - Keep the strongest emphasis on `Entry Points`, `Code Map`, `Layering Rules`, and `Architectural Invariants`.
-5. Add at least one diagram that reflects the real system shape.
+5. Add at least one diagram.
    - Use Mermaid or ASCII.
    - Prefer one high-level component diagram and one request, job, or data-flow diagram when both are material.
 6. Tie architecture claims to concrete implementation locations.
    - Name files, directories, modules, interfaces, or commands.
    - Avoid generic statements that are not grounded in the codebase.
-7. Capture rules that future contributors could break.
-   - Explicitly document ownership boundaries, allowed dependency direction, and failure or persistence guarantees.
+7. Document allowed dependency direction and implementation invariants contributors must preserve.
 8. Finish with the required ending sections from the skill and replace the changelog placeholder with the real session id before handoff.
 
 ## Fill-Out Guidance
@@ -56,7 +54,7 @@ Write the sections with this standard:
 - `Data / Request / Job Flow`: narrate the main runtime path in numbered steps
 - `State Model`: include only if state transitions materially affect design or correctness
 - `Key Abstractions`: define the core types or interfaces contributors must understand
-- `Architectural Invariants`: state the non-negotiable rules precisely
+- `Architectural Invariants`: list the non-negotiable rules contributors must preserve
 - `Boundaries and Ownership`: identify API boundaries, internal-only modules, and integration edges
 - `Concurrency / Performance Model`: include only when it affects how code must be written
 - `Configuration Model`: include only settings that materially change architecture or behavior
@@ -72,8 +70,6 @@ The doc is good enough to ship when:
 - a new contributor can identify where to start reading code
 - the main flows and boundaries are understandable without reverse-engineering the whole repo
 - the invariants are explicit enough to guide safe changes
-- diagrams match the actual implementation shape
-- filler text and empty template sections have been removed
 
 ## Stop And Clarify When
 

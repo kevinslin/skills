@@ -30,7 +30,6 @@
 - Include a `Requirements -> Design Mapping` table with one row per requirement.
 - Include a `Detailed File Plan` listing concrete files and expected changes.
 - Include `Planning & Milestones` where tasks are grouped by milestone.
-- Each milestone must ship a significant and verifiable unit of functionality.
 - Each milestone must include `Shipped functionality`, `Tasks`, and `Verification`.
 - Include `Rollout Plan` with progressive phases and explicit `Rollback`.
 - Include `Testing Plan` that covers unit, integration, and manual validation.

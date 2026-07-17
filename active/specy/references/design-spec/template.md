@@ -56,8 +56,6 @@ Out of scope:
 
 ## Planning & Milestones
 
-Every milestone must ship a significant and verifiable piece of functionality.
-
 ### Milestone 1: {name}
 
 **Shipped functionality:** [one sentence]

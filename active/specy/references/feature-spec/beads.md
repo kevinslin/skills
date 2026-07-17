@@ -12,7 +12,7 @@ follow its rules. Use it for project-specific naming, shortcut rules, and sync p
 
 1. Create a top-level bead for the plan. Include the plan title and link to the plan
    doc in the bead description.
-2. Create a bead for each phase in the plan's Steps section.
+2. Create a bead for each phase in the plan's `Phases and Dependencies` section.
 3. Add dependencies between phase beads to match the plan order.
 
 Example:

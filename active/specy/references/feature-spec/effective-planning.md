@@ -1,173 +1,84 @@
-# Effective Planning Guide
+# Feature-spec execution planning
 
-This reference provides guidance for creating high-quality feature specs (execution plans) that maximize clarity and effectiveness.
+Load `$docy` `ref/spec` through Specy's specification-style rule before using
+this reference. Docy owns specification writing and design completeness. This
+reference adds only the execution mechanics required by a feature spec.
 
-## Principles of Effective Planning
+## Acceptance and proof
 
-### 1. Start with a Clear Goal
+Keep the behavioral contract separate from proof:
 
-The goal should be:
-- **Specific**: Clearly define what will be accomplished
-- **Measurable**: Include criteria for determining completion
-- **Valuable**: Explain why this work matters
-- **Achievable**: Realistic given constraints and resources
+- `Acceptance Criteria` states the observable feature outcomes and invariants
+  that must be true.
+- `Validation Plan` names the automated and manual checks that prove those
+  criteria.
+- Phase-level verification proves an intermediate outcome; it does not replace
+  feature-level acceptance criteria.
 
-**Good Example:**
-> Implement a caching layer for the user profile API to reduce database load by 60% and improve response times from 500ms to under 100ms for cached requests.
+Cover each material acceptance criterion in the validation plan. Add criterion
+IDs when the mapping would otherwise be ambiguous. Link a separate validation
+spec when the proof matrix would overwhelm the feature spec.
 
-**Poor Example:**
-> Make the API faster.
+## Execution phases
 
-### 2. Provide Sufficient Context
+Apply Docy's dependency-based phase model. Extend each phase with:
 
-Context helps future readers (including yourself) understand:
-- **Why**: The business or technical motivation
-- **What exists**: Current system state and architecture
-- **What's changing**: Scope of modifications
-- **Constraints**: Technical, resource, or business limitations
+- the independently useful outcome it delivers;
+- concrete repository, infrastructure, documentation, or rollout work;
+- verification for that intermediate outcome;
+- dependencies and work that may proceed in parallel; and
+- an estimate only when it changes staffing, sequencing, or scope decisions.
 
-Without context, plans become documentation of "what" without explaining "why", making them less valuable for future reference.
+Keep the required `Phases and Dependencies` section for small work. Use one
+compact phase instead of omitting the section.
 
-### 3. Break Down Complex Steps
+## Dependencies and access
 
-Effective step breakdowns:
-- Use phases or milestones for large tasks
-- Each step should be concrete and actionable
-- Note dependencies between steps explicitly
-- Include research, testing, and deployment steps (not just coding)
-- Estimate effort or complexity when helpful
+Record dependencies that can block execution or validation, including external
+APIs, credentials, permissions, library versions, infrastructure, datasets, and
+required reviewers. For each blocker, name how it is obtained or resolved and
+which phase depends on it.
 
-**Example Phase Structure:**
-```
-Phase 1: Research & Design (2-3 days)
-- Research caching solutions (Redis vs Memcached)
-- Design cache key structure and invalidation strategy
-- Document data consistency approach
+## Risks, rollout, and recovery
 
-Phase 2: Implementation (3-5 days)
-- Set up Redis infrastructure
-- Implement cache wrapper service
-- Add caching to user profile endpoints
-- Implement cache invalidation on user updates
+Track material risks with impact, probability, and mitigation. When rollout or
+rollback work is required, put it in the phase that introduces the corresponding
+risk.
 
-Phase 3: Testing & Deployment (2 days)
-- Write unit tests for cache service
-- Load test cached endpoints
-- Deploy to staging environment
-- Monitor performance metrics
-- Deploy to production
-```
+Do not invent a fallback merely to fill a risk table. When recovery requires a
+second execution path, define it as part of the selected design under Docy's
+default, alternative, and failure rules.
 
-### 4. Document Dependencies Early
+## Open items
 
-Identify dependencies upfront to avoid blockers:
-- **External APIs**: Which services, what authentication, rate limits
-- **Access**: Credentials, permissions, accounts needed
-- **Libraries**: Specific versions, compatibility concerns
-- **Infrastructure**: Servers, databases, services required
-- **People**: Who to consult, who needs to approve
+Use Docy's decision-question format. For a blocking item, also track the
+execution metadata Specy needs:
 
-Early dependency identification allows parallel work on obtaining access or setting up infrastructure.
+- owner or authoritative source;
+- next action;
+- blocking phase, if any; and
+- current status when the spec owns tracking, or the authoritative task link
+  when an external tracker owns status.
 
-### 5. Anticipate and Plan for Risks
+When an item is resolved, remove it from `Open Items` and record the selected
+decision and rationale under `Design Decisions`.
 
-Effective risk planning:
-- Identify technical risks (integration failures, performance issues)
-- Identify resource risks (blocked dependencies, team availability)
-- Assess impact and probability
-- Define mitigation strategies before starting
-- Create fallback plans for high-impact risks
+## Splitting large work
 
-**Example:**
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Redis cluster downtime breaks all API calls | High | Implement fallback to direct DB queries if cache unavailable |
-| Cache invalidation bugs cause stale data | Medium | Add cache TTL as safety net, implement monitoring for data freshness |
+Split independently releasable outcomes or separable dependency graphs into
+linked feature specs. Create or link a design document when unresolved
+architecture dominates the execution plan.
 
-### 6. Make Questions Actionable
+## Maintaining the plan
 
-Questions should drive action:
-- **Technical questions**: What research or prototyping is needed?
-- **Clarification questions**: Who can answer? By when?
-- **Decision questions**: What are the options? What criteria for choosing?
+Update the feature spec when:
 
-Track questions with checkboxes and update the plan as answers are found.
+- research changes the approach;
+- a decision, dependency, or blocker changes;
+- scope or sequencing changes; or
+- a phase completes and its verification produces new evidence.
 
-### 7. Define Success Clearly
-
-Success criteria should be:
-- Measurable and verifiable
-- Include functional requirements (features work correctly)
-- Include non-functional requirements (performance, security)
-
-For `specy` feature specs, keep the behavioral contract separate from proof:
-- **Acceptance Criteria**: what must be true about the finished behavior or invariant
-- **Validation Plan**: how those criteria will be proven with automated or manual checks
-
-**Compact example:**
-- Acceptance criterion: "Users can retry a failed upload without creating duplicate records."
-- Automated validation: "Add an integration test covering retry after timeout."
-- Manual validation: "Check the resulting record count after a retry."
-
-## When to Update the Plan
-
-Plans are living documents. Update them:
-- **After research phase**: Add findings, update approach based on discoveries
-- **When decisions are made**: Document the decision and rationale
-- **When scope changes**: Reflect new requirements or reduced scope
-- **When blockers occur**: Document the blocker and revised timeline
-- **After major milestones**: Mark phases complete, note learnings
-
-## Plan Size Guidelines
-
-### Small Plans (1-3 days of work)
-- May skip formal phases
-- Focus on steps, dependencies, risks
-- Template sections can be brief
-
-### Medium Plans (1-2 weeks)
-- Use phases to organize work
-- Detailed dependency tracking important
-- Risk section becomes valuable
-- Timeline helps manage expectations
-
-### Large Plans (Multi-week projects)
-- Consider breaking into multiple related plans
-- Detailed technical approach section crucial
-- Risk and dependency tracking critical
-- Regular plan updates essential
-- May need separate architecture docs
-
-## Common Planning Pitfalls
-
-### Pitfall 1: Over-specification
-Planning every implementation detail wastes time and becomes outdated quickly. Focus on approach and structure, not line-by-line code plans.
-
-### Pitfall 2: Under-specification
-"Implement feature X" without context, approach, or dependencies leads to confusion and missed requirements.
-
-### Pitfall 3: Ignoring Dependencies
-Discovering required access or blocked dependencies mid-implementation causes delays. Front-load dependency identification.
-
-### Pitfall 4: Static Plans
-Plans that aren't updated as work progresses become misleading documentation. Treat plans as living documents.
-
-### Pitfall 5: No Risk Planning
-Failing to anticipate risks means scrambling when issues arise. Proactive risk identification enables mitigation.
-
-## Template Customization
-
-The standard template is comprehensive but should be adapted:
-- **Remove unused sections**: If no external dependencies, remove that section
-- **Add custom sections**: Project-specific needs (compliance, security reviews, etc.)
-- **Adjust detail level**: Match plan detail to task complexity and duration
-- **Use team conventions**: Adapt to team's planning culture and tools
-
-## Integration with Development Workflow
-
-Effective feature specs integrate with development practices:
-- **Version control**: Commit plans with code for traceability
-- **Reference in commits**: Link commits to plan sections
-- **Update in PRs**: Note plan updates in pull request descriptions
-- **Review with team**: Share plans for feedback before major work
-- **Archive completed plans**: Keep as documentation of decisions and approach
+When the repository uses a tracking system, replace task and open-item
+checkboxes with plain task-ID or link bullets and keep mutable status in that
+system. Keep the spec focused on durable outcomes, dependencies, decisions, and
+proof. Archive the completed spec according to the feature-spec workflow.

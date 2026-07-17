@@ -43,6 +43,11 @@ DOCS = {
         rel_path="ref/developer-docs.md",
         description="Developer documentation writing, editing, and review guidance.",
     ),
+    "ref/spec": DocSpec(
+        slug="ref/spec",
+        rel_path="ref/spec.md",
+        description="Architecture and design specification writing and review guidance.",
+    ),
     "ref/openclaw-docs": DocSpec(
         slug="ref/openclaw-docs",
         rel_path="ref/openclaw-docs.md",

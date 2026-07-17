@@ -15,6 +15,7 @@ SKILL_ROOT = SCRIPT_PATH.parents[1]
 REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "no-back-compat.md"
 COMMIT_MESSAGES_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "commit-messages.md"
 DEVELOPER_DOCS_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "developer-docs.md"
+SPEC_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "spec.md"
 OPENCLAW_DOCS_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "openclaw-docs.md"
 VENDOR_REFERENCE_PATH = SKILL_ROOT / "references" / "vendor" / "lerna.md"
 PYTHON_REFERENCE_PATH = SKILL_ROOT / "references" / "ref" / "python-preferred-modules.md"
@@ -77,6 +78,17 @@ class DocyIntegrationTests(unittest.TestCase):
         )
         self.assertIn("# Developer Documentation", result.stdout)
         self.assertIn("## Page patterns", result.stdout)
+        self.assertIn("## Final checklist", result.stdout)
+
+    def test_inject_spec_reference(self) -> None:
+        result = self.run_cli("inject", "ref/spec")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            result.stdout,
+            SPEC_REFERENCE_PATH.read_text(encoding="utf-8").rstrip() + "\n",
+        )
+        self.assertIn("# Design specifications", result.stdout)
+        self.assertIn("## Detail and scope", result.stdout)
         self.assertIn("## Final checklist", result.stdout)
 
     def test_inject_openclaw_docs_reference(self) -> None:
@@ -144,6 +156,18 @@ class DocyIntegrationTests(unittest.TestCase):
         self.assertIn("## Page patterns", content)
         self.assertIn("## Final checklist", content)
         self.assertIn("<!-- docy:ref__developer-docs:end -->", content)
+
+    def test_install_spec_reference(self) -> None:
+        result = self.run_cli("install", "ref/spec")
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+        agents_file = self.workspace / "AGENTS.md"
+        content = agents_file.read_text(encoding="utf-8")
+        self.assertIn("<!-- docy:ref__spec:begin -->", content)
+        self.assertIn("## docy: ref/spec", content)
+        self.assertIn("## Detail and scope", content)
+        self.assertIn("## Final checklist", content)
+        self.assertIn("<!-- docy:ref__spec:end -->", content)
 
     def test_install_openclaw_docs_reference(self) -> None:
         result = self.run_cli("install", "ref/openclaw-docs")

@@ -70,7 +70,7 @@ If you are new to the codebase, start here:
 - Lives in: `path/`
 - Depends on: allowed dependencies
 - Used by: callers or consumers
-- Notes: important implementation detail
+- Notes: contract-relevant constraints
 
 ### `component-or-package-b`
 - Purpose: what it does
@@ -160,8 +160,6 @@ Document the concepts contributors must understand.
 
 ## Architectural Invariants
 
-These are the most important rules in the document.
-
 - `Invariant 1`: precise statement of what must remain true
 - `Invariant 2`: precise statement of what must remain true
 - `Invariant 3`: precise statement of what must remain true
@@ -190,8 +188,6 @@ Call out the places where rules change.
 
 ## Concurrency / Performance Model
 
-Only include if relevant.
-
 - units of concurrency: threads, goroutines, workers, or queues
 - what can run in parallel
 - what must stay serialized
@@ -200,8 +196,6 @@ Only include if relevant.
 - backpressure or batching rules
 
 ## Configuration Model
-
-Document the settings that materially affect architecture.
 
 | Config | Effect | Default | Notes |
 |--------|--------|---------|-------|
@@ -245,7 +239,6 @@ If you need to change:
 
 ## Open Questions / Known Tensions
 
-Use this section to be honest about weak spots.
 - `Tension 1`
 - `Tension 2`
 - `Planned cleanup or redesign`
