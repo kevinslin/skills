@@ -3,7 +3,6 @@ name: fin
 description: Finalize completed PR or local checkout work.
 dependencies:
 - ag-learn
-- ag-taskv2
 - dev.llm-session
 - dev.shortcuts
 - mem
@@ -225,26 +224,9 @@ python3 <fin-skill-root>/scripts/cleanup_worktree.py \
 - If no linked pending issue was found, state that no Linear update was needed. If a linked issue was already completed or canceled, state that it was terminal and unchanged.
 - If lookup, status resolution, update, or read-back verification fails, preserve the successful landing result but report `partial finalization: Linear issue not verified complete` with the issue id when known and the exact blocker.
 
-## Tracked Task Closure
-
-8. Close a tracked ag-taskv2 thread
-- Run this step only after the selected landing flow, required local base verification and cleanup, repo-specific final hooks, spec archival, and any applicable Linear completion all succeeded. Do not close the task for auto-merge pending, partial cleanup, failed final hooks, incomplete spec archival, or unresolved linked-Linear outcomes.
-- Resolve the active Codex thread ID with the existing `dev.llm-session` dependency when it is not already authoritative in the current app context.
-- Resolve the runtime CLI as `${CODEX_HOME:-$HOME/.codex}/skills/ag-taskv2/scripts/ag-taskv2`. This is an installed sibling-skill dependency; never edit it or substitute a source-checkout path during finalization.
-- When the runtime CLI is absent, report `ag-taskv2 closure skipped: runtime dependency not installed` but do not turn otherwise successful unrelated finalization into failure.
-- When it exists, run the exact resolved command:
-  ```bash
-  SESSION_ID="<active-session-id>"
-  AG_TASKV2_CLI="${CODEX_HOME:-$HOME/.codex}/skills/ag-taskv2/scripts/ag-taskv2"
-  python3 "$AG_TASKV2_CLI" close --id "$SESSION_ID" --if-tracked --json
-  ```
-  - Treat JSON status `untracked` as a quiet no-op.
-  - For a tracked thread, require status `done`, a non-null `closed`, and exactly one `meta` `status:<old>->done` plus one `meta` `finalization:completed` rollout for the latest close lifecycle. Both rollouts use the current `closed` timestamp, so an idempotent retry verifies the existing pair while close/reopen/close verifies the newest pair.
-  - If the command fails or verification disagrees, preserve the completed landing result but report `partial finalization: ag-taskv2 thread not verified closed` with the exact thread ID and CLI error. Keep the landing result distinct from ledger closure.
-
 ## Retrospective And Reporting
 
-9. Run the retrospective
+8. Run the retrospective
 - Run `$ag-learn` after the task lands in the requested context, after any matching spec has been archived, and after any matching repo-specific final hooks from `~/.fin.yaml` have completed.
 - For `gh`, run it after the PR merge or already-merged confirmation, repo-specific final hooks, local base containment proof, and deterministic cleanup complete when applicable.
 - For `local`, run it after the local merge, repo-specific final hooks, local base verification, and deterministic cleanup complete when applicable.
@@ -252,7 +234,7 @@ python3 <fin-skill-root>/scripts/cleanup_worktree.py \
 - Present these as proposed learnings for follow-up, not mandatory extra scope.
 - If `ag-learn` finds no meaningful improvement opportunities, say that explicitly.
 
-10. Report the finished state
+9. Report the finished state
 - State which context ran: `gh` or `local`.
 - State whether that context was explicitly requested, implied by heartbeat or active task context, or auto-detected from current-branch PR state.
 - For `gh`, state the target identity line with PR number, branch, and source before reporting mergeability, checks, blockers, merge, or cleanup. If another PR was also present in the current checkout, explicitly state that it was not the finalization target.
@@ -271,7 +253,6 @@ python3 <fin-skill-root>/scripts/cleanup_worktree.py \
 - State whether `~/.fin.yaml` was checked, whether it parsed successfully, whether a workspace entry matched the non-worktree checkout root, and whether the matched repo-specific final hooks completed or were skipped.
 - If `local` pushed `main`, state whether the push succeeded. If it intentionally remained local-only, say that explicitly.
 - State the Linear result: linked issue id and completed status, no linked pending issue, already-terminal issue left unchanged, explicit keep-open override, or the exact partial-finalization blocker.
-- State the ag-taskv2 result: tracked thread ID and verified `done`, untracked no-op, runtime dependency absent/skipped, or the exact bookkeeping partial-finalization blocker.
 - Summarize the proposed learnings as a numbered list so each item can be referenced later.
 - Mention where `ag-learn` saved the learning note.
 - Keep the final report internally consistent with the chosen context: completed task, completed spec archival, requested landing path, reconciled or verified `main`, completed retrospective.
@@ -339,7 +320,6 @@ python3 <fin-skill-root>/scripts/cleanup_worktree.py \
 - For squash/rebase-merged PRs, local branch deletion used verified PR merge state plus local `main` containing the PR merge commit, not branch ancestry alone.
 - The local `main` checkout was checked for concurrent tracked or untracked changes immediately before refresh, then refreshed or verified to include the landed work before the task was reported complete; otherwise the required partial local cleanup state was reported.
 - The active thread's linked Linear issue was checked when applicable; exactly one pending match was moved to a live-resolved completed status and read back successfully, or the no-op/terminal/override/blocker result was reported explicitly.
-- After every other required finalization gate succeeded, the active thread was closed through the installed ag-taskv2 CLI and verified `done`, identified as untracked, or reported with the exact absent-runtime/bookkeeping result.
 - `$ag-learn` has been run.
 - The final report states whether the context was explicit, implied by heartbeat or active task context, or auto-detected.
 - The final report includes the archived spec path change when applicable.
