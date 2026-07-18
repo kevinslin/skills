@@ -31,9 +31,9 @@ class LoadConfigTests(unittest.TestCase):
     def write_config(self, text: str) -> None:
         self.config.write_text(textwrap.dedent(text).strip() + "\n", encoding="utf-8")
 
-    def run_loader(self) -> subprocess.CompletedProcess[str]:
+    def run_loader(self, *args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["python3", str(SCRIPT_PATH), "--config", str(self.config)],
+            ["python3", str(SCRIPT_PATH), "--config", str(self.config), *args],
             text=True,
             capture_output=True,
             check=False,
@@ -197,6 +197,148 @@ class LoadConfigTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         data = json.loads(result.stdout)
         self.assertEqual(data["bases"][0]["path_style"], "directory")
+
+    def test_optional_routing_metadata_is_normalized(self) -> None:
+        self.write_config(
+            f"""
+            version: 1
+            bases:
+              - name: docs
+                description: Durable documentation notes.
+                root: {self.base}
+                aliases: [documentation, durable-docs]
+                priority: 25
+                match:
+                  topics: [configuration]
+                  artifact_kinds: [guide, runbook]
+                  source_globs: ["src/docs/**"]
+                  cwd_globs: ["*/docs"]
+                schemas:
+                  - name: tool
+            """
+        )
+
+        result = self.run_loader()
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        base = json.loads(result.stdout)["bases"][0]
+        self.assertEqual(base["aliases"], ["documentation", "durable-docs"])
+        self.assertEqual(base["priority"], 25)
+        self.assertEqual(base["match"]["topics"], ["configuration"])
+
+    def test_nearest_ancestor_and_home_configs_are_merged(self) -> None:
+        project = self.root / "project"
+        nested = project / "one" / "two"
+        home = self.root / "home"
+        project_base = self.root / "project-kb"
+        home_base = self.root / "home-kb"
+        nested.mkdir(parents=True)
+        home.mkdir()
+        project_base.mkdir()
+        home_base.mkdir()
+        (project / ".mem.yaml").write_text(
+            textwrap.dedent(
+                f"""
+                version: 1
+                bases:
+                  - name: project
+                    description: Project notes.
+                    root: {project_base}
+                    schemas:
+                      - name: tool
+                """
+            ).strip()
+            + "\n",
+            encoding="utf-8",
+        )
+        (home / ".mem.yaml").write_text(
+            textwrap.dedent(
+                f"""
+                version: 1
+                bases:
+                  - name: global
+                    description: Global notes.
+                    root: {home_base}
+                    schemas:
+                      - name: tool
+                """
+            ).strip()
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = subprocess.run(
+            [
+                "python3",
+                str(SCRIPT_PATH),
+                "--cwd",
+                str(nested),
+                "--home",
+                str(home),
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual([base["name"] for base in data["bases"]], ["project", "global"])
+        self.assertEqual(
+            data["config_paths"],
+            [
+                str((project / ".mem.yaml").resolve()),
+                str((home / ".mem.yaml").resolve()),
+            ],
+        )
+
+    def test_nearest_config_overrides_duplicate_home_base(self) -> None:
+        project = self.root / "project"
+        home = self.root / "home"
+        local_base = self.root / "local-kb"
+        global_base = self.root / "global-kb"
+        project.mkdir()
+        home.mkdir()
+        local_base.mkdir()
+        global_base.mkdir()
+        for config_path, description, root in (
+            (project / ".mem.yaml", "Local docs.", local_base),
+            (home / ".mem.yaml", "Global docs.", global_base),
+        ):
+            config_path.write_text(
+                textwrap.dedent(
+                    f"""
+                    version: 1
+                    bases:
+                      - name: docs
+                        description: {description}
+                        root: {root}
+                        schemas:
+                          - name: tool
+                    """
+                ).strip()
+                + "\n",
+                encoding="utf-8",
+            )
+
+        result = subprocess.run(
+            [
+                "python3",
+                str(SCRIPT_PATH),
+                "--cwd",
+                str(project),
+                "--home",
+                str(home),
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        base = json.loads(result.stdout)["bases"][0]
+        self.assertEqual(base["description"], "Local docs.")
+        self.assertEqual(base["root"], str(local_base.resolve()))
 
 
 if __name__ == "__main__":

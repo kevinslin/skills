@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - environment issue
 
 PATH_STYLES = {"directory", "dotted"}
 DEFAULT_PATH_STYLE = "directory"
+MATCH_FIELDS = {"topics", "artifact_kinds", "source_globs", "cwd_globs"}
 
 
 def fail(message: str) -> None:
@@ -72,15 +73,51 @@ def normalize_schema(value: Any, field: str) -> dict[str, str]:
     return normalized
 
 
-def find_config(cwd: Path, home: Path) -> Path:
-    candidates = [
-        cwd / ".mem.yaml",
-        home / ".mem.yaml",
-    ]
-    for candidate in candidates:
+def normalize_string_list(value: Any, field: str) -> list[str]:
+    if not isinstance(value, list):
+        fail(f"{field} must be a list")
+    normalized = [non_empty_string(item, f"{field}[{index}]") for index, item in enumerate(value)]
+    if len(normalized) != len(set(normalized)):
+        fail(f"{field} must not contain duplicates")
+    return normalized
+
+
+def normalize_match(value: Any, field: str) -> dict[str, list[str]]:
+    if not isinstance(value, dict):
+        fail(f"{field} must be a mapping")
+    extra_keys = set(value) - MATCH_FIELDS
+    if extra_keys:
+        joined = ", ".join(sorted(extra_keys))
+        fail(f"{field} has unsupported key(s): {joined}")
+    normalized: dict[str, list[str]] = {}
+    for key in MATCH_FIELDS:
+        if key in value:
+            normalized[key] = normalize_string_list(value[key], f"{field}.{key}")
+    if not normalized:
+        fail(f"{field} must contain at least one routing field")
+    return normalized
+
+
+def nearest_config(cwd: Path) -> Path | None:
+    current = cwd.expanduser().resolve(strict=False)
+    for directory in (current, *current.parents):
+        candidate = directory / ".mem.yaml"
         if candidate.is_file():
             return candidate
-    expected = ", ".join(str(candidate) for candidate in candidates)
+    return None
+
+
+def find_configs(cwd: Path, home: Path) -> list[Path]:
+    candidates: list[Path] = []
+    nearest = nearest_config(cwd)
+    if nearest is not None:
+        candidates.append(nearest)
+    home_config = home.expanduser().resolve(strict=False) / ".mem.yaml"
+    if home_config.is_file() and home_config not in candidates:
+        candidates.append(home_config)
+    if candidates:
+        return candidates
+    expected = f"nearest ancestor of {cwd} or {home_config}"
     fail(f"missing config: expected one of: {expected}")
 
 
@@ -178,9 +215,19 @@ def normalize_config(path: Path, require_roots: bool) -> dict[str, Any]:
             "root": str(root),
             "path_style": path_style,
             "schemas": normalized_schemas,
+            "config_path": str(path),
         }
         if "skill" in base:
             normalized["skill"] = non_empty_string(base.get("skill"), f"{label}.skill")
+        if "aliases" in base:
+            normalized["aliases"] = normalize_string_list(base["aliases"], f"{label}.aliases")
+        if "match" in base:
+            normalized["match"] = normalize_match(base["match"], f"{label}.match")
+        if "priority" in base:
+            priority = base["priority"]
+            if not isinstance(priority, int) or isinstance(priority, bool):
+                fail(f"{label}.priority must be an integer")
+            normalized["priority"] = priority
         normalized_bases.append(normalized)
 
     return {
@@ -190,14 +237,51 @@ def normalize_config(path: Path, require_roots: bool) -> dict[str, Any]:
     }
 
 
+def merge_configs(paths: list[Path], require_roots: bool) -> dict[str, Any]:
+    normalized_configs = [normalize_config(path, require_roots) for path in paths]
+    merged_bases: list[dict[str, Any]] = []
+    seen_names: set[str] = set()
+    for config in normalized_configs:
+        for base in config["bases"]:
+            if base["name"] in seen_names:
+                continue
+            seen_names.add(base["name"])
+            merged_bases.append(base)
+    return {
+        "config_path": str(paths[0]),
+        "config_paths": [str(path) for path in paths],
+        "version": 1,
+        "bases": merged_bases,
+    }
+
+
+def load_config(
+    *,
+    cwd: Path,
+    home: Path,
+    config: Path | None = None,
+    require_roots: bool = True,
+) -> dict[str, Any]:
+    paths = [config.expanduser().resolve(strict=False)] if config else find_configs(cwd, home)
+    for path in paths:
+        if not path.is_file():
+            fail(f"config does not exist: {path}")
+    return merge_configs(paths, require_roots)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config",
         type=Path,
-        help="Use a specific .mem.yaml instead of searching cwd then home.",
+        help="Use only this .mem.yaml instead of merging nearest and home configs.",
     )
-    parser.add_argument("--cwd", type=Path, default=Path.cwd(), help="Current directory to search.")
+    parser.add_argument(
+        "--cwd",
+        type=Path,
+        default=Path.cwd(),
+        help="Current directory whose nearest ancestor config should be loaded.",
+    )
     parser.add_argument("--home", type=Path, default=Path.home(), help="Home directory to search.")
     parser.add_argument(
         "--allow-missing-roots",
@@ -210,10 +294,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    config = args.config.resolve(strict=False) if args.config else find_config(args.cwd, args.home)
-    if not config.is_file():
-        fail(f"config does not exist: {config}")
-    normalized = normalize_config(config, require_roots=not args.allow_missing_roots)
+    normalized = load_config(
+        cwd=args.cwd,
+        home=args.home,
+        config=args.config,
+        require_roots=not args.allow_missing_roots,
+    )
     json.dump(normalized, sys.stdout, indent=2 if args.pretty else None)
     print()
 

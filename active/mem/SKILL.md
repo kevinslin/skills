@@ -1,6 +1,8 @@
 ---
 name: mem
-description: Manage user-defined knowledge bases when `$mem` is invoked or durable knowledge is being saved.
+description: Automatically use for explicit requests to save or retrieve durable guides,
+  runbooks, decisions, research, findings, lessons, or references, even when `$mem`
+  is not named.
 dependencies:
 - dev.llm-session
 - specy
@@ -12,18 +14,22 @@ Use this skill as a router for persistent knowledge bases. Resolve the knowledge
 
 ## Invocation Rule
 
-Invoke `$mem` whenever saving durable knowledge. Do not write durable knowledge directly to ad hoc files, repo-local `.mem` trees, Dendron notes, or other long-lived knowledge stores without first using this skill to resolve the configured base, schemas, and optional base-specific file rules.
+Invoke `$mem` whenever the user explicitly asks to save, retrieve, organize, or update durable knowledge, even when they do not name this skill. Treat requests to record, remember, capture, or document reusable guides, cookbooks, runbooks, decisions, research notes, findings, lessons, and references as `$mem` requests.
+
+Do not auto-write merely because information might be useful later. Require explicit durable-output intent or an applicable project instruction. Do not use `$mem` for transient answers or for files whose repository-owned workflow and exact destination the user already specified.
+
+Do not write durable knowledge directly to ad hoc files, repo-local `.mem` trees, Dendron notes, or other long-lived knowledge stores without first using this skill to resolve the configured base, schemas, and optional base-specific file rules.
 
 This rule applies even when another skill discovers the learning, finding, decision, or workflow improvement. The discovering skill can decide what should be remembered, but `$mem` owns where and how that knowledge is persisted.
 
 ## Configuration
 
-Resolve configuration in this order:
+Merge configuration from:
 
-1. `$PWD/.mem.yaml`
+1. The nearest `.mem.yaml` at or above `$PWD`
 2. `$HOME/.mem.yaml`
 
-If neither file exists, stop and ask where the memory configuration should live. Do not guess a root.
+Load both when present. The nearest config wins when both define the same base name; unique home bases remain available. If neither file exists, stop and ask where the memory configuration should live. Do not guess a root.
 If the user does not specify a base name, route by the configured base `description`. If no description clearly matches, prefer an exact `root` match with the working directory. If neither signal is decisive, stop and ask the user. Do not guess.
 
 Expected shape:
@@ -36,6 +42,13 @@ bases:
     root: {{path}}
     path_style: {{directory|dotted}} # optional; inferred from existing files when omitted
     skill: {{skill_name}} # optional
+    aliases: [{{string}}] # optional exact routing names
+    priority: {{integer}} # optional routing tiebreaker
+    match: # optional deterministic routing signals
+      topics: [{{string}}]
+      artifact_kinds: [{{string}}]
+      source_globs: [{{glob}}]
+      cwd_globs: [{{glob}}]
     schemas:
       - name: {{schema_name}}
         path: {{absolute_schema_file_path}} # optional
@@ -47,7 +60,7 @@ Load and validate `.mem.yaml` with the bundled parser script instead of hand-par
 python3 ./scripts/load_config.py --pretty
 ```
 
-Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script searches `$PWD/.mem.yaml`, then `$HOME/.mem.yaml`, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to the config file directory, requires roots to exist, and prints normalized JSON.
+Run the command from the directory containing this `SKILL.md`, or otherwise resolve `./scripts/load_config.py` relative to this `SKILL.md` and run that copy. The script finds the nearest ancestor config, merges it with the home config, validates the shape below, expands `~` and shell environment variables in `root`, resolves relative roots relative to each config file directory, requires roots to exist, and prints normalized JSON with config provenance.
 
 The parser enforces:
 
@@ -59,6 +72,9 @@ The parser enforces:
 - Each schema object's `path` is optional. When present, it must be an absolute path to an existing schema file.
 - `path_style` is optional; when present, it must be `directory` or `dotted`. When omitted, the parser infers it from existing Markdown files under `root` and falls back to `directory` if no convention is visible.
 - `skill` is optional; when present, it must be non-empty.
+- `aliases` is an optional unique list of exact routing names.
+- `priority` is an optional integer routing tiebreaker.
+- `match` is an optional mapping of `topics`, `artifact_kinds`, `source_globs`, and `cwd_globs` string lists.
 
 Each base has:
 
@@ -67,7 +83,10 @@ Each base has:
 - `root`: filesystem root for that knowledge base.
 - `path_style`: how schema paths map to files for this base. Use `dotted` for files such as `pkg.test.cli.md`; use `directory` for paths such as `pkg/test/cli.md`.
 - `skill`: optional skill name to load for base-specific navigation and file operations under `root`.
-- `schemas`: ordered schema objects to resolve into `$schema` definitions. `name` identifies a bundled schema when `path` is absent. `path` points to an absolute schema file when the schema is not bundled or should be loaded from a specific file. Use resolved schemas to understand the expected structure, placement, naming, frontmatter, and section format of knowledge bases in this base.
+- `aliases`: optional exact names that should route to this base.
+- `priority`: optional score used only as a routing tiebreaker.
+- `match`: optional deterministic topic, artifact, source-path, and working-directory signals.
+- `schemas`: ordered schema objects to resolve into schema definitions. `name` identifies a bundled schema when `path` is absent. `path` points to an absolute schema file when the schema is not bundled or should be loaded from a specific file. Use resolved schemas to understand the expected structure, placement, naming, frontmatter, and section format of knowledge bases in this base.
 
 The selected base `root` is the authoritative filesystem root for that operation. Optional base skills must consume this selected root and the resolved schemas as context; they should not reinterpret their own independent root variables when `mem` has already selected a base.
 
@@ -77,27 +96,26 @@ The selected base `root` is the authoritative filesystem root for that operation
    - `add this finding to $mem {{knowledge_base}}`: add or update knowledge.
    - `look in $mem {{knowledge_base}}`: search/read knowledge.
    - `delete from $mem {{knowledge_base}}`: delete only when the user is explicit about what to remove.
-2. Load `.mem.yaml` by running `./scripts/load_config.py`; use the normalized JSON output for base selection and root paths.
+2. Load merged `.mem.yaml` configuration by running `./scripts/load_config.py`; use the normalized JSON output for base selection, root paths, and config provenance.
 3. Select a base:
    - If the knowledge-base target starts with `{{base.name}}/`, select that base and treat the remainder as the knowledge-base path or query.
    - If the knowledge-base target exactly matches a base name, select that base and operate at the base root.
-   - If the user does not name a base, compare the request intent with each base's `description`; select the base only when one description clearly matches the operation.
-   - If no description is decisive and one base has `root` equal to the working directory, select that base.
-   - If only one base exists, select it.
-   - If multiple bases match or none can be inferred, ask which base to use.
+   - Otherwise run `python3 ./scripts/route.py --query "{{request intent}}" --pretty`, adding `--source`, `--artifact-kind`, or `--target` when known.
+   - Treat `status: selected` as the route and retain its reasons for auditability.
+   - Treat `status: ambiguous` or `status: no_match` as a request for user clarification; do not silently choose the first candidate.
 4. Normalize and constrain any file-like knowledge-base target:
    - Expand only the selected base `root`; do not expand shell syntax inside the user-provided knowledge-base target.
    - Resolve the final candidate path after `..`, symlinks, and relative segments.
    - Reject the operation if the resolved candidate is outside the selected base `root`.
    - Do not follow user-provided absolute paths unless the resolved path is inside the selected base `root`.
-5. Resolve every schema object in the selected base's `schemas` list to `$schema` definitions before creating, reading, updating, deleting, or summarizing knowledge bases.
+5. Resolve every schema object in the selected base's `schemas` list to schema definitions before creating, reading, updating, deleting, or summarizing knowledge bases.
    - Treat schema entries as objects with `name` and optional `path`.
    - If `path` is present, load the schema from that absolute file path and use `name` as its local identifier.
    - If `path` is absent, resolve `name` as a bundled schema identifier.
-   - Use the resolved `$schema` definitions to determine knowledge base structure, required fields, naming, placement, and update style.
+   - Use the resolved schema definitions to determine knowledge base structure, required fields, naming, placement, and update style.
    - If resolved schemas conflict with each other, ask the user which schema should govern the write before making changes.
    - If the schemas conflict with the optional base skill's file-operation rules, follow the base skill for how to touch files and the schemas for what knowledge base content should look like.
-6. If the selected base has `skill`, load that skill with the selected base name, selected base `root`, knowledge-base target, and resolved `$schema` definitions as the operating context. If `skill` is absent, use normal file/search tools constrained to `root`.
+6. If the selected base has `skill`, load that skill with the selected base name, selected base `root`, knowledge-base target, and resolved schema definitions as the operating context. If `skill` is absent, use normal file/search tools constrained to `root`.
 7. Choose the schema node before writing:
    - If the knowledge-base target maps to a file path, match that path to the nearest resolved schema node first.
    - If the user references an existing numbered spec folder such as `spec 30`, `spec 30/foo`, or "under spec 30", resolve that reference against existing spec folders under the selected base root before choosing a new destination. Treat the matched spec folder as the container for sidecars instead of minting a new numbered spec.
@@ -130,12 +148,12 @@ When a protected manual-notes section exists:
 
 ## Specy Ending Sections
 
-When creating or updating Markdown knowledge notes, apply the `../specy/SKILL.md` Required Ending Sections contract unless the selected schema template explicitly specifies a different changelog shape.
+When creating or updating Markdown knowledge notes, apply the `$specy` Required Ending Sections contract unless the selected schema template explicitly specifies a different changelog shape.
 
 - Ensure each revised note ends with `## Manual Notes` followed by the exact preservation marker, then `## Changelog`.
 - If the note already has `## Manual Notes`, preserve that section body byte-for-byte and place changelog edits outside it.
 - Append one concise changelog entry for each `$mem` write in this shape: `- YYYY-MM-DD HH:MM: description of update (agent session id - current git sha)`.
-- Use the current local date and time to the minute. Resolve the active session id with `../dev.llm-session/SKILL.md`; prefer the active thread/session id when available and do not leave placeholders such as `[agent session id]` or `[codex session id]`.
+- Use the current local date and time to the minute. Resolve the active session id with `$dev.llm-session`; prefer the active thread/session id when available and do not leave placeholders such as `[agent session id]` or `[codex session id]`.
 - Use the current git SHA for the repository or worktree that owns the knowledge note when available. If the note is outside a git worktree, write `no-git-sha` rather than inventing a value.
 
 ## Finding Knowledge Bases
@@ -145,7 +163,7 @@ Treat the knowledge-base argument as either a file-like target or a search query
 - If it looks like a path, title, or exact knowledge base name, search under the selected base root for a matching file before creating anything.
 - If it is broad or ambiguous, search filenames first, then headings and body text.
 - Prefer updating an existing knowledge base over creating a near-duplicate.
-- If creating a new knowledge base, follow the optional selected base skill's file rules when configured and the resolved `$schema` definitions' naming, placement, frontmatter, and structure conventions.
+- If creating a new knowledge base, follow the optional selected base skill's file rules when configured and the resolved schema definitions' naming, placement, frontmatter, and structure conventions.
 - Create only the specific knowledge file needed for the request. Avoid schema scaffold generation that leaves placeholder files such as default navfiles, architecture docs, specs, recipes, or vendor docs.
 
 ## Adding Knowledge
@@ -153,7 +171,7 @@ Treat the knowledge-base argument as either a file-like target or a search query
 When adding a finding:
 
 - Preserve the knowledge base's existing format and organization.
-- Choose the schema node before writing, then shape new or updated content according to the resolved `$schema` definitions.
+- Choose the schema node before writing, then shape new or updated content according to the resolved schema definitions.
 - If another invoked skill proposes a default structure or template, treat that as content guidance only. The selected `$mem` schema node still owns the destination path and the required document shape.
 - When the selected file does not exist, create that file directly from the selected node's expected template/sections. Do not initialize the rest of the schema around it.
 - If the selected node is a sidecar under an existing folder-based unit, preserve the existing spec folder. For example, adding `specs/reports/{{report}}` under `specs/{NN}-{slug}/` must leave that spec folder present and authoritative.
@@ -179,7 +197,7 @@ When looking in a knowledge base:
 
 - Search before answering.
 - Read the most relevant matching files.
-- Use the resolved `$schema` definitions to interpret fields, sections, and relationships.
+- Use the resolved schema definitions to interpret fields, sections, and relationships.
 - Summarize what the knowledge base says, not what you assume.
 - Cite exact local files and line numbers when the surrounding agent instructions require file citations.
 
