@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Integration tests for the schemas CLI."""
+"""Integration tests for the schema engine embedded in mem."""
 
 from __future__ import annotations
 
@@ -21,8 +21,8 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        self.skill_dir = self.root / "schemas"
-        self.references_dir = self.skill_dir / "references"
+        self.skill_dir = self.root / "mem"
+        self.references_dir = self.skill_dir / "references" / "schemas"
         self.script = self.skill_dir / "scripts" / "schema"
         self.script.parent.mkdir(parents=True)
         shutil.copyfile(SCRIPT_PATH, self.script)
@@ -39,7 +39,7 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             (schema_dir / template_name).write_text(textwrap.dedent(template).strip() + "\n", encoding="utf-8")
 
     def install_prod_schema(self, name: str) -> None:
-        shutil.copytree(REAL_SKILL_DIR / "references" / name, self.references_dir / name)
+        shutil.copytree(REAL_SKILL_DIR / "references" / "schemas" / name, self.references_dir / name)
 
     def install_fixture_schema(self, name: str) -> None:
         shutil.copytree(TEST_DIR / "fixtures" / name, self.references_dir / name)
@@ -700,6 +700,11 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         self.assertIn("- ref: References for facts", describe_result.stdout)
         self.assertIn("- ref/{{reference}}: Reference for a fact", describe_result.stdout)
         self.assertIn("- t: Topics for domain entities", describe_result.stdout)
+
+        validate_result = self.run_schema("validate", "global-core")
+
+        self.assertEqual(validate_result.returncode, 0, msg=validate_result.stderr)
+        self.assertIn("global-core\tvalid\t", validate_result.stdout)
         self.assertIn("- t/{{topic}}: Topic for a domain entity", describe_result.stdout)
 
         out = self.root / "out"
@@ -735,6 +740,48 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             "Topic for a domain entity",
             (out / "t" / "account.md").read_text(encoding="utf-8"),
         )
+
+    def test_ag_dir_schema_materializes_project_and_run_notes(self) -> None:
+        self.install_prod_schema("ag-dir")
+
+        show_result = self.run_schema("show", "ag-dir")
+
+        self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
+        self.assertIn("    |-- design\n", show_result.stdout)
+        self.assertIn("    `-- .agents\n", show_result.stdout)
+
+        out = self.root / "out"
+        result = self.run_schema(
+            "materialize",
+            "ag-dir",
+            "--out",
+            str(out),
+            "--path-style",
+            "directory",
+            "--var",
+            "project_title=Example Project",
+            "--var",
+            "spec_num=01",
+            "--var",
+            "spec_name=bootstrap",
+            "--include",
+            "design",
+            "--include",
+            "docs/spec-01-bootstrap",
+            "--include",
+            ".agents/runs/spec-01/handoff",
+            "--include",
+            ".agents/runs/spec-01/progress",
+            "--include",
+            ".agents/runs/spec-01/learnings",
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("Example Project Design", (out / "design.md").read_text(encoding="utf-8"))
+        self.assertTrue((out / "docs" / "spec-01-bootstrap.md").is_file())
+        self.assertTrue((out / ".agents" / "runs" / "spec-01" / "handoff.md").is_file())
+        self.assertTrue((out / ".agents" / "runs" / "spec-01" / "progress.md").is_file())
+        self.assertTrue((out / ".agents" / "runs" / "spec-01" / "learnings.md").is_file())
 
 
 if __name__ == "__main__":

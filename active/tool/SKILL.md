@@ -3,14 +3,14 @@ name: tool
 description: Install or document local command-line tools end to end.
 dependencies:
 - dendron
-- schemas
+- mem
 ---
 
 # Tool
 
 ## Overview
 
-Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then use the `schemas` skill to initialize and update the schema-defined Dendron note set rooted at `[[<prefix>.<name>]]` with concise install and usage guidance.
+Handle local tool onboarding in one pass: either install the tool with the best available package manager for the host and verify it, or document the tool without installing it, then use `$mem schema` to initialize and update the schema-defined Dendron note set rooted at `[[<prefix>.<name>]]` with concise install and usage guidance.
 
 Require the user to choose the root prefix explicitly. The only valid prefixes are `vpkg` and `pkg`. If the request does not specify one, ask which prefix to use before creating or updating notes.
 
@@ -33,7 +33,7 @@ Also use this workflow for equivalent requests such as:
 - "install delta and use the pkg prefix"
 - "set up uv locally"
 - "install ripgrep and document it"
-- Read [references/install.md](./references/install.md) and follow it.
+- Read the [install workflow](./references/install.md) and follow it.
 
 ### document
 
@@ -50,13 +50,13 @@ Also use this workflow for equivalent requests such as:
 - "create a vpkg note set for uv"
 - "create a pkg note set for uv"
 - "fill out the ripgrep note template without installing it"
-- Read [references/document.md](./references/document.md) and follow it.
+- Read the [document workflow](./references/document.md) and follow it.
 
 ## Dendron Note Rules
 
 - `<prefix>` must come from the user and must be either `vpkg` or `pkg`. Do not guess or silently default.
-- Before creating, auditing, or materializing notes, read and follow `../schemas/SKILL.md` for the `tool` schema.
-- Treat `schemas` as the source of truth for note paths, required files, optional namespaces, templates, insertion routing, and materialization.
+- Before creating, auditing, or materializing notes, read the `$mem` schema workflow for the `tool` schema.
+- Treat `$mem schema` as the source of truth for note paths, required files, optional namespaces, templates, insertion routing, and materialization.
 - Prefer the executable name for the root note when that is what the user will type, unless the package name is the clearer long-term identifier.
 - Standardize title casing in frontmatter title, but keep file names lowercase.
 - When updating an existing note, refresh `last_refreshed` and `last_refreshed_by` in frontmatter along with the note content you changed.
@@ -89,7 +89,7 @@ the expected flow is:
 1. Confirm the official upstream project and install guidance.
 2. On macOS with Homebrew available, install the package `git-delta`.
 3. Verify the executable `delta` with `command -v delta` and `delta --version`.
-4. Follow `../schemas/SKILL.md` to materialize missing `tool` schema notes for `vpkg.delta`.
+4. Use `$mem schema` to materialize missing `tool` schema notes for `vpkg.delta`.
 5. Use the `dendron` skill to update the materialized notes from verified local behavior and official sources.
 6. Create optional note branches only if the user is digging into a specific topic, reference, or API surface.
 

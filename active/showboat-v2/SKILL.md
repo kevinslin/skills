@@ -3,7 +3,6 @@ name: showboat-v2
 description: Create schema-backed Showboat integration proofs with scenario summaries, raw artifacts, and replayable verification.
 dependencies:
   - mem
-  - schemas
 ---
 
 # Showboat V2
@@ -12,9 +11,9 @@ dependencies:
 
 Use this skill when the user wants an executable Showboat proof that also has a durable, structured proof directory. It is for live integration or behavior proof, not for wrapping an existing unit test run as the whole proof.
 
-Use `../schemas/SKILL.md` to inspect and materialize the directory structure before writing proof content. Prefer the bundled `integ-proof` schema when the user does not name another schema.
+Use `$mem schema` to inspect and materialize the directory structure before writing proof content. Prefer the bundled `integ-proof` schema when the user does not name another schema.
 
-Before writing a durable proof directory or any long-lived proof artifact, invoke `../mem/SKILL.md` to resolve the intended knowledge base, root, schemas, and file rules. Do this because the memory root may be any configured path, not necessarily a directory named `.mem`. Only write outside `$mem` when the artifact is explicitly temporary, repo-owned source/docs, or the user names a concrete non-memory destination.
+Before writing a durable proof directory or any long-lived proof artifact, invoke `$mem` to resolve the intended knowledge base, root, schemas, and file rules. Do this because the memory root may be any configured path, not necessarily a directory named `.mem`. Only write outside `$mem` when the artifact is explicitly temporary, repo-owned source/docs, or the user names a concrete non-memory destination.
 
 ## Workflow
 
@@ -23,14 +22,15 @@ Before writing a durable proof directory or any long-lived proof artifact, invok
 3. Read the schema before materializing:
 
 ```bash
-../schemas/scripts/schema.py show integ-proof
+../mem/scripts/mem.py schema show integ-proof
 ```
 
 4. Materialize the root proof file and each scenario file with explicit includes:
 
 ```bash
-../schemas/scripts/schema.py materialize integ-proof \
-  --out <proofs-root> \
+../mem/scripts/mem.py schema materialize integ-proof \
+  --base <selected-base> \
+  --root-relative <proofs-root-relative-path> \
   --var proof=<proof-slug> \
   --var scenario=<scenario-slug> \
   --include <proof-slug>/proof \
@@ -101,7 +101,7 @@ Omit or mark `Config` as not applicable only when the scenario genuinely has no 
 
 ## Proof Rules
 
-- The proof directory shape comes from `schemas`; do not invent a parallel layout when a schema exists.
+- The proof directory shape comes from `$mem schema`; do not invent a parallel layout when a schema exists.
 - The Showboat document proves replayable behavior. Scenario files explain what each scenario means and link to the relevant raw artifacts.
 - Raw, nondeterministic output should not be embedded directly in a Showboat command block that must verify later. Store raw output separately and capture a deterministic summary command in Showboat.
 - Redact secrets, credentials, account identifiers, and private tokens before writing any artifact.

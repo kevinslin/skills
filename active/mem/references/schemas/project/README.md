@@ -2,11 +2,11 @@
 
 Source: `schema.yaml`
 
-Regenerate this view from the schemas skill root:
+Regenerate this view from this schema directory:
 
 ```bash
-UV_CACHE_DIR=/private/tmp/uv-cache ./scripts/schema.py show project
-UV_CACHE_DIR=/private/tmp/uv-cache ./scripts/schema.py describe project
+python3 ../../../scripts/mem.py schema show project
+python3 ../../../scripts/mem.py schema describe project
 ```
 
 ```text

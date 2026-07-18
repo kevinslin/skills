@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
-REFERENCES_DIR = SKILL_DIR / "references"
+REFERENCES_DIR = SKILL_DIR / "references" / "schemas"
 DEFAULT_TEMPLATE = "default"
 PLACEHOLDER_RE = re.compile(r"{{\s*([A-Za-z_][A-Za-z0-9_]*)\s*}}")
 PathStyle = Literal["directory", "dotted"]
@@ -277,7 +277,7 @@ def validate_variables(document: SchemaDocument, values: dict[str, str]) -> dict
 
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     context.setdefault("last_refreshed", now)
-    context.setdefault("last_refreshed_by", "codex/schemas")
+    context.setdefault("last_refreshed_by", "codex/mem")
     return context
 
 
@@ -609,12 +609,13 @@ def materialize(
     destination: Path,
     values: dict[str, str],
     *,
+    explicit_schema_path: Path | None = None,
     overwrite: bool,
     skip_existing: bool,
     includes: list[str],
     path_style: PathStyle | None,
 ) -> list[Path]:
-    schema_path = schema_path_for_name(schema_name)
+    schema_path = explicit_schema_path.resolve() if explicit_schema_path else schema_path_for_name(schema_name)
     schema_dir, document = load_schema_file(schema_path)
     resolved_path_style = path_style or infer_path_style(destination, includes, document.output.file_extension)
     include_paths = parse_include_paths(includes, resolved_path_style)
@@ -641,7 +642,7 @@ def materialize(
         if target.exists() and not overwrite:
             raise FileExistsError(f"refusing to overwrite existing file: {target}")
 
-        with tempfile.TemporaryDirectory(prefix="schemas-copier-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="mem-schema-copier-") as tmp:
             source = Path(tmp) / "template"
             source.mkdir()
             (source / "copier.yml").write_text("_answers_file: .copier-answers.yml\n")
@@ -755,8 +756,8 @@ def print_descriptions(
         print(f"- {path}: {description}")
 
 
-def show_schema(schema_name: str) -> int:
-    schema_path = schema_path_for_name(schema_name)
+def show_schema(schema_name: str, explicit_schema_path: Path | None = None) -> int:
+    schema_path = explicit_schema_path.resolve() if explicit_schema_path else schema_path_for_name(schema_name)
     schema_dir, document = load_schema_file(schema_path)
     extension = document.output.file_extension or "<template>"
     print(f"{schema_name} [version={document.version} extension={extension}]")
@@ -776,12 +777,28 @@ def show_schema(schema_name: str) -> int:
     return 0
 
 
-def describe_schema(schema_name: str) -> int:
-    schema_path = schema_path_for_name(schema_name)
+def describe_schema(schema_name: str, explicit_schema_path: Path | None = None) -> int:
+    schema_path = explicit_schema_path.resolve() if explicit_schema_path else schema_path_for_name(schema_name)
     schema_dir, document = load_schema_file(schema_path)
     descriptions = collect_descriptions(document.tree, schema_dir=schema_dir, schema_stack=(schema_path,))
     print_descriptions(descriptions)
     return 0
+
+
+def validate_schema(schema_name: str, explicit_schema_path: Path | None = None) -> int:
+    schema_path = explicit_schema_path.resolve() if explicit_schema_path else schema_path_for_name(schema_name)
+    schema_dir, document = load_schema_file(schema_path)
+    collect_descriptions(document.tree, schema_dir=schema_dir, schema_stack=(schema_path,))
+    print(f"{schema_name}\tvalid\t{schema_path}")
+    return 0
+
+
+def add_schema_path_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--schema-path",
+        type=Path,
+        help="Use an explicit schema.yaml file instead of the bundled schema name.",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -795,12 +812,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     show = subparsers.add_parser("show", help="Show a schema tree.")
     show.add_argument("schema")
+    add_schema_path_argument(show)
 
     describe = subparsers.add_parser("describe", help="Show schema descriptions as Markdown bullets.")
     describe.add_argument("schema")
+    add_schema_path_argument(describe)
+
+    validate = subparsers.add_parser("validate", help="Validate a schema and its composed children.")
+    validate.add_argument("schema")
+    add_schema_path_argument(validate)
 
     materialize_parser = subparsers.add_parser("materialize", help="Materialize a schema into an output directory.")
     materialize_parser.add_argument("schema")
+    add_schema_path_argument(materialize_parser)
     materialize_parser.add_argument("--out", required=True, type=Path, help="Output directory.")
     materialize_parser.add_argument("--var", action="append", default=[], help="Template variable in key=value form.")
     materialize_parser.add_argument(
@@ -827,9 +851,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "list":
             return list_schemas()
         if args.command == "show":
-            return show_schema(args.schema)
+            return show_schema(args.schema, args.schema_path)
         if args.command == "describe":
-            return describe_schema(args.schema)
+            return describe_schema(args.schema, args.schema_path)
+        if args.command == "validate":
+            return validate_schema(args.schema, args.schema_path)
         if args.command == "materialize":
             if args.overwrite and args.skip_existing:
                 raise ValueError("use either --overwrite or --skip-existing, not both")
@@ -838,6 +864,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.schema,
                 args.out.resolve(),
                 values,
+                explicit_schema_path=args.schema_path,
                 overwrite=args.overwrite,
                 skip_existing=args.skip_existing,
                 includes=args.include,

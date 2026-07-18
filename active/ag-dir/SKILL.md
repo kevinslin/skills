@@ -4,7 +4,7 @@ description: Create or audit Agent Project Directory docs and status structure.
 dependencies:
 - ag-ledger
 - dev.shortcuts
-- schemas
+- mem
 - specy
 ---
 
@@ -14,12 +14,12 @@ Use this skill when creating, auditing, or updating a durable AG directory (AGD)
 
 ## Canonical Layout
 
-Use `$schemas` and the bundled `ag-dir` schema as the source of truth for layout,
+Use `$mem schema` and the bundled `ag-dir` schema as the source of truth for layout,
 boilerplate, file descriptions, insertion routing, and template sections. Inspect the
 schema before creating or auditing an AGD:
 
 ```bash
-../schemas/scripts/schema.py show ag-dir
+../mem/scripts/mem.py schema show ag-dir
 ```
 
 When this skill and the schema disagree, prefer the schema and update stale skill text
@@ -27,35 +27,49 @@ rather than inventing a third layout.
 
 ## Materialization
 
-Use `$schemas` to create missing AGD notes instead of hand-writing boilerplate.
+Use `$mem schema` to create missing AGD notes instead of hand-writing boilerplate.
 
 Create or backfill the AGD skeleton:
 
 ```bash
-../schemas/scripts/schema.py materialize ag-dir \
+../mem/scripts/mem.py schema materialize ag-dir \
   --out "$ROOT_DIR" \
+  --unmanaged \
   --var project_title="Example Project" \
   --var spec_num=01 \
   --var spec_name=bootstrap \
+  --include design \
+  --include memory \
+  --include progress \
+  --include docs/spec-01-bootstrap \
+  --include .agents/runs/spec-01/handoff \
+  --include .agents/runs/spec-01/progress \
+  --include .agents/runs/spec-01/learnings \
   --skip-existing
 ```
 
 Add a new active spec plus matching run notes to an existing AGD:
 
 ```bash
-../schemas/scripts/schema.py materialize ag-dir \
+../mem/scripts/mem.py schema materialize ag-dir \
   --out "$ROOT_DIR" \
+  --unmanaged \
   --var project_title="Example Project" \
   --var spec_num=02 \
   --var spec_name=workflow-cleanup \
+  --include docs/spec-02-workflow-cleanup \
+  --include .agents/runs/spec-02/handoff \
+  --include .agents/runs/spec-02/progress \
+  --include .agents/runs/spec-02/learnings \
   --skip-existing
 ```
 
 Materialize an archived spec note only when you explicitly need the optional archive branch:
 
 ```bash
-../schemas/scripts/schema.py materialize ag-dir \
+../mem/scripts/mem.py schema materialize ag-dir \
   --out "$ROOT_DIR" \
+  --unmanaged \
   --var project_title="Example Project" \
   --var spec_num=02 \
   --var spec_name=workflow-cleanup \
@@ -67,7 +81,7 @@ Materialize an archived spec note only when you explicitly need the optional arc
 
 ## Operating Rules
 
-1. Use `$schemas` with the `ag-dir` schema to inspect layout or materialize missing notes before creating new boilerplate by hand.
+1. Use `$mem schema` with the `ag-dir` schema to inspect layout or materialize missing notes before creating new boilerplate by hand.
 2. Create matching run notes when adding a new active spec.
 3. Keep `memory.md` concise and durable; remove stale hypotheses once resolved.
 4. Keep active spec numbering stable (`spec-01`, `spec-02`, ...). Avoid renaming active specs.
@@ -75,7 +89,7 @@ Materialize an archived spec note only when you explicitly need the optional arc
 
 ## Recommended Workflow
 
-1. Inspect `ag-dir` with `$schemas` to confirm the current layout.
+1. Inspect `ag-dir` with `$mem schema` to confirm the current layout.
 2. Materialize the AGD skeleton into the target directory with `--skip-existing`.
 3. Draft `design.md`.
 4. Add one or more active feature specs in `docs/`.
@@ -95,7 +109,7 @@ Write or refresh `.agents/runs/spec-{num}/handoff.md` for the requested spec.
 
 1. Normalize `[spec]` from forms like `spec14`, `spec-14`, or `14` to the folder name `spec-14`.
 2. Locate the matching active spec file under `docs/` using `docs/spec-{num}-*.md`.
-3. If `.agents/runs/spec-{num}/` or `handoff.md` is missing, materialize the missing run notes with `$schemas`. Reuse the slug from the matching `docs/spec-{num}-<name>.md` file as `spec_name`.
+3. If `.agents/runs/spec-{num}/` or `handoff.md` is missing, materialize the missing run notes with `$mem schema`. Reuse the slug from the matching `docs/spec-{num}-<name>.md` file as `spec_name`.
 4. Read the current spec, relevant run notes, and recent workspace changes before writing.
 5. Write the handoff doc at `.agents/runs/spec-{num}/handoff.md` using the existing template sections.
 6. Replace placeholders with concrete current-state information; do not leave the handoff note as boilerplate.
@@ -105,7 +119,7 @@ Write or refresh `.agents/runs/spec-{num}/handoff.md` for the requested spec.
 Write or refresh `.agents/runs/spec-{num}/progress.md` for the requested spec.
 
 1. Normalize `[spec]` to `spec-{num}`.
-2. Ensure the run-note directory exists; if not, materialize it with `$schemas` using the matching `docs/spec-{num}-*.md` slug.
+2. Ensure the run-note directory exists; if not, materialize it with `$mem schema` using the matching `docs/spec-{num}-*.md` slug.
 3. Read the active spec plus recent work artifacts.
 4. Update `.agents/runs/spec-{num}/progress.md` with the current state, next steps, and any spec-local notes.
 
@@ -114,6 +128,6 @@ Write or refresh `.agents/runs/spec-{num}/progress.md` for the requested spec.
 Write or refresh `.agents/runs/spec-{num}/learnings.md` for the requested spec.
 
 1. Normalize `[spec]` to `spec-{num}`.
-2. Ensure the run-note directory exists; if not, materialize it with `$schemas` using the matching `docs/spec-{num}-*.md` slug.
+2. Ensure the run-note directory exists; if not, materialize it with `$mem schema` using the matching `docs/spec-{num}-*.md` slug.
 3. Read the active spec plus the latest implementation or investigation evidence.
 4. Update `.agents/runs/spec-{num}/learnings.md` with concrete takeaways using the existing template sections.

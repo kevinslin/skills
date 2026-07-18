@@ -2,11 +2,12 @@
 name: sw-loop
 description: Run explicitly requested swarm workflows for feature delivery.
 dependencies:
+- babysit-pr
 - dev.loop
 - dev.review
 - dev.shortcuts
 - mem
-- schemas
+- slack-notify
 - specy
 - sw-ctrl
 ---
@@ -37,7 +38,7 @@ changes.
 
 - Create a swarm checklist before starting the loop.
 - Before writing any durable spec, checklist, flow doc, proof, review artifact, runbook, or long-lived project note, invoke `$mem` to resolve the intended base, root, schemas, and file rules. Do this by artifact intent, not by path shape: `$mem` roots may be anywhere and may not contain `.mem`.
-- Store the checklist in the active spec folder when using `schemas` `specs`.
+- Store the checklist in the active spec folder when using `$mem schema` `specs`.
 - Store the checklist in a temporary folder for all other workflows.
 - Include every required gate: spec, spec review, implementation, review swarm,
   review fixes, verification, implementation flow doc, PR push, and any
@@ -132,7 +133,7 @@ or unclear ownership, bubble it up for human review instead of guessing.
 - Before running `trigger:push-pr`, create or update a `$specy` `flow-doc` for
   the primary logic path exercised by the implementation.
 - Resolve the durable flow-doc target through `$mem` before writing. Store it in
-  the `$mem`-resolved active spec folder when using `schemas` `specs`, otherwise
+  the `$mem`-resolved active spec folder when using `$mem schema` `specs`, otherwise
   use the resolved base and flow-doc route.
 - The flow doc must describe the changed request path, entry points, key
   state/config transitions, exit behavior, and validation/proof hooks.

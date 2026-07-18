@@ -34,7 +34,7 @@ Use this path when the user wants the note and guidance but does not want a loca
 ### 3. Create or update the Dendron note set
 
 - Use the `dendron` skill for vault discovery, note placement, and note editing.
-- Read and follow `../schemas/SKILL.md` for the `tool` schema before materializing notes.
+- Read and follow `$mem`'s schema workflow for the `tool` schema before materializing notes.
 - Reuse existing notes if present; do not create duplicates.
 - Create optional note branches only when the documentation task benefits from a dedicated topic, reference, or API note.
 - Refresh `last_refreshed` and `last_refreshed_by` whenever you update an existing note.
