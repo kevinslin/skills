@@ -1,7 +1,15 @@
 ---
 name: dev.shortcuts
-description: Resolve explicit shortcut triggers and usage. Always read this file at the start of a thread or when user mentions `trigger`.
-dependencies: [dev.review, oai-push, spec-simulate, specy]
+description: Resolve explicit shortcut triggers and usage. Always read this file at
+  the start of a thread or when user mentions `trigger`.
+dependencies:
+- agtask
+- babysit-pr
+- branch
+- dev.review
+- oai-push
+- spec-simulate
+- specy
 ---
 
 ## Context
@@ -31,6 +39,7 @@ The file under `./references/shortcuts/[shortcut].md` remains the executable sou
 | `auto-merge` | Run `push-pr`, then `merge-pr-basic`. |
 | `check-ci` | Watch PR checks and classify Buildkite failures before reporting status. |
 | `checkout-worktree` | Use `arbor checkout` from the main checkout with an explicit worktree path, then verify cleanup. |
+| `close` | Close the tracked task, then archive its Codex thread. |
 | `commit-code` | Run the canonical precommit flow, commit cleanly, and update the PR if one exists. |
 | `create-spec` | Create a spec with `specy`, then run looped `dev.review` and `spec-simulate` passes on it. |
 | `fix-pr-conflict` | Rebase the current PR branch onto its base branch, resolve conflicts, and force-push. |

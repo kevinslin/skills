@@ -5,7 +5,7 @@ Collection of LLM agent [skills](https://platform.claude.com/docs/en/agents-and-
 - [specy](active/specy/SKILL.md): Write flow docs and other useful doc types.
 - [dev.review](active/dev.review/SKILL.md): Code review, slop review, spec review, and other review passes.
 - [sw-loop](active/sw-loop/SKILL.md): Devloop with subagents and loops on review.
-- [dev.shortcuts](active/dev.shortcuts/SKILL.md): Triggers for workflows like push code, loop, and PR.
+- [dev.shortcuts](active/dev.shortcuts/SKILL.md): Triggers for workflows like closing and archiving tasks, pushing code, loops, and PRs.
 - [ag-learn](active/ag-learn/SKILL.md): Automatically improve skills based on conversation sessions.
 
 ## Conventions
@@ -64,7 +64,7 @@ Example:
 - [dev.llm-session](active/dev.llm-session/SKILL.md): Derive Codex CLI session IDs and resume interactive sessions. Use when asked to resume Codex sessions, find or map session IDs, inspect ~/.codex/history.jsonl or ~/.codex/sessions, or troubleshoot Codex resume behavior.
 - [dev.loop](active/dev.loop/SKILL.md): Drive a development task end-to-end from a user-stated goal through planning, context gathering, execution, verification. Use when the user asks to run a devloop, drive a task to completion, or wants a plan-gather-execute-verify workflow with phased commits and CI verification. Also use if user asks to invoke any individual phase of the devloop
 - [dev.review](active/dev.review/SKILL.md): Multi-type review skill for code, developer docs, design docs/specs, architecture, UX, and other reviews, including contract and complexity checks for implementation specs. Use when the user asks for a review or critique (code review, docs review, design doc review, spec review, PR review).
-- [dev.shortcuts](active/dev.shortcuts/SKILL.md): Mandatory shortcut trigger and usage guidance. ALWAYS check if shortcut applies before responding to ANY coding or development request.
+- [dev.shortcuts](active/dev.shortcuts/SKILL.md): Resolve explicit `trigger:<name>` workflows, including `trigger:close` for closing a tracked task before archiving its Codex thread.
 - [dev.worktrees](active/dev.worktrees/SKILL.md): Create and inspect Git worktrees, remove already-clean targets conservatively, and transactionally clean one proven-landed worktree and local branch with exact commit identity, dry-run-first execution, resumable journaling, and strict postconditions.
 - [fin](active/fin/SKILL.md): Finalize a completed task through a selected `gh` or `local` landing flow, archive the matching spec, verify the local base and final hooks, delegate proven-landed cleanup to `dev.worktrees`, complete an exactly linked pending Linear issue, and run `ag-learn`.
 - [linear](active/linear/SKILL.md): Manage Linear issues, projects, comments, and team workflows with the `linear-cli` terminal client. Use when the user invokes `linear`, asks to work in Linear from the terminal, or wants issue/project reads or updates performed through `linear-cli` rather than a plugin or SDK.
