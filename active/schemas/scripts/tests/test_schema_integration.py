@@ -680,12 +680,14 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             (out / "reports" / "security-review.md").read_text(encoding="utf-8"),
         )
 
-    def test_global_core_schema_shows_and_materializes_reference_and_topic(self) -> None:
+    def test_global_core_schema_shows_and_materializes_guide_reference_and_topic(self) -> None:
         self.install_prod_schema("global-core")
 
         show_result = self.run_schema("show", "global-core")
 
         self.assertEqual(show_result.returncode, 0, msg=show_result.stderr)
+        self.assertIn("    |-- cook\n", show_result.stdout)
+        self.assertIn("    |   `-- {{cook}}\n", show_result.stdout)
         self.assertIn("    |-- ref\n", show_result.stdout)
         self.assertIn("    |   `-- {{reference}}\n", show_result.stdout)
         self.assertIn("    `-- t\n", show_result.stdout)
@@ -693,6 +695,8 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         describe_result = self.run_schema("describe", "global-core")
 
         self.assertEqual(describe_result.returncode, 0, msg=describe_result.stderr)
+        self.assertIn("- cook: Task-oriented guides", describe_result.stdout)
+        self.assertIn("- cook/{{cook}}: Guide for completing", describe_result.stdout)
         self.assertIn("- ref: References for facts", describe_result.stdout)
         self.assertIn("- ref/{{reference}}: Reference for a fact", describe_result.stdout)
         self.assertIn("- t: Topics for domain entities", describe_result.stdout)
@@ -705,9 +709,13 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
             "--out",
             str(out),
             "--var",
+            "cook=configure-slack",
+            "--var",
             "reference=shared-fact",
             "--var",
             "topic=account",
+            "--include",
+            "cook/configure-slack",
             "--include",
             "ref/shared-fact",
             "--include",
@@ -715,6 +723,10 @@ class SchemaScriptIntegrationTests(unittest.TestCase):
         )
 
         self.assertEqual(materialize_result.returncode, 0, msg=materialize_result.stderr)
+        self.assertIn(
+            "## Guide",
+            (out / "cook" / "configure-slack.md").read_text(encoding="utf-8"),
+        )
         self.assertIn(
             "Reference for a fact",
             (out / "ref" / "shared-fact.md").read_text(encoding="utf-8"),

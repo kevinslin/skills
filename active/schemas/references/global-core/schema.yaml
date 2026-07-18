@@ -2,6 +2,10 @@ version: 1.0
 output:
   file_extension: md
 variables:
+  cook:
+    values: ["*"]
+    default: guide
+    description: Task-oriented guide slug.
   reference:
     values: ["*"]
     default: reference
@@ -11,6 +15,13 @@ variables:
     default: topic
     description: Domain entity topic slug.
 schema:
+  cook:
+    description: Task-oriented guides for completing workflows.
+    children:
+      "{{cook}}":
+        description: Guide for completing a specific workflow.
+        template: cook
+        dynamic_child: true
   ref:
     description: References for facts that might not fit within a topic or might fit across multiple topics.
     children:
