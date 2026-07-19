@@ -2,6 +2,19 @@
 
 Use these rules after `$mem` selects a managed base and resolves its schemas.
 
+## Project context lookup
+
+Use this mode when project or workspace instructions require `$mem` to orient source work, even when the user did not request a durable write.
+
+1. Inspect the resolved schemas and their node descriptions.
+2. Infer one or more likely nodes from the task intent and render their concrete paths.
+3. Search existing files at those candidate paths, then nearby filenames, headings, and body text inside the selected base.
+4. Use the strongest matching knowledge as context.
+5. When managed knowledge is absent or insufficient, search the relevant project, service, or package source with scoped `rg` or `rg --files`.
+6. Widen only after the scoped search fails; avoid broad repository-root scans unless the user needs exhaustive coverage.
+
+Schema-path inference is model judgment guided by descriptions and existing files. Do not require a dedicated ranking command. Context lookup is read-only and never authorizes materialization or edits.
+
 ## Finding knowledge
 
 - Treat the target as either a file-like path or search query.
