@@ -1,7 +1,7 @@
 ---
 name: dev.shortcuts
-description: Resolve explicit shortcut triggers and usage. Always read this file at
-  the start of a thread or when user mentions `trigger`.
+description: Route any request containing literal `trigger:` before ordinary skill
+  dispatch. Read at thread start and whenever `trigger` appears.
 dependencies:
 - agtask
 - babysit-pr
@@ -12,10 +12,19 @@ dependencies:
 - specy
 ---
 
+## Mandatory Trigger Gate
+
+1. Before ordinary intent or skill routing, scan the user request for the literal `trigger:` token.
+2. When present, resolve and load the exact matching shortcut before invoking any dependency or semantically related skill.
+3. When a shortcut matches, announce `Using [shortcut name]`.
+4. Treat the shortcut as the end-to-end contract. A wrapped skill's success does not complete the shortcut while later shortcut steps remain.
+5. If the user later questions a trigger's outcome, re-read the matched shortcut and compare every required action before explaining or correcting the result.
+6. When absent, do not invoke shortcuts.
+
 ## Context
 Shortcuts are a small self-contained workflow that can be triggered via `trigger:<shortcut-name>`, for example `trigger:merge-pr`.
 
-ALWAYS use the shortcut when user mentions `trigger:<shortcut>`. Read the shortcut file and follow literaly. 
+ALWAYS use the shortcut when user mentions `trigger:<shortcut>`. Read the shortcut file and follow literally.
 
 ## Shortcut Location
 Shortcuts can be in the following locations:
@@ -86,10 +95,3 @@ This involves using multiple shortcuts in sequence. Shortcut chaining is denoted
 
 Example:
 `trigger:precommit-process -> trigger:create-pr`
-
-## Trigger Gate
-
-1. If the user request includes `trigger:`, scan this skill's `./references/shortcuts` directory first (canonical source).
-2. If a shortcut matches, announce `Using [shortcut name]`.
-3. Follow the shortcut exactly.
-4. If no `trigger:` token is present, do not check or invoke shortcuts.
