@@ -40,6 +40,24 @@ Run `fin [context] [target]`.
 1. Confirm finalization preconditions
 - Use this flow only when the requested scope is complete.
 - If work is partial or blocked, do not archive specs and do not present the task as finished.
+- Resolve the repository's origin main branch before any spec archival, landing, merge, or cleanup. In this skill, `main` means the default branch of the repository addressed by `origin`; do not assume the literal branch name is `main`.
+  - For `gh`, query the target repository's authoritative default branch and the locked PR's `baseRefName`.
+  - For `local`, resolve and verify the default branch associated with `origin`, using the remote provider when available or `refs/remotes/origin/HEAD` as a fallback. If the origin main branch cannot be determined unambiguously, stop.
+  - Compare canonical short branch names. When a local fallback returns `refs/remotes/origin/<name>` or `origin/<name>`, retain the raw result as evidence and pass only `<name>` to the gate.
+  - Pass the two resolved names through the mandatory machine gate before any spec archival, landing, merge, cleanup, or full-finalization wording:
+
+    ```bash
+    python3 ./scripts/check_default_branch.py \
+      --context gh \
+      --repository-default-branch "<resolved-origin-main>" \
+      --target-base-ref "<locked-target-base-ref>"
+    ```
+
+    Resolve `./scripts/check_default_branch.py` relative to this `SKILL.md`, replace the quoted placeholders with the resolved values, and use `--context local` for local finalization. Do not replace this command with a manual comparison or a same-named repository script.
+  - Continue only when the command exits `0` and its JSON reports `status: "pass"`, `matches: true`, and every `allow` field as `true`. Retain that JSON as finalization evidence. Treat a nonzero exit, malformed output, or any other result as a hard blocker.
+  - Rerun the gate if the locked target, repository default branch, or target base ref changes. The latest passing record is the only valid authorization for the finishing actions.
+  - A mismatch blocks intermediate, stacked, release, and feature branches. Use the script's retarget-or-create-PR message in the report.
+  - If the PR already merged into a non-main branch, the gate still fails: stop before archival or cleanup, report that it did not land in origin's main branch, and do not describe it as fully finalized.
 - Before archiving any spec or attempting to land the change, determine the current branch, whether it is attached to a linked worktree, and where the non-worktree `main` checkout lives.
 - Check `~/.fin.yaml` for repo-specific finalization instructions before landing or cleanup. If the file exists, parse entries shaped as `workspace: [{path: ..., instructions: ...}]`.
 - If `~/.fin.yaml` exists but cannot be parsed, do not treat the parse failure as "no hooks". Report the parser error separately and inspect the raw file. Continue only when the raw content is clearly non-executable, unambiguous context; if it might contain commands, hooks, destructive instructions, or ambiguous cleanup requirements, stop before spec archival, landing cleanup, or linked-worktree removal and report the malformed config as the blocker.
@@ -56,10 +74,10 @@ Run `fin [context] [target]`.
 - For `gh` with an explicit target, identify that target PR directly with GitHub before consulting current-branch PR state. If the current checkout points at another PR, report the mismatch in the target identity line and ignore the other PR unless it blocks local cleanup.
 - For `gh`, identify any active PR babysit/watch automation for the target PR or branch when automation state is visible. Record its id so it can be updated or deleted after the PR lands.
 - If the task includes a requested external notification after green CI, such as Slack or another chat notice, track that notification as a separate finalization gate from PR mergeability and CI. Check notification prerequisites when feasible, such as required local credential files or configured CLIs, and record any missing prerequisite as a notification blocker, not as a CI failure.
-- If the target PR is already merged, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
-- For `gh`, when the target PR is still open, confirm it is mergeable against `main` or its base branch.
+- If the target PR is already merged into the verified origin main branch, treat the PR landing precondition as satisfied and skip mergeability repair. Continue with any matching spec archival, worktree cleanup, local `main` refresh, and retrospective.
+- For `gh`, when the target PR is still open, confirm it is mergeable against the verified origin main branch.
   - If GraphQL or `gh pr view` reports `UNKNOWN`/indeterminate mergeability while checks and reviews otherwise look green, poll the REST pull-request endpoint once or twice for `mergeable` and `mergeable_state` before invoking conflict repair. Treat REST `mergeable: true` with `mergeable_state: clean` as the mergeability confirmation; treat repeated `null`/unknown as indeterminate and wait or report it.
-- For `local`, confirm the current branch is mergeable into local `main`.
+- For `local`, confirm the current branch is mergeable into the verified local origin main branch.
 - If the `gh` flow is blocked only by base-branch conflicts, run `trigger:fix-pr-conflict` against the locked target PR and let it try to restore a clean merge state.
 - If the `gh` flow is blocked by broader PR issues, or conflict repair needs a fuller pass, run `trigger:fix-pr` against the locked target PR.
 - If the `local` flow is blocked only by trunk drift, run `trigger:sync-branch` or otherwise rebase the current branch onto the merge target before retrying the check.
@@ -69,14 +87,14 @@ Run `fin [context] [target]`.
 
 - When finalization stops on named non-conflict blockers and the user explicitly says to merge or land while ignoring those blockers, treat that response as an auditable override limited to the blockers already reported for the locked target.
 - Restate the target identity and the exact waived blockers before proceeding. Do not infer an override from a generic approval, an earlier broad permission, silence, or a request that does not clearly authorize landing.
-- An override may waive failing or pending checks, review/proof/approval gates, waiting periods, and incomplete-spec landing gates. It does not waive an unmergeable/conflicting target, a target mismatch, unknown commit identity, dirty-worktree preservation, malformed or failed final hooks, missing repository permission, or post-merge verification and cleanup.
+- An override may waive failing or pending checks, review/proof/approval gates, waiting periods, and incomplete-spec landing gates. It does not waive a missing or failed default-branch gate, a non-main merge target, an unmergeable/conflicting target, a target mismatch, unknown commit identity, dirty-worktree preservation, malformed or failed final hooks, missing repository permission, or post-merge verification and cleanup.
 - Keep incomplete specs and milestones active and unarchived. Do not mark them complete merely to satisfy the normal archival-before-landing order. Record the spec exception in the final report.
 - In `gh` context, re-confirm `mergeable: true` for the exact PR head, then use a repository-supported administrator or maintainer override merge. If merge commits are disallowed, retry once with the supported squash method. Never use the override to merge a conflicting or indeterminate head.
 - Preserve the waived state in the final report: who authorized it, which blockers were ignored, whether an administrator merge was used, and which spec artifacts intentionally remained active.
 
 ### PR Automation Lookup
 
-- Resolve a matching babysit/watch automation by exact automation id first, then by the locked PR number and head branch.
+- Resolve a matching babysit/watch or `fin` auto-merge heartbeat automation by exact automation id first, then by the locked repository, PR number, and head branch.
 - Bound the automation service lookup to one request and at most 30 seconds of waiting. Do not let an unavailable automation service stall finalization indefinitely.
 - If the service lookup errors or times out, search `${CODEX_HOME:-$HOME/.codex}/automations` for the exact automation id, PR number, or head branch. Treat this as read-only fallback evidence; never delete automation files directly.
 - When the fallback finds a persisted automation, retry one service lookup/delete operation using its exact id. If deletion still fails, report automation cleanup as blocked with the id and error.
@@ -145,7 +163,11 @@ Run `fin [context] [target]`.
 - If direct merge is rejected because repository policy requires auto-merge, and checks/reviews are otherwise green, enable repository-supported auto-merge for the locked target PR instead of treating the rejection as a terminal merge failure.
 - After any successful auto-merge enablement, query the target PR for `autoMergeRequest`, `state`, `mergedAt`, `mergeCommit`, `mergeStateStatus`, and status checks.
 - Treat `autoMergeRequest` present with the PR still `OPEN` as `auto-merge pending`, not as `blocked`, while checks remain green and no explicit cancellation or failing required check is present.
-- Poll the locked PR for a bounded window after enabling auto-merge. If it becomes `MERGED`, continue with normal post-merge cleanup. If the bounded window expires with `autoMergeRequest` still present, report `auto-merge pending` with the PR URL and defer local branch/worktree cleanup that requires landed-merge proof.
+- Poll the locked PR for a bounded window after enabling auto-merge. If it becomes `MERGED`, verify `mergedAt` and `mergeCommit`, then continue with normal post-merge cleanup.
+- If the bounded window expires with `autoMergeRequest` still present, create or update exactly one dedicated thread heartbeat named `fin: auto-merge <owner>/<repo>#<number>`. Reuse an existing exact match instead of creating duplicates. Store the locked repository, PR number and URL, base and head branches, head SHA, merge method, `autoMergeRequest.enabledAt`, and the deferred `fin` stage in its context.
+- On every heartbeat wake, query the locked PR live for `autoMergeRequest`, `state`, `mergedAt`, `mergeCommit`, `mergeStateStatus`, head SHA, and required checks. While the same head remains `OPEN` with auto-merge present and no terminal blocker, keep the heartbeat active, report `auto-merge pending`, and leave post-merge cleanup, Linear completion, and full-finalization wording deferred.
+- Resolve and delete the heartbeat only after live GitHub state is `MERGED` with non-empty `mergedAt` and `mergeCommit`; then resume this workflow at step 5 in the same wake. If the auto-merge request is removed or cancelled, the head changes unexpectedly, a required check fails, or conflicts appear, stop the heartbeat as blocked rather than resolving it as successful, preserve cleanup state, and report the exact evidence.
+- If heartbeat creation or update fails, report `auto-merge pending` plus the automation error and leave cleanup deferred; do not imply that monitoring was established.
 - Treat auto-merge as blocked only when GitHub reports the auto-merge request was removed/cancelled, a required check fails, conflicts appear, or the PR is otherwise no longer mergeable.
 - If the merge command reports that the local branch cannot be deleted because it is still attached to a linked worktree, check whether the remote PR actually merged before treating the step as failed.
 - When the PR merged remotely but local branch deletion failed only because of the linked worktree attachment, treat that as a successful merge followed by incomplete cleanup and continue with the deterministic cleanup script from a retained checkout.
@@ -220,12 +242,13 @@ Run `fin [context] [target]`.
 9. Report the finished state
 - State which context ran: `gh` or `local`.
 - State whether that context was explicitly requested, implied by heartbeat or active task context, or auto-detected from current-branch PR state.
+- State the default-branch gate's `status`, `repository_default_branch`, `target_base_ref`, and `matches` fields. For a missing or failed gate, report the blocker and retarget-or-create-PR guidance instead of a finished state.
 - For `gh`, state the target identity line with PR number, branch, and source before reporting mergeability, checks, blockers, merge, or cleanup. If another PR was also present in the current checkout, explicitly state that it was not the finalization target.
 - State whether the mergeability check passed directly, was skipped because the PR was already merged, or required `fix-pr-conflict` / `fix-pr` / `sync-branch` / manual repair.
 - State whether a spec was archived and include the source and destination paths when applicable.
 - If an explicit blocker override was used, state the authorizing user instruction, the exact waived blockers, the override merge method, and every incomplete spec or milestone intentionally left active.
 - For `gh`, state whether the PR was already merged and `merge-pr` was skipped, or whether `merge-pr` ran successfully, including whether the remote merge succeeded directly or required separate post-merge worktree cleanup because local branch deletion failed.
-- For `gh`, if auto-merge was enabled but the PR has not merged yet, report `auto-merge pending`, include the PR URL, head SHA, auto-merge method, `autoMergeRequest.enabledAt` when available, and explicitly state that local cleanup requiring merged proof was deferred.
+- For `gh`, if auto-merge was enabled but the PR has not merged yet, report `auto-merge pending`, include the PR URL, head SHA, auto-merge method, `autoMergeRequest.enabledAt` when available, heartbeat automation id and next check when creation succeeded, and explicitly state that local cleanup requiring merged proof was deferred.
 - For `local`, state whether the branch landed via local merge, was already on `main`, or was blocked before landing.
 - State the deterministic cleanup script's final `status`, whether the worktree path and registration are absent, whether the local branch was deleted, and whether cleanup was not applicable. Do not claim or report global prune as a normal step.
 - For `gh`, state whether any PR babysit/watch automation was found and whether it was deleted, already absent, or blocked.
@@ -244,6 +267,7 @@ Run `fin [context] [target]`.
 
 - Do not move a spec into `.archive` unless the task is actually complete.
 - Do not archive unrelated active specs.
+- Never archive, merge, clean up, or claim full finalization without a current passing `./scripts/check_default_branch.py` record. Never merge or finalize a PR whose base is not the repository's origin main branch.
 - Do not try to finalize directly from detached `HEAD`; create a named branch first.
 - Do not archive a spec or land the change before the current branch or PR is confirmed mergeable for the chosen context, unless the matching PR is already merged.
 - Do not silently switch from `gh` to `local` or from `local` to `gh`.
@@ -255,6 +279,7 @@ Run `fin [context] [target]`.
 - Do not run `merge-pr` in `gh` mode before the matching spec is marked complete and archived, unless an explicit blocker override authorizes landing a mergeable PR while leaving that incomplete spec active and unarchived.
 - Do not require a PR in `local` mode.
 - Do not classify a green PR as terminally blocked only because GitHub still reports `OPEN`/`BLOCKED` shortly after auto-merge was successfully enabled. Use the explicit `auto-merge pending` state unless the auto-merge request disappears, checks fail, or conflicts appear.
+- Do not leave an auto-merge-pending PR without exactly one active heartbeat unless heartbeat creation failed and that automation blocker is reported explicitly. Do not resolve or delete that heartbeat merely because auto-merge was enabled or remains pending.
 - Do not treat `gh pr merge --delete-branch` local branch-deletion failures caused only by linked worktree attachment as a failed merge when the remote PR already landed.
 - Do not leave a merged linked worktree behind when the branch is meant to be fully finalized.
 - Do not remove unrelated named worktrees or branches during cleanup. The cleanup script requires the exact registered branch and HEAD, or an explicit detached flag plus exact HEAD; path naming alone is never cleanup authority.
@@ -282,6 +307,7 @@ Run `fin [context] [target]`.
 ## Done Checklist
 
 - `fin` was run with either an explicit `gh` / `local` argument, a heartbeat-derived or active-task-derived PR target, or no argument and a context auto-detected from current-branch PR state.
+- The repository's origin main branch was resolved authoritatively before mutation, and `./scripts/check_default_branch.py` returned exit `0` with `status: "pass"`, `matches: true`, and every `allow` field set to `true` for the exact PR base or local merge target. The JSON record was retained; a missing, malformed, or failed gate stopped finalization.
 - In `gh` mode, any explicit PR number, PR URL, branch target, heartbeat-derived PR target, or active-task-derived PR target was locked before current-branch PR detection and reused for every PR-state, mergeability, merge, automation, and cleanup decision.
 - Every PR status or blocker report included a target identity line with PR number, branch, and source; when multiple PRs were mentioned, every PR-specific claim was labeled with the PR number.
 - If the run started from detached `HEAD`, it was converted into a named branch before context detection and landing.
@@ -294,6 +320,7 @@ Run `fin [context] [target]`.
 - Unrelated active specs remain untouched.
 - `~/.fin.yaml` was checked, parsed or explicitly handled as malformed, and any workspace entry matching the non-worktree checkout root was applied before linked-worktree removal.
 - In `gh` mode, the matching PR was checked for an existing `MERGED` state before attempting merge; `trigger:merge-pr` has been run after archival only when the PR was not already merged, or the missing-PR condition was reported explicitly.
+- An auto-merge-pending handoff has exactly one active heartbeat for the locked PR, or that heartbeat was resolved and deleted only after live `MERGED`, `mergedAt`, and `mergeCommit` verification; any terminal blocker or automation failure was reported without claiming full finalization.
 - Any explicit blocker override recorded the locked target, exact waived blockers, authorizing user instruction, override merge method, and intentionally unarchived incomplete specs.
 - In `local` mode, the completed branch has been merged into local `main` or verified as already landed there.
 - The local base was refreshed or verified to contain the landed commit before cleanup, and every matching final hook succeeded.

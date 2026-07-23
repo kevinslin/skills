@@ -9,13 +9,18 @@ from pathlib import Path
 
 from dependency_tools import (
     collect_skill_dependency_text,
+    discover_skill_names,
     normalize_dependencies,
     parse_skill_markdown,
     render_skill_markdown,
 )
 
 
-def sync_dependencies(skill_path: Path, *, ensure_field: bool = True) -> tuple[bool, list[str], list[str]]:
+def sync_dependencies(
+    skill_path: Path,
+    *,
+    ensure_field: bool = True,
+) -> tuple[bool, list[str], list[str], list[str]]:
     """Sync dependencies for a single skill directory."""
     skill_md = skill_path / "SKILL.md"
     if not skill_md.exists():
@@ -23,9 +28,10 @@ def sync_dependencies(skill_path: Path, *, ensure_field: bool = True) -> tuple[b
 
     frontmatter, body = parse_skill_markdown(skill_md)
     dependency_text = collect_skill_dependency_text(skill_path, body)
-    updated_frontmatter, merged, added, changed = normalize_dependencies(
+    updated_frontmatter, merged, added, unresolved, changed = normalize_dependencies(
         frontmatter,
         dependency_text,
+        known_skill_names=discover_skill_names(skill_path),
         ensure_field=ensure_field,
     )
 
@@ -34,7 +40,7 @@ def sync_dependencies(skill_path: Path, *, ensure_field: bool = True) -> tuple[b
             render_skill_markdown(updated_frontmatter, body),
             encoding="utf-8",
         )
-    return changed, merged, added
+    return changed, merged, added, unresolved
 
 
 def main() -> int:
@@ -58,7 +64,7 @@ def main() -> int:
         return 1
 
     try:
-        changed, merged, added = sync_dependencies(
+        changed, merged, added, unresolved = sync_dependencies(
             skill_path,
             ensure_field=not args.no_ensure_field,
         )
@@ -74,6 +80,13 @@ def main() -> int:
             print("   No new dependencies were detected, but metadata was normalized.")
     else:
         print(f"✅ No dependency changes needed in {skill_path / 'SKILL.md'}")
+
+    if unresolved:
+        references = ", ".join(f"${name}" for name in unresolved)
+        print(
+            "⚠️ Unresolved references were not added as dependencies: "
+            + references
+        )
 
     print(
         "Current dependencies: "

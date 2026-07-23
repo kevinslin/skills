@@ -100,6 +100,20 @@ def extract_skill_dependencies_from_body(body: str) -> set[str]:
     return deps
 
 
+def discover_skill_names(skill_path: Path) -> set[str]:
+    """Discover sibling and runtime-installed skill names."""
+    names: set[str] = set()
+    roots = (skill_path.parent, Path.home() / ".codex" / "skills")
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for skill_md in root.glob("*/SKILL.md"):
+            candidate = skill_md.parent.name
+            if is_valid_skill_name(candidate):
+                names.add(candidate)
+    return names
+
+
 def collect_skill_dependency_text(skill_path: Path, body: str) -> str:
     """Collect dependency-bearing text from SKILL.md and bundled Markdown references."""
     parts = [body]
@@ -157,13 +171,20 @@ def normalize_dependencies(
     frontmatter: dict[str, Any],
     body: str,
     *,
+    known_skill_names: set[str],
     ensure_field: bool = False,
-) -> tuple[dict[str, Any], list[str], list[str], bool]:
+) -> tuple[dict[str, Any], list[str], list[str], list[str], bool]:
     """
-    Merge explicit body references into frontmatter dependencies.
+    Merge discoverable body references into frontmatter dependencies.
 
     Returns:
-      (updated_frontmatter, merged_dependencies, added_dependencies, changed)
+      (
+        updated_frontmatter,
+        merged_dependencies,
+        added_dependencies,
+        unresolved_references,
+        changed,
+      )
     """
     name = str(frontmatter.get("name", "")).strip()
     existing_value = frontmatter.get("dependencies")
@@ -183,11 +204,14 @@ def normalize_dependencies(
     else:
         raise ValueError("dependencies must be a list of skill names")
 
-    detected = sorted(
+    candidates = {
         dep
         for dep in extract_skill_dependencies_from_body(body)
         if dep and dep != name
-    )
+    }
+    allowed = known_skill_names.union(existing)
+    detected = sorted(candidates.intersection(allowed))
+    unresolved = sorted(candidates.difference(allowed))
     merged = sorted(set(_dedupe_preserve_order(existing)).union(detected))
     added = sorted(set(merged) - set(existing))
 
@@ -198,4 +222,4 @@ def normalize_dependencies(
         updated = dict(frontmatter)
 
     changed = updated != frontmatter
-    return updated, merged, added, changed
+    return updated, merged, added, unresolved, changed

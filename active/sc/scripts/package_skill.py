@@ -47,7 +47,10 @@ def package_skill(skill_path, output_dir=None):
 
     # Auto-sync dependencies from in-body skill references before validation.
     try:
-        changed, merged, added = sync_dependencies(skill_path, ensure_field=True)
+        changed, merged, added, unresolved = sync_dependencies(
+            skill_path,
+            ensure_field=True,
+        )
     except Exception as e:
         print(f"❌ Failed to sync dependencies: {e}")
         return None
@@ -62,6 +65,14 @@ def package_skill(skill_path, output_dir=None):
             print(f"   Current dependencies: {', '.join(merged)}")
         else:
             print("   Current dependencies: (none)")
+        print()
+
+    if unresolved:
+        references = ", ".join(f"${name}" for name in unresolved)
+        print(
+            "⚠️ Unresolved references were not added as dependencies: "
+            + references
+        )
         print()
 
     # Run validation before packaging

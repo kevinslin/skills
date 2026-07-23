@@ -10,6 +10,7 @@ from pathlib import Path
 from dependency_tools import (
     FRONTMATTER_RE,
     collect_skill_dependency_text,
+    discover_skill_names,
     find_nonrelative_skill_file_references,
     is_valid_skill_name,
     normalize_dependencies,
@@ -111,9 +112,10 @@ def validate_skill(skill_path):
     # This catches invalid dependency field types early with a clear message.
     try:
         dependency_text = collect_skill_dependency_text(skill_path, body)
-        _, _, missing_dependencies, _ = normalize_dependencies(
+        _, _, missing_dependencies, _, _ = normalize_dependencies(
             frontmatter,
             dependency_text,
+            known_skill_names=discover_skill_names(skill_path),
             ensure_field=False,
         )
     except ValueError as exc:

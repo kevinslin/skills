@@ -405,6 +405,7 @@ Write the YAML frontmatter with `name`, `description`, and `dependencies`:
 - Reference other skills in the body by name using `$<skill-name>`.
 - Automatically synchronize named skill references into frontmatter dependencies with:
     - `./scripts/sync_dependencies.py <path/to/skill-folder>`
+- Dependency synchronization adds only sibling or runtime-installed skills. It preserves explicitly declared dependencies and warns about unresolved `$<token>` references without adding them.
 
 Do not include unapproved fields in YAML frontmatter (approved: `name`, `description`, `dependencies`, and repository-specific optional fields such as `version`, `license`, `allowed-tools`, `metadata`).
 

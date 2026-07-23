@@ -71,16 +71,42 @@ class ScScriptsIntegrationTests(unittest.TestCase):
         }
         body = "Use `$specy`, ignore the self-reference `$consumer`, and treat `$skill` as a placeholder."
 
-        updated, merged, added, changed = dependency_tools.normalize_dependencies(
-            frontmatter,
-            body,
-            ensure_field=True,
+        updated, merged, added, unresolved, changed = (
+            dependency_tools.normalize_dependencies(
+                frontmatter,
+                body,
+                known_skill_names={"specy"},
+                ensure_field=True,
+            )
         )
 
         self.assertTrue(changed)
         self.assertEqual(merged, ["dev.llm-session", "specy"])
         self.assertEqual(added, ["specy"])
+        self.assertEqual(unresolved, [])
         self.assertEqual(updated["dependencies"], ["dev.llm-session", "specy"])
+
+    def test_normalize_dependencies_preserves_declared_undiscoverable_skill(self) -> None:
+        frontmatter = {
+            "name": "consumer",
+            "description": "test",
+            "dependencies": ["future-skill"],
+        }
+
+        updated, merged, added, unresolved, changed = (
+            dependency_tools.normalize_dependencies(
+                frontmatter,
+                "Use `$future-skill`.",
+                known_skill_names=set(),
+                ensure_field=True,
+            )
+        )
+
+        self.assertFalse(changed)
+        self.assertEqual(merged, ["future-skill"])
+        self.assertEqual(added, [])
+        self.assertEqual(unresolved, [])
+        self.assertEqual(updated["dependencies"], ["future-skill"])
 
     def test_dependency_inference_ignores_numeric_replacement_tokens(self) -> None:
         body = "Map Jest output with `'$1'`, read shell `$2`, and use `$dev.code`."
@@ -92,33 +118,72 @@ class ScScriptsIntegrationTests(unittest.TestCase):
 
     def test_sync_dependencies_updates_skill_file_from_named_reference(self) -> None:
         skill_dir = self.root / "sync-skill"
+        _write_skill(self.root / "mem", name="mem")
+        _write_skill(self.root / "dev.code", name="dev.code")
         _write_skill(
             skill_dir,
             name="sync-skill",
-            body="Use `$specy`.",
+            body="Use `$mem` and `$dev.code`; pass shell `$resource` unchanged.",
         )
 
-        changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=True)
+        changed, merged, added, unresolved = sync_dependencies.sync_dependencies(
+            skill_dir,
+            ensure_field=True,
+        )
 
         self.assertTrue(changed)
-        self.assertEqual(merged, ["specy"])
-        self.assertEqual(added, ["specy"])
+        self.assertEqual(merged, ["dev.code", "mem"])
+        self.assertEqual(added, ["dev.code", "mem"])
+        self.assertEqual(unresolved, ["resource"])
 
         frontmatter, _ = dependency_tools.parse_skill_markdown(skill_dir / "SKILL.md")
-        self.assertEqual(frontmatter["dependencies"], ["specy"])
+        self.assertEqual(frontmatter["dependencies"], ["dev.code", "mem"])
+
+    def test_sync_dependencies_cli_warns_about_unresolved_tokens(self) -> None:
+        skill_dir = self.root / "shell-variable-skill"
+        _write_skill(
+            skill_dir,
+            name="shell-variable-skill",
+            body='Run `tilt trigger "$resource"`.',
+        )
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT_DIR / "sync_dependencies.py"),
+                str(skill_dir),
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("Unresolved references", result.stdout)
+        self.assertIn("$resource", result.stdout)
+
+        frontmatter, _ = dependency_tools.parse_skill_markdown(
+            skill_dir / "SKILL.md"
+        )
+        self.assertEqual(frontmatter["dependencies"], [])
 
     def test_sync_dependencies_reads_bundled_markdown_references(self) -> None:
         skill_dir = self.root / "reference-dependency-skill"
+        _write_skill(self.root / "dev.review", name="dev.review")
         _write_skill(skill_dir, name="reference-dependency-skill")
         references_dir = skill_dir / "references"
         references_dir.mkdir()
         (references_dir / "workflow.md").write_text("Use `$dev.review`.", encoding="utf-8")
 
-        changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=True)
+        changed, merged, added, unresolved = sync_dependencies.sync_dependencies(
+            skill_dir,
+            ensure_field=True,
+        )
 
         self.assertTrue(changed)
         self.assertEqual(merged, ["dev.review"])
         self.assertEqual(added, ["dev.review"])
+        self.assertEqual(unresolved, [])
 
     def test_sync_dependencies_respects_no_ensure_field(self) -> None:
         skill_dir = self.root / "no-ensure-skill"
@@ -129,11 +194,15 @@ class ScScriptsIntegrationTests(unittest.TestCase):
             body="No explicit named skill references here.",
         )
 
-        changed, merged, added = sync_dependencies.sync_dependencies(skill_dir, ensure_field=False)
+        changed, merged, added, unresolved = sync_dependencies.sync_dependencies(
+            skill_dir,
+            ensure_field=False,
+        )
 
         self.assertFalse(changed)
         self.assertEqual(merged, [])
         self.assertEqual(added, [])
+        self.assertEqual(unresolved, [])
 
         frontmatter, _ = dependency_tools.parse_skill_markdown(skill_dir / "SKILL.md")
         self.assertNotIn("dependencies", frontmatter)
@@ -179,6 +248,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
 
     def test_quick_validate_rejects_missing_named_dependency(self) -> None:
         skill_dir = self.root / "missing-named-dependency"
+        _write_skill(self.root / "specy", name="specy")
         _write_skill(
             skill_dir,
             name="missing-named-dependency",
@@ -365,6 +435,7 @@ class ScScriptsIntegrationTests(unittest.TestCase):
 
     def test_package_skill_auto_syncs_dependencies_before_packaging(self) -> None:
         skill_dir = self.root / "pkg-skill"
+        _write_skill(self.root / "specy", name="specy")
         _write_skill(
             skill_dir,
             name="pkg-skill",
