@@ -44,7 +44,7 @@ graph TD
         K -->|exact replay| M["Commit without mutation"]
         K -->|same key, different message| N["Roll back conflict"]
         L --> O{"Event kind"}
-        O -->|user| P["Set active unless done or merging"]
+        O -->|user| P["Set active unless terminal or merging"]
         O -->|assistant| Q["Set blocked only for exact leading Blocked marker"]
         O -->|meta or append-only| R["Preserve task status"]
         P --> S["Commit"]
@@ -129,7 +129,8 @@ For user and assistant events, the idempotency key is
 
 ### 4. Preserve terminal and history-only state
 
-Ordinary conversation may advance `updated`, but it cannot leave `done`.
+Ordinary conversation may advance `updated`, but it cannot leave `done` or
+`drop`.
 While a project merge claim is live, ordinary turns update the claim's saved
 underlying status rather than replacing visible `merging`.
 
@@ -146,8 +147,8 @@ preserve thread.description
 preserve thread.status
 ```
 
-Only `reopen` leaves `done`; compaction and explicit append-only writes do not
-change the thread row.
+Only `reopen` leaves a terminal state; compaction and explicit append-only
+writes do not change the thread row.
 
 ## Notes
 
@@ -159,8 +160,8 @@ change the thread row.
   `UserPromptSubmit` event arrives, depending on arrival order.
 - A fast `Stop` may commit before initial-prompt reconciliation. Later bootstrap
   verification preserves the assistant-selected status.
-- A new ordinary turn on a completed task may update history and `updated`, but
-  the task remains `done`.
+- A new ordinary turn on a completed or dropped task may update history and
+  `updated`, but the task remains terminal.
 
 ## Observability
 

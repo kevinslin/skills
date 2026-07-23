@@ -272,7 +272,7 @@ class DashboardIntegrationTest(unittest.TestCase):
         self.assertIn({"value": None, "count": 1}, payload["facets"]["parents"])
         self.assertEqual(
             [item["value"] for item in payload["facets"]["statuses"]],
-            ["todo", "active", "blocked", "merging", "done"],
+            ["todo", "active", "blocked", "merging", "done", "drop"],
         )
 
     def test_json_sort_keeps_null_closed_values_last_and_uses_stable_ties(self) -> None:
@@ -828,6 +828,39 @@ class DashboardIntegrationTest(unittest.TestCase):
         )
         self.assertEqual(status, 404)
         self.assertEqual(json.loads(body), {"error": "task not found"})
+
+        status, _headers, body = self.request(
+            url,
+            path=status_path,
+            method="PATCH",
+            body='{"expected_status":"blocked","status":"drop"}',
+            headers={"Content-Type": "application/json", "Origin": origin},
+        )
+        self.assertEqual(status, 200)
+        dropped = json.loads(body)
+        self.assertTrue(dropped["changed"])
+        self.assertEqual(dropped["task"]["status"], "drop")
+        self.assertEqual(dropped["task"]["updated"], dropped["task"]["closed"])
+        with sqlite3.connect(self.db_path) as connection:
+            self.assertEqual(
+                connection.execute(
+                    "SELECT message FROM rollout WHERE thread_id=? ORDER BY id DESC LIMIT 1",
+                    (thread["id"],),
+                ).fetchone()[0],
+                "status:blocked->drop",
+            )
+
+        status, _headers, body = self.request(
+            url,
+            path=status_path,
+            method="PATCH",
+            body='{"expected_status":"drop","status":"active"}',
+            headers={"Content-Type": "application/json", "Origin": origin},
+        )
+        self.assertEqual(status, 409)
+        self.assertEqual(
+            json.loads(body), {"error": "dropped threads must be reopened explicitly"}
+        )
 
     def test_server_rejects_bad_host_and_invalid_query(self) -> None:
         self.seed_dashboard()

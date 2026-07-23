@@ -20,8 +20,8 @@ Validate the prepared result:
 - `status: "untracked"` is a successful no-op and must have empty
   `hook_prompts`.
 - A tracked result must have the requested ID and a structured `merge_claim`.
-- An already-done thread returns `merge_claim.state: "not_applicable"` and no
-  prompt.
+- An already-terminal (`done` or `drop`) thread returns
+  `merge_claim.state: "not_applicable"` and no prompt.
 - `merge_claim.state: "waiting"` means another live claim owns the exact stored
   project. It changes no thread state, returns no prompt, and includes a
   randomized `retry_after_ms`. Wait for that interval outside SQLite and rerun
@@ -83,10 +83,10 @@ python3 ./scripts/agtask close \
 ```
 
 Validate that a tracked result has the requested ID and `status: "done"`. A
-non-done commit without the matching unexpired token must fail; this fencing
+nonterminal commit without the matching unexpired token must fail; this fencing
 prevents a stale closer from committing after lease takeover. The commit
 atomically records `merging -> done`, appends finalization, and deletes the
-claim. An already-done retry remains token-free and prompt-free.
+claim. An already-terminal retry remains token-free and prompt-free.
 
 A real transition may return one `OnPostClose` entry containing `event`, a
 non-empty `prompt`, and `source`; an idempotent retry must return no prompt.

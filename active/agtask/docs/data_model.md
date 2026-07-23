@@ -6,7 +6,7 @@ conversation and native rollout history. The ledger contains only current
 thread state, task kind, project identity, origin lineage, bounded turn
 summaries, lifecycle events, and short-lived project merge claims.
 
-The canonical schema is version 5. Its executable source of truth is `DDL` in
+The canonical schema is version 6. Its executable source of truth is `DDL` in
 [`skills/agtask/scripts/agtask`](../skills/agtask/scripts/agtask).
 This document describes that schema and the application contract around it.
 
@@ -20,11 +20,10 @@ This document describes that schema and the application contract around it.
   established, and set a 1,000 ms busy timeout.
 - Timestamps written by the application are UTC RFC 3339 strings with
   millisecond precision, for example `2026-07-16T18:28:46.513Z`.
-- `PRAGMA user_version` is `5`. Existing databases are inspected read-only and
-  must match the exact version-5 objects and SQL definitions before the normal
-  writer opens them. A missing database or empty version-0 database may be
-  initialized; any other shape is rejected without migration or project
-  backfill.
+- `PRAGMA user_version` is `6`. Existing databases are inspected read-only
+  before a writer opens them. An exact version-5 schema is migrated
+  transactionally to version 6; a missing database or empty version-0 database
+  may be initialized. Any other shape is rejected without project backfill.
 
 ## Entity relationship
 
@@ -83,14 +82,14 @@ may own at most one short-lived project merge claim.
 | `description` | `TEXT NOT NULL DEFAULT ''` | Immutable normalized summary derived from the initial creation prompt. |
 | `created` | `TEXT NOT NULL` | Registration timestamp. It never changes. |
 | `updated` | `TEXT NOT NULL` | Timestamp of the latest state or recorded-turn update. |
-| `closed` | `TEXT` | Completion timestamp. Non-null exactly when `status = 'done'`. |
-| `status` | `TEXT NOT NULL` | One of `todo`, `active`, `blocked`, `merging`, or `done`. `merging` projects ownership of a project merge claim until it is committed, released, or reaped. |
+| `closed` | `TEXT` | Terminal timestamp. Non-null exactly when `status` is `done` or `drop`. |
+| `status` | `TEXT NOT NULL` | One of `todo`, `active`, `blocked`, `merging`, `done`, or `drop`. `done` records successful completion; `drop` records intentionally abandoned work; `merging` projects ownership of a project merge claim until it is committed, released, or reaped. |
 
 The database enforces these row constraints:
 
-- `status IN ('todo', 'active', 'blocked', 'merging', 'done')`.
-- `done` requires a non-null `closed`; every other status requires `closed` to
-  be null.
+- `status IN ('todo', 'active', 'blocked', 'merging', 'done', 'drop')`.
+- `done` and `drop` require a non-null `closed`; every other status requires
+  `closed` to be null.
 - `id` and `session_id` are nonempty; `session_id` is globally unique.
 - A row cannot name its own `session_id` as `parent_session_id`.
 - `kind IN ('main', 'child')`.
@@ -107,7 +106,7 @@ The narrow exception is authoritative one-shot reconciliation of a provisional
 copied-helper binding, which replaces the session and prompt-derived
 description before canonical task history is recorded. Direct `add` treats the
 current Codex title as an exact reconciliation value and rejects a session
-already stored as child kind. Version 5 is an exact-schema compatibility
+already stored as child kind. Version 6 is an exact-schema compatibility
 boundary; the CLI does not migrate version-4 ledgers in place.
 
 ### Thread indexes
@@ -152,7 +151,7 @@ identity. Consequently same-named unrelated projects intentionally contend in
 one local ledger, while different labels do not. Randomized retry has
 best-effort fairness and may starve under sustained contention; strict FIFO
 would require durable waiter rows, stale-waiter cleanup, and more cancellation
-state, which version 5 deliberately avoids.
+state, which version 6 deliberately avoids.
 
 ### Dashboard projection and status mutation
 
@@ -174,11 +173,12 @@ The token-scoped browser server also accepts one status mutation for a task
 resolved by `session_id`. Its JSON body carries both the rendered
 `expected_status` and requested `status`. Under `BEGIN IMMEDIATE`, the server
 requires the current value to equal the expected value and then reuses the
-manual status transition contract. Only `todo`, `active`, and `blocked` are
-valid targets. A real change advances `updated`, keeps `closed` null, and
-appends one `status:<old>-><new>` meta rollout with the same timestamp; a
-same-state request is a no-op. Stale, `merging`, and `done` rows fail without
-writes, preserving merge-claim, close, and reopen ownership.
+manual status transition contract. `todo`, `active`, `blocked`, and `drop` are
+valid targets. A real change advances `updated` and appends one
+`status:<old>-><new>` meta rollout with the same timestamp; `drop` sets
+`closed`, while nonterminal targets clear it. A same-state request is a no-op.
+Stale, `merging`, and terminal rows fail without writes, preserving
+merge-claim, close, and reopen ownership.
 
 The snapshot derives project, parent, and lifecycle-status facets before any
 filter is applied, so facet counts always describe the complete ledger. Exact
@@ -194,8 +194,8 @@ chip value rewrites the canonical query and requests a fresh snapshot; it does
 not change persistence or filter evaluation.
 
 Visible rows are emitted in fixed `todo`, `active`, `blocked`, `merging`,
-`done` groups.
-With no status filter all five groups exist even when empty; a status filter
+`done`, `drop` groups.
+With no status filter all six groups exist even when empty; a status filter
 emits only selected groups in the same lifecycle order. Created, updated, or
 closed timestamp sorting applies inside each group. Null primary timestamps
 sort last in either direction, followed by deterministic `updated DESC`,
@@ -400,13 +400,17 @@ stateDiagram-v2
     merging --> done: fenced close
     active --> done: confirmed archived-session audit
     done --> active: reopen
+    todo --> drop: explicit status
+    active --> drop: explicit status
+    blocked --> drop: explicit status
+    drop --> active: reopen
 ```
 
-The explicit `status` command may move any non-done thread among `todo`,
-`active`, and `blocked`, except that a merging thread must first be closed or
-have its claim released. A done thread must be reopened before those explicit
-updates. Exact-pair re-registration is verification-only and does not alter
-lifecycle state, including `merging` and `done`.
+The explicit `status` command may move any nonterminal thread among `todo`,
+`active`, and `blocked`, or end it as `drop`, except that a merging thread must
+first be closed or have its claim released. A terminal thread must be reopened
+before other explicit updates. Exact-pair re-registration is verification-only
+and does not alter lifecycle state, including `merging`, `done`, and `drop`.
 The confirmed archive audit is the only direct `active -> done` path; its
 unchanged plan token binds the user-reviewed active row snapshot to the write.
 
@@ -435,15 +439,15 @@ Status and timestamp rules are:
   the owning thread. Consequently, `thread.updated` is the last current-state
   or recorded-turn update, not necessarily the timestamp of the newest
   rollout.
-- On a non-done, non-merging thread, a user turn selects `active`. An assistant turn selects
+- On a nonterminal, non-merging thread, a user turn selects `active`. An assistant turn selects
   `blocked` only when the raw content starts exactly with `Blocked:`;
   otherwise it selects `active`. Turns recorded during OnPreClose append their
   rollout and advance `updated` while preserving the visible `merging` status;
   the same inference updates the claim's underlying `prior_status` so cancel or
   stale recovery restores the latest result.
-- Ordinary turn hooks may advance the `updated` timestamp of a done thread and
-  append its rollout, but they do not change its description or move it out of
-  `done`; only `reopen` changes the terminal status.
+- Ordinary turn hooks may advance the `updated` timestamp of a terminal thread
+  and append its rollout, but they do not change its description or move it out
+  of `done` or `drop`; only `reopen` changes the terminal status.
 - When an assistant Stop event is recorded before the initial bootstrap write
   is verified, the matching bootstrap write keeps the assistant-selected
   `active` or `blocked` status instead of projecting the earlier user prompt
@@ -463,9 +467,13 @@ Status and timestamp rules are:
   non-archived observations never mutate a row. The audit does not create a
   merge claim or finalization event because the underlying Codex thread is
   already archived.
-- Repeated close is a no-op. `reopen` changes `done` to `active`, clears
-  `closed`, advances `updated`, and records `status:done->active`. A later close
-  is a distinct lifecycle with new status and finalization event IDs.
+- Explicit Drop sets `status = 'drop'`, gives `updated`, `closed`, and
+  `status:<prior>->drop` one timestamp, and does not create merge or
+  finalization evidence.
+- Repeated close is a no-op. `reopen` changes `done` or `drop` to `active`,
+  clears `closed`, advances `updated`, and records
+  `status:<terminal>->active`. A later close is a distinct lifecycle with new
+  status and finalization event IDs.
 
 The application provides timestamp formatting; SQLite constrains nullability
 and the status/closed relationship but does not parse or compare timestamp
@@ -480,8 +488,8 @@ app-action `threadId` values, and deep links continue to use the session ID.
 
 | Codex hook | Ledger operation | Thread state effect | Output |
 | --- | --- | --- | --- |
-| `UserPromptSubmit` | Validate an exact final bootstrap envelope. For valid version 2, atomically bind its logical ID to the payload session, register an untracked child from the prompt metadata, and record one `user` rollout by logical owner and real Codex turn ID; otherwise record only when the session is already tracked. | New hook-owned children start `active`; existing rows preserve description and select `active` unless done or bootstrap reconciliation must preserve a later assistant state. While merging, keep the visible status and update the claim's underlying state. | Version 1 renders action-only context. Version 2 renders allowlisted bootstrap actions plus tracked context only after exact-pair reconciliation commits; copied or conflicting bindings are silent. |
-| `Stop` | Record one `assistant` rollout by Codex turn ID. | Preserve description; select `blocked` for an exact leading `Blocked:`, otherwise `active`, unless done. While merging, keep the visible status and update the claim's underlying state. | None. |
+| `UserPromptSubmit` | Validate an exact final bootstrap envelope. For valid version 2, atomically bind its logical ID to the payload session, register an untracked child from the prompt metadata, and record one `user` rollout by logical owner and real Codex turn ID; otherwise record only when the session is already tracked. | New hook-owned children start `active`; existing rows preserve description and select `active` unless terminal or bootstrap reconciliation must preserve a later assistant state. While merging, keep the visible status and update the claim's underlying state. | Version 1 renders action-only context. Version 2 renders allowlisted bootstrap actions plus tracked context only after exact-pair reconciliation commits; copied or conflicting bindings are silent. |
+| `Stop` | Record one `assistant` rollout by Codex turn ID. | Preserve description; select `blocked` for an exact leading `Blocked:`, otherwise `active`, unless terminal. While merging, keep the visible status and update the claim's underlying state. | None. |
 | `PostCompact` | Append one deterministic `meta` rollout. | None. | None. |
 | `SessionStart` | Read the thread and five newest rollouts. Its payload has no prompt, so it cannot parse bootstrap metadata. | None. | Render tracked context for supported start sources. |
 
@@ -559,4 +567,4 @@ snapshot is the workflow's normal write-verification and orchestration
 boundary. Claimed, waiting, heartbeat, cancel, and completed close results also
 include `merge_claim`; only the claimed form includes its opaque token, and only
 the waiting form includes randomized `retry_after_ms`. Prompt data is not a
-rollout and does not affect schema version 5.
+rollout and does not affect schema version 6.

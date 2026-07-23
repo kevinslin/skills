@@ -54,7 +54,7 @@ CREATION_BOOTSTRAP_SCENARIO_VERSION = 3
 LIFECYCLE_SCENARIO_NAME = "lifecycle-create-directive-close-hooks"
 LIFECYCLE_SCENARIO_VERSION = 13
 DASHBOARD_SCENARIO_NAME = "dashboard-html"
-DASHBOARD_SCENARIO_VERSION = 10
+DASHBOARD_SCENARIO_VERSION = 11
 RENAME_SCENARIO_NAME = "current-task-rename"
 RENAME_SCENARIO_VERSION = 2
 AUDIT_SCENARIO_NAME = "archived-session-audit"
@@ -356,7 +356,7 @@ def verify_dashboard(
     )
     require(
         [group["status"] for group in snapshot["groups"]]
-        == ["todo", "active", "blocked", "merging", "done"],
+        == ["todo", "active", "blocked", "merging", "done", "drop"],
         "dashboard default groups are not in canonical status order",
     )
     require(snapshot["visible_count"] == 1, "dashboard did not isolate the live child")
@@ -413,7 +413,7 @@ def verify_dashboard(
     )
     require(
         [item["value"] for item in snapshot["facets"]["statuses"]]
-        == ["todo", "active", "blocked", "merging", "done"],
+        == ["todo", "active", "blocked", "merging", "done", "drop"],
         "dashboard status facets are not canonical",
     )
     done_snapshot = run_cli(
@@ -532,6 +532,7 @@ def verify_dashboard(
                     and b"FILTER_DEFS" in body
                     and b"menuKeydown" in body
                     and b"STATUS_OPTIONS" in body
+                    and b'value:"drop"' in body
                     and b"expected_status" in body
                     and b"/status" in body,
                     "dashboard client interactions or task-row links are missing",
@@ -686,6 +687,29 @@ def verify_dashboard(
             == 1,
             "dashboard stale status update changed the fixture",
         )
+        drop_status, _drop_headers, drop_body = dashboard_http_patch(
+            parsed,
+            status_path,
+            {"expected_status": "blocked", "status": "drop"},
+        )
+        drop_snapshot = json.loads(drop_body)
+        require(
+            drop_status == 200
+            and drop_snapshot["changed"] is True
+            and drop_snapshot["task"]["status"] == "drop"
+            and drop_snapshot["task"]["closed"] == drop_snapshot["task"]["updated"],
+            "dashboard Drop completion transition mismatch",
+        )
+        drop_rollouts = [
+            row
+            for row in query_rollouts(database, status_fixture_id)
+            if row["message"].startswith("status:")
+        ]
+        require(
+            [row["message"] for row in drop_rollouts]
+            == ["status:active->blocked", "status:blocked->drop"],
+            "dashboard Drop transition evidence mismatch",
+        )
         responses["status_update"] = {
             "status": status,
             "content_type": headers["content-type"],
@@ -711,8 +735,8 @@ def verify_dashboard(
     status_fixture_after = query_thread(database, status_fixture_id)
     require(
         status_fixture_after is not None
-        and status_fixture_after["status"] == "blocked"
-        and status_fixture_after["closed"] is None,
+        and status_fixture_after["status"] == "drop"
+        and status_fixture_after["closed"] == status_fixture_after["updated"],
         "dashboard status fixture did not retain the expected transition",
     )
     return {
@@ -727,8 +751,17 @@ def verify_dashboard(
         "status_update": {
             "result": status_update_snapshot,
             "stale_conflict": True,
-            "transition_rollout_count": 1,
+            "transition_rollout_count": len(drop_rollouts),
             "transition": status_transition_snapshot,
+            "drop_result": drop_snapshot,
+            "transitions": [
+                {
+                    "created": row["created"],
+                    "role": row["role"],
+                    "message": row["message"],
+                }
+                for row in drop_rollouts
+            ],
         },
         "clean_shutdown": True,
         "known_rows_unchanged": True,
@@ -1686,7 +1719,7 @@ def verify_current_task_rename(
         )
         require(
             result["phase"] == "app_action_required"
-            and result["plan_version"] == 1
+            and result["plan_version"] == 2
             and result["applied"] is False
             and result["id"] == task_id
             and result["session_id"] == session_id

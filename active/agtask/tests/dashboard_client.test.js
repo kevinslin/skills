@@ -134,7 +134,7 @@ function snapshotFor(base, requestUrl) {
     (!statuses.length || statuses.includes(thread.status)) &&
     (!search || thread.title.toLocaleLowerCase().includes(search))
   );
-  const groupOrder = statuses.length ? ["todo", "active", "blocked", "merging", "done"].filter(status => statuses.includes(status)) : ["todo", "active", "blocked", "merging", "done"];
+  const groupOrder = statuses.length ? ["todo","active","blocked","merging","done","drop"].filter(status => statuses.includes(status)) : ["todo","active","blocked","merging","done","drop"];
   snapshot.filters = {projects,parent_session_ids:parents,include_root:root,statuses};
   snapshot.search = query.get("search") || "";
   snapshot.sort = {field:query.get("sort") || "updated",direction:query.get("direction") || "desc"};
@@ -278,8 +278,8 @@ async function main() {
   );
   assert.equal(document.activeElement,document.getElementById("status-search"));
   assert.deepEqual(
-    ["Todo","Active","Blocked"].map(label=>Boolean(statusButton(document,label))),
-    [true,true,true],
+    ["Todo","Active","Blocked","Drop"].map(label=>Boolean(statusButton(document,label))),
+    [true,true,true,true],
     "the picker exposes the ledger's user-settable statuses"
   );
   statusButton(document,"Blocked").click();
@@ -465,6 +465,30 @@ async function main() {
   plus.click();
   menu.dispatchEvent({type:"keydown",key:"Tab"});
   assert.equal(menu.hidden,true,"Tab dismisses the menu without trapping focus");
+
+  const droppableTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" && ["todo","active","blocked"].includes(node.getAttribute("data-status"))
+  );
+  droppableTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:droppableTaskRow});
+  statusButton(document,"Drop").click();
+  await settle();
+  await settle();
+  assert.equal(statusUpdates.at(-1).status,"drop","Drop is persisted as a completion status");
+  const droppedTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" && node.getAttribute("data-status") === "drop"
+  );
+  assert.ok(droppedTaskRow,"the dashboard renders a Drop group");
+  droppedTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:droppedTaskRow});
+  assert.match(
+    document.getElementById("status-error").textContent,
+    /must be reopened explicitly/,
+    "dropped tasks stay terminal until reopened"
+  );
+  assert.equal(statusButton(document,"Active").disabled,true);
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+
   assert.ok(requests.length >= 5,"interactions issued fresh dashboard requests");
   process.stdout.write("dashboard client interactions passed\n");
 }

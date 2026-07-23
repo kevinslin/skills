@@ -112,7 +112,7 @@ extra-field envelopes cannot register an untracked session or render actions.
 
 ### 3. Bind the pair transactionally
 
-The hook opens schema version 5 and takes a write reservation before reading
+The hook opens schema version 6 and takes a write reservation before reading
 either unique identity. SQLite primary-key and unique-index constraints remain
 backstops; the application classifies conflicts before attempting a write.
 
@@ -173,9 +173,9 @@ user_prompt_context.append(thread_context(connection, logical_id))
 ```
 
 An exact turn retry is a no-op. A new user turn may update ordinary lifecycle
-state, but a completed task stays done and a merging task updates only its
-saved post-merge status. The hook emits title/pin instructions only after the
-transaction commits.
+state, but a completed or dropped task stays terminal and a merging task
+updates only its saved post-merge status. The hook emits title/pin instructions
+only after the transaction commits.
 
 ### 5. Reconcile parent-side registration
 
@@ -227,8 +227,8 @@ the canonical initial user turn.
   `parent_session_id`, Codex links, routes, and app actions are Codex identities.
 - Hooks fail open on malformed input, database incompatibility, lock timeout,
   or identity conflicts. Explicit CLI commands fail closed with an error.
-- Schema version 5 is a hard cut. Older ledgers are refused without migration
-  or reinterpretation.
+- Schema version 6 transactionally migrates only an exact version-5 ledger.
+  Other older or drifted ledgers are refused without reinterpretation.
 
 ## Observability
 

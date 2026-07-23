@@ -222,14 +222,14 @@ initial prompt remains the task description.
 
 ## dashboard-html
 
-Scenario version: 10
+Scenario version: 11
 
 After the live child task is finalized:
 
 1. Give the live child a proof-specific title so retained rows from earlier
    proofs cannot match the current dashboard assertions.
 2. Run `dashboard --json` through the installed CLI, narrowed by the exact
-   project, parent session ID, and proof-specific child title. Require all five canonical status
+   project, parent session ID, and proof-specific child title. Require all six canonical status
    groups, the finalized child only in `done`, its logical ID, session ID,
    parent session ID, remaining dashboard projection fields, selected
    filter/search/sort state, and global facets containing
@@ -237,7 +237,9 @@ After the live child task is finalized:
 3. Run a second JSON snapshot with `--status done` and require only the selected
    done group, proving status-filter behavior independently of default grouping.
 4. Register a dedicated active dashboard-status fixture in the proof ledger.
-   Keep it separate from the finalized live child and lifecycle main task.
+   Keep it separate from the finalized live child and lifecycle main task. Move
+   it through `blocked` to the terminal `drop` status, require the shared
+   `closed`/`updated` timestamp, and retain both transition events.
 5. Start the installed `dashboard --no-open` server with the same filters. Read
    its flushed URL without retaining its token, require numeric loopback plus an
    ephemeral port and opaque token path, and fetch the dashboard HTML, shared
@@ -249,7 +251,7 @@ After the live child task is finalized:
    token-scoped detail routes on pointer-clickable task rows with native table
    semantics, while title links remain encoded `codex://threads/<session-id>`
    deep links with keyboard activation. Require the hover-plus-`s` status picker,
-   its Todo/Active/Blocked choices, and its expected-status guarded PATCH route.
+   its Todo/Active/Blocked/Drop choices, and its expected-status guarded PATCH route.
    Require no task values in executable assets and dashboard API parity with the
    CLI JSON snapshot.
 7. PATCH the dedicated fixture from active to blocked with the exact loopback
@@ -257,6 +259,8 @@ After the live child task is finalized:
    Require the canonical nine-field task projection, one
    `status:active->blocked` meta rollout sharing the updated timestamp, and a
    stale expected-status retry that returns conflict without another write.
+   Then PATCH blocked to Drop and require `closed = updated` plus ordered
+   `status:blocked->drop` evidence.
 8. Require the task-detail view to expose title, description, Timeline, Created,
    Updated, and Session ID structure, with Session ID rendered as an encoded
    `codex://threads/<session-id>` deep link. Require its API to return the exact

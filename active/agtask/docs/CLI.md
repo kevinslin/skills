@@ -29,7 +29,8 @@ command:
   stored as logical `thread.id`.
 - `<session-id>` is the real Codex session ID stored as unique
   `thread.session_id` and used for hooks, app actions, and deep links.
-- Thread status is one of `todo`, `active`, `blocked`, `merging`, or `done`.
+- Thread status is one of `todo`, `active`, `blocked`, `merging`, `done`, or
+  `drop`. `done` means completed; `drop` means intentionally abandoned.
 - Thread kind is `main` for a root dispatcher or `child` for a task with a
   `parent_session_id`.
 - Structured thread results include a `rollouts` array ordered newest first.
@@ -326,7 +327,7 @@ python3 "$AGTASK" list --status active --limit 25 --json
 
 | Flag | Values and behavior |
 | --- | --- |
-| `--status <status>` | Optional filter: `todo`, `active`, `blocked`, `merging`, or `done`. |
+| `--status <status>` | Optional filter: `todo`, `active`, `blocked`, `merging`, `done`, or `drop`. |
 | `--limit <integer>` | Maximum rows returned. Default: `50`. |
 
 The result is an array of thread rows without nested rollouts.
@@ -354,12 +355,12 @@ HTTP server on `127.0.0.1`, prints a capability URL, opens it in the default
 browser, and runs until interrupted. With `--json`, it returns one snapshot and
 does not start a server.
 
-Hover a task row and press `s` to open its status picker. Todo, Active, and
-Blocked use the same atomic transition contract as the `status` command. The
-request includes the row's expected status, so a concurrent hook or workflow
-change returns a conflict instead of being overwritten; refresh and retry.
-Merging and Done remain unavailable because close, release, and reopen own
-those transitions.
+Hover a task row and press `s` to open its status picker. Todo, Active, Blocked,
+and Drop use the same atomic transition contract as the `status` command. Drop
+ends the task without marking it successfully completed. The request includes
+the row's expected status, so a concurrent hook or workflow change returns a
+conflict instead of being overwritten; refresh and retry. Merging and Done
+remain unavailable because close, release, and reopen own those transitions.
 
 In the browser, each task row opens a token-scoped detail page. The page shows
 the task description, rollout items ordered newest first, and properties for
@@ -382,7 +383,7 @@ python3 "$AGTASK" dashboard \
 | `--project <name>` | Filter by project. Repeat to select multiple projects. |
 | `--parent-session-id <session-id>` | Filter by parent session. Repeat to select multiple parents. |
 | `--root-parent` | Include threads whose `parent_session_id` is null. |
-| `--status <status>` | Filter by `todo`, `active`, `blocked`, `merging`, or `done`. Repeat to select multiple statuses. |
+| `--status <status>` | Filter by `todo`, `active`, `blocked`, `merging`, `done`, or `drop`. Repeat to select multiple statuses. |
 | `--sort <field>` | Sort by `created`, `updated`, or `closed`. Default: `updated`. |
 | `--direction <direction>` | `asc` or `desc`. Default: `desc`. |
 | `--search <text>` | Case-insensitive title search. Default: empty. |
@@ -395,7 +396,7 @@ browser's token-scoped status endpoint is the only dashboard write surface.
 
 ## `status`
 
-Set a tracked, nonterminal thread to a nonterminal status.
+Set a tracked thread to a user-controlled status, including terminal `drop`.
 
 ```bash
 python3 "$AGTASK" status --id <creation-id> --status blocked --json
@@ -404,13 +405,14 @@ python3 "$AGTASK" status --id <creation-id> --status blocked --json
 | Flag | Values and behavior |
 | --- | --- |
 | `--id <creation-id>` / `--session-id <session-id>` | Mutually exclusive selector; exactly one is required. |
-| `--status <status>` | Required target: `todo`, `active`, or `blocked`. |
+| `--status <status>` | Required target: `todo`, `active`, `blocked`, or `drop`. |
 
-A real change updates `updated`, clears `closed`, and appends a
-`status:<old>-><new>` meta rollout. Repeating the current status is a no-op.
-Use `reopen` rather than `status` for a `done` thread, and use `close` to enter
-`done`. A `merging` thread rejects explicit status changes until its claim is
-cancelled or committed.
+A real change updates `updated` and appends a `status:<old>-><new>` meta
+rollout. Todo, active, and blocked clear `closed`; Drop sets `closed` to the
+same timestamp as `updated`. Repeating the current status is a no-op. Use
+`reopen` for either terminal state, and use `close` to enter `done`. A
+`merging` thread rejects explicit status changes until its claim is cancelled
+or committed.
 
 ## `reopen`
 
@@ -424,9 +426,9 @@ python3 "$AGTASK" reopen --session-id <session-id> --json
 | --- | --- |
 | `--id <creation-id>` / `--session-id <session-id>` | Mutually exclusive selector; exactly one is required. |
 
-For a `done` thread, the command clears `closed`, updates `updated`, and appends
-`status:done->active`. Reopening a thread that is not done is an idempotent
-no-op.
+For a `done` or `drop` thread, the command clears `closed`, updates `updated`,
+and appends `status:<terminal>->active`. Reopening a nonterminal thread is an
+idempotent no-op.
 
 ## `audit`
 
@@ -522,12 +524,12 @@ python3 "$AGTASK" close --session-id <session-id> --if-tracked \
 | `--prepare` | Atomically attempt or renew the project claim. Returns `merge_claim.state` as `claimed`, `waiting`, or `not_applicable`. |
 | `--heartbeat` | Renew an owned, unexpired claim. Requires `--merge-token`. |
 | `--cancel` | Release the still-matching owned claim and restore its latest underlying status. It remains available after lease expiry until takeover replaces the token. Requires `--merge-token`. |
-| `--merge-token <token>` | Opaque token returned by a claimed prepare; required for heartbeat, cancel, and non-done commit. |
+| `--merge-token <token>` | Opaque token returned by a claimed prepare; required for heartbeat, cancel, and nonterminal commit. |
 
-Preparing or closing an already-done thread is an idempotent no-op with no
-prompt. A stale token is fenced. Reopen-then-prepare creates a new claim and
-token; the following state-changing close creates a new
-transition/finalization pair and surfaces the current `OnPostClose` prompt.
+Preparing or closing an already-terminal (`done` or `drop`) thread is an
+idempotent no-op with no prompt. A stale token is fenced. Reopen-then-prepare
+creates a new claim and token; the following state-changing close creates a
+new transition/finalization pair and surfaces the current `OnPostClose` prompt.
 
 ## `append-rollout`
 
@@ -584,8 +586,8 @@ rejected. Later user and assistant messages are still recorded, and assistant
 content still selects `blocked` or `active`, but neither can replace the task
 description. A Stop event that wins the race before bootstrap verification
 keeps its authoritative status when the matching bootstrap write arrives.
-Turns recorded after completion are retained without reopening or changing the
-`done` status.
+Turns recorded after completion are retained without reopening or changing a
+`done` or `drop` status.
 
 ## `hook`
 

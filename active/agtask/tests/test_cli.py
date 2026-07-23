@@ -5,6 +5,7 @@ import html
 import json
 import os
 from pathlib import Path
+import runpy
 import sqlite3
 import stat
 import subprocess
@@ -1846,7 +1847,7 @@ class CliIntegrationTest(unittest.TestCase):
 
     def test_schema_permissions_and_immediate_reopen(self) -> None:
         result = self.run_cli("init", "--json")
-        self.assertEqual(json.loads(result.stdout)["schema_version"], 5)
+        self.assertEqual(json.loads(result.stdout)["schema_version"], 6)
         self.assertEqual(stat.S_IMODE(self.store.stat().st_mode), 0o700)
         self.assertEqual(stat.S_IMODE(self.db_path.stat().st_mode), 0o600)
 
@@ -1857,7 +1858,7 @@ class CliIntegrationTest(unittest.TestCase):
         self.assertEqual(state["parent_session_id"], "parent-thread")
 
         with self.connect() as connection:
-            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 5)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 6)
             objects = {
                 row[0]
                 for row in connection.execute(
@@ -1922,7 +1923,7 @@ class CliIntegrationTest(unittest.TestCase):
             self.assertIn("parent_session_id <> session_id", thread_sql)
             self.assertIn("kind = 'main' AND parent_session_id IS NULL", thread_sql)
             self.assertIn("kind = 'child' AND parent_session_id IS NOT NULL", thread_sql)
-            self.assertIn("status = 'done' AND closed IS NOT NULL", thread_sql)
+            self.assertIn("status IN ('done', 'drop') AND closed IS NOT NULL", thread_sql)
             turn_index_sql = connection.execute(
                 "SELECT sql FROM sqlite_master WHERE name='rollout_turn_event_idx'"
             ).fetchone()[0]
@@ -1983,7 +1984,7 @@ class CliIntegrationTest(unittest.TestCase):
         self.db_path.chmod(0o600)
         self.run_cli("init")
         with self.connect() as connection:
-            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 5)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 6)
 
         home = self.root / "home"
         old_dir = home / ".llm" / "thread"
@@ -2005,8 +2006,10 @@ class CliIntegrationTest(unittest.TestCase):
             ("v1", None, 1),
             ("v2", None, 2),
             ("drifted-v3", None, 3),
+            ("drifted-v4", None, 4),
+            ("drifted-v5", None, 5),
             ("unversioned-objects", None, 0),
-            ("newer", None, 4),
+            ("newer", None, 7),
             ("malformed", b"not a sqlite database", None),
         ]
         for name, raw_bytes, version in cases:
@@ -2022,7 +2025,7 @@ class CliIntegrationTest(unittest.TestCase):
                             connection.execute("CREATE TABLE sessions (id TEXT PRIMARY KEY)")
                         elif name == "v2":
                             connection.execute("CREATE TABLE thread (id TEXT PRIMARY KEY)")
-                        elif name == "drifted-v3":
+                        elif name in {"drifted-v3", "drifted-v4", "drifted-v5"}:
                             connection.execute("CREATE TABLE thread (id TEXT PRIMARY KEY)")
                         elif name == "unversioned-objects":
                             connection.execute("CREATE TABLE unexpected (value TEXT)")
@@ -2043,6 +2046,80 @@ class CliIntegrationTest(unittest.TestCase):
                 self.assertEqual(
                     sorted(item.name for item in case_dir.iterdir()), before_entries
                 )
+
+    def test_exact_v5_ledger_migrates_to_v6_without_losing_data(self) -> None:
+        runtime = runpy.run_path(str(CLI))
+        self.store.mkdir(mode=0o700)
+        with sqlite3.connect(self.db_path) as connection:
+            connection.execute("PRAGMA foreign_keys=ON")
+            connection.execute(runtime["V5_THREAD_DDL"])
+            for statement in runtime["DDL"][1:]:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO thread("
+                "id,session_id,parent_session_id,kind,project,title,description,"
+                "created,updated,closed,status"
+                ") VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    fixture_creation_id("v5-thread"),
+                    "v5-session",
+                    "v5-parent",
+                    "child",
+                    "agtask",
+                    "V5 task",
+                    "preserve me",
+                    "2026-01-01T00:00:00.000Z",
+                    "2026-01-02T00:00:00.000Z",
+                    None,
+                    "active",
+                ),
+            )
+            connection.execute(
+                "INSERT INTO rollout(created,thread_id,turn_id,role,message) "
+                "VALUES (?,?,?,?,?)",
+                (
+                    "2026-01-02T00:00:00.000Z",
+                    fixture_creation_id("v5-thread"),
+                    "v5-turn",
+                    "user",
+                    "preserve rollout",
+                ),
+            )
+            connection.execute("PRAGMA user_version=5")
+        self.db_path.chmod(0o600)
+
+        migrated = json.loads(
+            self.run_cli(
+                "show",
+                "--id",
+                "v5-thread",
+                "--json",
+            ).stdout
+        )
+
+        self.assertEqual(migrated["description"], "preserve me")
+        self.assertEqual(migrated["rollouts"][0]["message"], "preserve rollout")
+        search = json.loads(self.run_cli("search", "V5 task", "--json").stdout)
+        self.assertEqual([row["id"] for row in search], [fixture_creation_id("v5-thread")])
+        with self.connect() as connection:
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 6)
+            self.assertEqual(connection.execute("PRAGMA foreign_key_check").fetchall(), [])
+            thread_sql = connection.execute(
+                "SELECT sql FROM sqlite_master WHERE name='thread'"
+            ).fetchone()[0]
+            self.assertIn("'drop'", thread_sql)
+        dropped = json.loads(
+            self.run_cli(
+                "status",
+                "--id",
+                "v5-thread",
+                "--status",
+                "drop",
+                "--json",
+            ).stdout
+        )
+        self.assertEqual(dropped["status"], "drop")
+        self.assertIsNotNone(dropped["closed"])
 
     def test_kind_project_and_parent_lineage_are_immutable(self) -> None:
         self.run_cli("init")
@@ -3387,6 +3464,43 @@ class CliIntegrationTest(unittest.TestCase):
         ]
         self.assertEqual(len(blocked_events), 2)
         self.assertEqual(len({row["turn_id"] for row in blocked_events}), 2)
+
+        self.run_cli("status", "--id", "thread-1", "--status", "drop")
+        dropped = self.show()
+        self.assertEqual(dropped["status"], "drop")
+        self.assertEqual(dropped["updated"], dropped["closed"])
+        dropped_at = dropped["closed"]
+        self.run_cli(
+            "record-turn",
+            "--id",
+            "thread-1",
+            "--role",
+            "assistant",
+            "--turn-id",
+            "after-drop",
+            "--content",
+            "This ordinary turn must not resume abandoned work.",
+        )
+        after_drop_turn = self.show()
+        self.assertEqual(after_drop_turn["status"], "drop")
+        self.assertEqual(after_drop_turn["closed"], dropped_at)
+        prepared = json.loads(
+            self.run_cli(
+                "close", "--id", "thread-1", "--prepare", "--json"
+            ).stdout
+        )
+        self.assertEqual(prepared["merge_claim"]["state"], "not_applicable")
+        rejected = self.run_cli(
+            "status",
+            "--id",
+            "thread-1",
+            "--status",
+            "active",
+            check=False,
+        )
+        self.assertIn("dropped threads must be reopened explicitly", rejected.stderr)
+        self.run_cli("reopen", "--id", "thread-1")
+        self.assertEqual(self.show()["rollouts"][0]["message"], "status:drop->active")
 
         first_close = self.close_thread()
         self.assertEqual(first_close["status"], "done")

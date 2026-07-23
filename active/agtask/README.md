@@ -193,10 +193,11 @@ button to add another field and the chip remove button to clear one. Values in
 one chip are ORed, while separate field chips and title search are ANDed. Sort
 by created, updated, or closed time, or refresh the current snapshot from the
 toolbar.
-Hover a task and press `s` to open the status picker. Choosing Todo, Active, or
-Blocked applies the same atomic ledger transition as the `status` command and
-then refreshes the current view. Merging and Done remain owned by the close and
-reopen workflows.
+Hover a task and press `s` to open the status picker. Choosing Todo, Active,
+Blocked, or Drop applies the same atomic ledger transition as the `status`
+command and then refreshes the current view. Drop marks work intentionally
+abandoned and terminal; Merging and Done remain owned by the close and reopen
+workflows.
 Click a task row outside its title to open the local detail page. Clicking the
 title, or focusing it and pressing Enter or Space, opens the task directly in
 Codex. The detail view shows the task description, a newest-first rollout
@@ -250,7 +251,12 @@ sqlite3 "file:$HOME/.llm/agtask/ledger.db?mode=ro&immutable=1" \
   'SELECT id,created,thread_id,turn_id,role,message FROM rollout ORDER BY created,id;'
 ```
 
-Schema version 5 is a hard cut. Older rows are not migrated or backfilled. The runtime opens only `~/.llm/agtask/ledger.db`; the v1 database at `~/.llm/thread/thread.db` remains a historical artifact. If the canonical path contains an incompatible database, move that file aside and run `init` to create a fresh ledger.
+Schema version 6 adds the terminal `drop` status. An exact version-5 ledger is
+migrated transactionally on first open; other older, newer, or drifted schemas
+are refused without mutation. The runtime opens only
+`~/.llm/agtask/ledger.db`; the v1 database at `~/.llm/thread/thread.db` remains
+a historical artifact. If the canonical path contains an incompatible
+database, move that file aside and run `init` to create a fresh ledger.
 
 Remove only the owned hook groups with:
 

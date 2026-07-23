@@ -146,9 +146,10 @@ and compares the supplied token before any write. This prevents a user
 confirmation for one candidate snapshot from being reused after ledger state
 or Codex archive observations change.
 
-Apply maps the external Codex `archived` fact into the existing terminal ledger
-state `done`; it does not add a second terminal state or persist Codex UI
-metadata. Each transition sets `closed`, appends `status:active->done`, and
+Apply maps the external Codex `archived` fact into terminal ledger state
+`done`; it does not use the separate user-selected `drop` state or persist
+Codex UI metadata. Each transition sets `closed`, appends
+`status:active->done`, and
 records `archival:codex-thread-archived`. It intentionally bypasses the project
 merge lease and close prompt hooks because the Codex thread is already
 archived. Once applied, the row is no longer in the active discovery set, so
@@ -185,7 +186,7 @@ nosniff, and CSP checks form the HTTP boundary, and access logging is disabled
 so tokens and filters do not reach stderr. Status mutation additionally
 requires the exact loopback origin and JSON media type. Its immediate
 transaction compares the expected status before reusing the CLI's manual
-transition helper; stale, done, and merging states fail without writes.
+transition helper; stale, terminal, and merging states fail without writes.
 
 `dashboard --json` bypasses both server and browser and emits the same grouped
 snapshot once. `--no-open` retains the server but skips browser launch. Browser
@@ -199,7 +200,7 @@ the matching point-detail API and renders the description, newest-first
 timeline, and created and updated properties. Its session-ID property is also
 an encoded Codex deep link. There are no external assets or background polling.
 All dashboard reads remain read-only. The status endpoint is the only mutation
-surface, and it permits only Todo, Active, and Blocked; merge claims,
+surface, and it permits Todo, Active, Blocked, and Drop; merge claims,
 finalization, and reopen remain workflow-owned.
 
 ### Layered configuration and prompt hooks
@@ -237,7 +238,7 @@ The hook installer structurally merges four owned command groups into `~/.codex/
 
 ## SQLite model
 
-The canonical schema is version 5.
+The canonical schema is version 6.
 
 ```mermaid
 erDiagram
@@ -283,8 +284,10 @@ dispatched `child` threads, and `project` records the resolved project label.
 for child kind, without a foreign key because the parent may not itself be
 tracked. Kind, project, parent lineage, initial title, and the
 initial-prompt-derived description are immutable during pair reconciliation.
-Status is `todo`, `active`, `blocked`, `merging`, or `done`; a check constraint
-couples `done` to a non-null `closed` timestamp. `project_merge_claim` remains
+Status is `todo`, `active`, `blocked`, `merging`, `done`, or `drop`; a check
+constraint couples both terminal states to a non-null `closed` timestamp.
+`done` means completed and `drop` means intentionally abandoned.
+`project_merge_claim` remains
 owned by logical `thread.id`, and a partial unique index defensively permits
 only one `merging` thread per project.
 
@@ -403,15 +406,15 @@ platform vocabulary and always use the Codex session ID.
 
 | Codex event | Ledger effect | Context output |
 | --- | --- | --- |
-| `UserPromptSubmit` | Validate final bootstrap metadata; version 2 may atomically bind an untracked logical ID to the payload session before recording the real user rollout under that logical ID. Preserve description; ordinarily activate a non-done, non-merging row unless bootstrap repair preserves a later assistant state. While merging, keep the visible status and update only the claim's underlying state; done remains terminal. | Allowlisted bootstrap action request plus current title, status, stable description, five recent rollouts, result contract after an exact-pair successful write; conflicting/copied bindings are silent |
-| `Stop` | Record assistant rollout without replacing the description; exact leading `Blocked:` ordinarily transitions to `blocked`, other final results to `active`. While merging, keep the visible status and update only the claim's underlying state; done remains terminal. | None |
+| `UserPromptSubmit` | Validate final bootstrap metadata; version 2 may atomically bind an untracked logical ID to the payload session before recording the real user rollout under that logical ID. Preserve description; ordinarily activate a nonterminal, non-merging row unless bootstrap repair preserves a later assistant state. While merging, keep the visible status and update only the claim's underlying state; done and drop remain terminal. | Allowlisted bootstrap action request plus current title, status, stable description, five recent rollouts, result contract after an exact-pair successful write; conflicting/copied bindings are silent |
+| `Stop` | Record assistant rollout without replacing the description; exact leading `Blocked:` ordinarily transitions to `blocked`, other final results to `active`. While merging, keep the visible status and update only the claim's underlying state; done and drop remain terminal. | None |
 | `PostCompact` | Record deterministic `meta` compaction rollout | None |
 | `SessionStart` | Read the tracked thread and recent rollouts; never parse bootstrap metadata because the payload has no prompt | Current title, status, stable description, five recent rollouts, result contract |
 
 Hooks are silent for missing ledgers and untracked sessions except when an exact
 version-2 creation prompt initializes the ledger and registers its own real
-session binding. A `done` thread remains terminal for ordinary turn hooks until
-`reopen` explicitly returns it to `active`.
+session binding. A `done` or `drop` thread remains terminal for ordinary turn
+hooks until `reopen` explicitly returns it to `active`.
 
 ## Core flows
 
@@ -488,6 +491,10 @@ stateDiagram-v2
     merging --> done: close --merge-token
     active --> done: confirmed audit of archived Codex thread
     done --> active: reopen
+    todo --> drop: explicit status
+    active --> drop: explicit status
+    blocked --> drop: explicit status
+    drop --> active: reopen
 ```
 
 Every actual transition and successful tokenized close is recorded in the same
@@ -530,11 +537,17 @@ never removes the current worktree.
 
 ## Database opening and failure semantics
 
-The runtime opens only `~/.llm/agtask/ledger.db`, with `AGTASK_DB` reserved for isolated environments. A missing database or empty version-0 file is initialized transactionally. Every existing file is first inspected read-only; an exact version-5 schema is reopened normally, while an incompatible file is rejected with move-aside recovery guidance before WAL selection, permission changes, or DDL. Older rows are not migrated or backfilled.
+The runtime opens only `~/.llm/agtask/ledger.db`, with `AGTASK_DB` reserved for
+isolated environments. A missing database or empty version-0 file is initialized
+transactionally. Every existing file is first inspected read-only; an exact
+version-6 schema is reopened normally and an exact version-5 schema is migrated
+transactionally by rebuilding `thread`, preserving row IDs and data, rebuilding
+FTS, and validating foreign keys. Any other schema is rejected with move-aside
+recovery guidance before WAL selection or permission changes.
 
 The store directory uses mode `0700`; the database, WAL, and shared-memory files use `0600`. Connections enable foreign keys, WAL after compatibility is established, and a one-second busy timeout. Explicit commands fail closed and roll back on error. Hooks validate safe modes, use bounded operations, and fail open.
 
-The historical v1 database at `~/.llm/thread/thread.db` is outside the runtime path. It can be inspected manually and is never an initialization source for version 5.
+The historical v1 database at `~/.llm/thread/thread.db` is outside the runtime path. It can be inspected manually and is never an initialization source for version 6.
 
 ## Source and runtime layout
 

@@ -26,11 +26,12 @@ import uuid
 import webbrowser
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 BUSY_TIMEOUT_MS = 1000
 SUMMARY_LIMIT = 240
-DASHBOARD_STATUSES = ("todo", "active", "blocked", "merging", "done")
-MANUAL_STATUSES = ("todo", "active", "blocked")
+DASHBOARD_STATUSES = ("todo", "active", "blocked", "merging", "done", "drop")
+MANUAL_STATUSES = ("todo", "active", "blocked", "drop")
+TERMINAL_STATUSES = frozenset({"done", "drop"})
 MERGE_OWNER_LEASE_SECONDS = 300
 MERGE_RETRY_MIN_MS = 750
 MERGE_RETRY_JITTER_MS = 750
@@ -97,8 +98,34 @@ EXPECTED_OBJECTS = {
     "thread_status_updated_idx",
 }
 
-DDL = (
-    """CREATE TABLE thread (
+THREAD_DDL = """CREATE TABLE thread (
+      id               TEXT PRIMARY KEY NOT NULL,
+      session_id       TEXT NOT NULL,
+      parent_session_id TEXT,
+      kind             TEXT NOT NULL CHECK (kind IN ('main', 'child')),
+      project          TEXT NOT NULL CHECK (length(trim(project)) > 0),
+      title            TEXT NOT NULL,
+      description      TEXT NOT NULL DEFAULT '',
+      created          TEXT NOT NULL,
+      updated          TEXT NOT NULL,
+      closed           TEXT,
+      status           TEXT NOT NULL
+                       CHECK (status IN ('todo', 'active', 'blocked', 'merging', 'done', 'drop')),
+      CHECK (
+        (status IN ('done', 'drop') AND closed IS NOT NULL) OR
+        (status NOT IN ('done', 'drop') AND closed IS NULL)
+      ),
+      CHECK (id <> ''),
+      CHECK (session_id <> ''),
+      CHECK (parent_session_id IS NULL OR parent_session_id <> ''),
+      CHECK (parent_session_id IS NULL OR parent_session_id <> session_id),
+      CHECK (
+        (kind = 'main' AND parent_session_id IS NULL) OR
+        (kind = 'child' AND parent_session_id IS NOT NULL)
+      )
+    )"""
+
+V5_THREAD_DDL = """CREATE TABLE thread (
       id               TEXT PRIMARY KEY NOT NULL,
       session_id       TEXT NOT NULL,
       parent_session_id TEXT,
@@ -123,7 +150,10 @@ DDL = (
         (kind = 'main' AND parent_session_id IS NULL) OR
         (kind = 'child' AND parent_session_id IS NOT NULL)
       )
-    )""",
+    )"""
+
+DDL = (
+    THREAD_DDL,
     "CREATE UNIQUE INDEX thread_session_id_idx ON thread(session_id)",
     "CREATE INDEX thread_created_idx ON thread(created)",
     "CREATE INDEX thread_status_updated_idx ON thread(status, updated)",
@@ -199,7 +229,7 @@ DASHBOARD_HTML = """<!doctype html>
 <div id="status-modal" class="status-modal" role="dialog" aria-modal="true" aria-labelledby="status-heading" hidden>
 <section class="status-dialog"><header class="status-header"><div><p id="status-heading">Change status</p><strong id="status-task-title"></strong></div><button id="status-close" class="icon-button" type="button" aria-label="Close status picker">×</button></header>
 <label class="visually-hidden" for="status-search">Find a status</label><input id="status-search" class="status-search" type="search" autocomplete="off" placeholder="Change status…" aria-controls="status-options">
-<div id="status-options" class="status-options" role="listbox" aria-label="Available statuses"></div><p class="status-guidance">Merging and Done are managed by task close workflows.</p><p id="status-error" class="status-error" role="status" aria-live="polite"></p></section></div></body></html>
+<div id="status-options" class="status-options" role="listbox" aria-label="Available statuses"></div><p class="status-guidance">Merging and Done are managed by task close workflows. Drop ends work without completing it.</p><p id="status-error" class="status-error" role="status" aria-live="polite"></p></section></div></body></html>
 """
 
 TASK_DETAIL_HTML = """<!doctype html>
@@ -226,7 +256,7 @@ button { cursor:pointer; font-weight:650; }button:hover { background:var(--hover
 .filter-bar { min-height:3.35rem; display:flex; align-items:center; gap:.45rem; padding:.6rem 1rem; border:1px solid var(--line); border-top:0; border-radius:0 0 10px 10px; background:var(--panel); overflow:hidden; }.active-filters { min-width:0; flex:1 1 auto; display:flex; align-items:center; gap:.45rem; overflow-x:auto; }.filter-empty-label { color:var(--muted); font-size:.8rem; white-space:nowrap; }.filter-chip { flex:0 0 auto; display:flex; min-height:2rem; align-items:stretch; border:1px solid var(--line-strong); border-radius:7px; background:var(--bg); overflow:hidden; white-space:nowrap; }.chip-segment { display:flex; align-items:center; padding:.35rem .55rem; border-right:1px solid var(--line); font-size:.78rem; }.chip-field { font-weight:700; }.chip-operator { color:var(--muted); }.chip-value { max-width:20rem; overflow:hidden; text-overflow:ellipsis; }.chip-remove { min-height:0; width:2rem; padding:0; border:0; border-radius:0; background:transparent; color:var(--muted); font-size:1rem; }.chip-remove:hover { color:var(--text); }.add-filter { flex:0 0 auto; min-height:2rem; width:2rem; padding:0; border-color:transparent; background:transparent; color:var(--muted); font-size:1.2rem; }
 .notice { min-height:2.2rem; padding:.7rem .1rem; color:var(--muted); }.notice.error { color:var(--danger); font-weight:650; }.groups { display:grid; gap:1rem; }.group { background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }.group-header { display:flex; align-items:center; gap:.55rem; padding:.8rem 1rem; border-bottom:1px solid var(--line); }.group-header h2 { margin:0; font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; }.badge { min-width:1.65rem; text-align:center; padding:.15rem .4rem; border-radius:999px; background:var(--bg); color:var(--muted); font-size:.72rem; }
 .table-wrap { overflow-x:auto; }table { width:100%; border-collapse:collapse; font-size:.82rem; }th { color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.055em; text-align:left; font-weight:650; }th,td { padding:.72rem 1rem; border-bottom:1px solid var(--line); white-space:nowrap; }tr:last-child td { border-bottom:0; }td:first-child { width:42%; white-space:normal; font-weight:600; }.task-row { cursor:pointer; }.task-row:hover { background:var(--hover); }.task-link { color:inherit; text-decoration:none; }.task-link:hover { color:var(--accent); text-decoration:underline; text-underline-offset:.18em; }.empty { padding:1.2rem 1rem; color:var(--muted); font-size:.82rem; }.empty-state { padding:2.5rem 1rem; border:1px solid var(--line); border-radius:10px; background:var(--panel); text-align:center; }.empty-state h2 { margin:0 0 .45rem; font-size:1rem; }.empty-state p { margin:0 auto 1rem; color:var(--muted); font-size:.85rem; }.empty-state button { background:var(--accent); border-color:var(--accent); color:white; }
-.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }.status-modal { position:fixed; z-index:50; inset:0; display:grid; place-items:start center; padding:clamp(4rem,12vh,8rem) 1rem 1rem; background:rgb(0 0 0 / .48); backdrop-filter:blur(2px); }.status-modal[hidden] { display:none; }.status-dialog { width:min(42rem,100%); overflow:hidden; padding:.75rem; border:1px solid var(--line-strong); border-radius:14px; background:var(--raised); box-shadow:0 24px 80px rgb(0 0 0 / .42); }.status-header { display:flex; align-items:start; justify-content:space-between; gap:1rem; padding:.3rem .35rem .7rem .55rem; }.status-header p { margin:0 0 .25rem; color:var(--muted); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }.status-header strong { display:block; max-width:35rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.9rem; }.status-search { width:100%; margin-bottom:.45rem; border-color:transparent; background:var(--bg); }.status-options { display:grid; gap:.2rem; }.status-option { width:100%; min-height:3.2rem; display:grid; grid-template-columns:1.25rem 1fr auto auto; align-items:center; gap:.75rem; padding:.65rem .75rem; border-color:transparent; background:transparent; text-align:left; font-weight:600; }.status-option:hover,.status-option:focus-visible { background:var(--hover); }.status-option[aria-selected="true"] { background:var(--accent-soft); }.status-option:disabled { cursor:not-allowed; opacity:.5; }.status-symbol { font-size:1rem; text-align:center; }.status-symbol.todo { color:var(--muted); }.status-symbol.active { color:#e4b400; }.status-symbol.blocked { color:var(--danger); }.status-current { color:var(--accent); font-size:.78rem; }.status-shortcut { min-width:1.8rem; padding:.18rem .35rem; border:1px solid var(--line); border-radius:5px; color:var(--muted); font-size:.7rem; text-align:center; }.status-guidance { margin:.55rem .55rem 0; color:var(--muted); font-size:.72rem; }.status-error { min-height:1.2rem; margin:.35rem .55rem 0; color:var(--danger); font-size:.78rem; font-weight:650; }
+.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }.status-modal { position:fixed; z-index:50; inset:0; display:grid; place-items:start center; padding:clamp(4rem,12vh,8rem) 1rem 1rem; background:rgb(0 0 0 / .48); backdrop-filter:blur(2px); }.status-modal[hidden] { display:none; }.status-dialog { width:min(42rem,100%); overflow:hidden; padding:.75rem; border:1px solid var(--line-strong); border-radius:14px; background:var(--raised); box-shadow:0 24px 80px rgb(0 0 0 / .42); }.status-header { display:flex; align-items:start; justify-content:space-between; gap:1rem; padding:.3rem .35rem .7rem .55rem; }.status-header p { margin:0 0 .25rem; color:var(--muted); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }.status-header strong { display:block; max-width:35rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.9rem; }.status-search { width:100%; margin-bottom:.45rem; border-color:transparent; background:var(--bg); }.status-options { display:grid; gap:.2rem; }.status-option { width:100%; min-height:3.2rem; display:grid; grid-template-columns:1.25rem 1fr auto auto; align-items:center; gap:.75rem; padding:.65rem .75rem; border-color:transparent; background:transparent; text-align:left; font-weight:600; }.status-option:hover,.status-option:focus-visible { background:var(--hover); }.status-option[aria-selected="true"] { background:var(--accent-soft); }.status-option:disabled { cursor:not-allowed; opacity:.5; }.status-symbol { font-size:1rem; text-align:center; }.status-symbol.todo,.status-symbol.drop { color:var(--muted); }.status-symbol.active { color:#e4b400; }.status-symbol.blocked { color:var(--danger); }.status-current { color:var(--accent); font-size:.78rem; }.status-shortcut { min-width:1.8rem; padding:.18rem .35rem; border:1px solid var(--line); border-radius:5px; color:var(--muted); font-size:.7rem; text-align:center; }.status-guidance { margin:.55rem .55rem 0; color:var(--muted); font-size:.72rem; }.status-error { min-height:1.2rem; margin:.35rem .55rem 0; color:var(--danger); font-size:.78rem; font-weight:650; }
 .detail-topbar { min-height:4.5rem; display:flex; align-items:center; padding:1rem clamp(1rem,4vw,3.5rem); border-bottom:1px solid var(--line); }.back-link { color:var(--muted); font-size:.85rem; font-weight:650; text-decoration:none; }.back-link:hover { color:var(--text); }.detail-layout { max-width:88rem; margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) minmax(14rem,20rem); gap:clamp(2rem,6vw,6rem); padding:clamp(2rem,6vw,5rem) clamp(1rem,5vw,5rem); }.detail-content { min-width:0; }.detail-content h1 { margin:0; font-size:clamp(2rem,5vw,3.25rem); }.task-description { margin:2rem 0 0; max-width:52rem; white-space:pre-wrap; font-size:1rem; line-height:1.7; }.timeline-section { margin-top:3.5rem; }.timeline-section h2,.properties h2 { margin:0 0 1.25rem; font-size:1.1rem; }.timeline { margin:0; padding:0; list-style:none; border-top:1px solid var(--line); }.timeline-item { display:grid; grid-template-columns:minmax(9.5rem,12rem) minmax(5rem,7rem) minmax(0,1fr); gap:1rem; padding:1rem 0; border-bottom:1px solid var(--line); line-height:1.5; }.timeline-time,.timeline-role { color:var(--muted); font-size:.78rem; }.timeline-role { font-weight:700; text-transform:capitalize; }.timeline-message { min-width:0; white-space:pre-wrap; overflow-wrap:anywhere; }.properties { align-self:start; padding-left:clamp(1rem,3vw,2rem); border-left:1px solid var(--line); }.properties h2 { color:var(--muted); }.properties dl { margin:0; display:grid; gap:1.5rem; }.properties dl div { display:grid; gap:.4rem; }.properties dt { color:var(--muted); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }.properties dd { margin:0; font-size:.86rem; overflow-wrap:anywhere; }.session-link { color:var(--accent); text-decoration:none; }.session-link:hover { text-decoration:underline; text-underline-offset:.18em; }.detail-notice { grid-column:1/-1; margin:0; color:var(--danger); font-weight:650; }.timeline-empty { padding:1.25rem 0; color:var(--muted); }
 @media (max-width:900px) { .toolbar { align-items:stretch; flex-direction:column; }.search { flex:none; max-width:none; }.toolbar-actions { width:100%; margin-left:0; }.filter-launcher { margin-left:auto; } }
 @media (max-width:700px) { .topbar { align-items:start; flex-direction:column; }.toolbar-actions { display:grid; grid-template-columns:1fr 1fr; }.toolbar-actions .secondary-button { align-self:end; }.filter-launcher { position:static; margin-left:0; align-self:end; }.filter-menu { top:calc(100% - .5rem); left:.75rem; right:.75rem; width:auto; max-height:min(28rem,calc(100vh - 5rem)); }.filter-bar { align-items:flex-start; }.active-filters { flex:1 1 0; max-width:calc(100% - 2.45rem); flex-wrap:wrap; }.add-filter { align-self:flex-start; }.chip-value { max-width:11rem; }.optional-parent,.optional-time { display:none; }.detail-layout { grid-template-columns:1fr; }.properties { grid-row:2; padding:1.5rem 0 0; border-left:0; border-top:1px solid var(--line); }.timeline-item { grid-template-columns:1fr; gap:.35rem; } }
@@ -255,11 +285,12 @@ DASHBOARD_JS = r"""(() => {
   let statusSaving = false;
   let statusModalGeneration = 0;
 
-  const STATUS_LABELS = {todo:"Todo",active:"Active",blocked:"Blocked",merging:"Merging",done:"Done"};
+  const STATUS_LABELS = {todo:"Todo",active:"Active",blocked:"Blocked",merging:"Merging",done:"Done",drop:"Drop"};
   const STATUS_OPTIONS = [
     {value:"todo",label:"Todo",symbol:"○",shortcut:"1"},
     {value:"active",label:"Active",symbol:"◐",shortcut:"2"},
-    {value:"blocked",label:"Blocked",symbol:"!",shortcut:"3"}
+    {value:"blocked",label:"Blocked",symbol:"!",shortcut:"3"},
+    {value:"drop",label:"Drop",symbol:"×",shortcut:"4"}
   ];
   const FILTER_DEFS = [
     {
@@ -306,7 +337,7 @@ DASHBOARD_JS = r"""(() => {
     sorted(state.projects).forEach(value=>query.append("project",value));
     sorted(state.parents).forEach(value=>query.append("parent_session_id",value));
     if(state.root)query.set("root_parent","1");
-    ["todo","active","blocked","merging","done"].filter(value=>state.statuses.includes(value)).forEach(value=>query.append("status",value));
+    ["todo","active","blocked","merging","done","drop"].filter(value=>state.statuses.includes(value)).forEach(value=>query.append("status",value));
     if(state.sort!=="updated")query.set("sort",state.sort);
     if(state.direction!=="desc")query.set("direction",state.direction);
     if(state.search)query.set("search",state.search);
@@ -463,6 +494,7 @@ DASHBOARD_JS = r"""(() => {
 
   function statusLockMessage(task) {
     if(task.status==="done")return "Done tasks must be reopened explicitly.";
+    if(task.status==="drop")return "Dropped tasks must be reopened explicitly.";
     if(task.status==="merging")return "Merging tasks must be closed or released explicitly.";
     return "";
   }
@@ -1056,9 +1088,9 @@ def normalize_sql(value: str) -> str:
     return " ".join(value.lower().split()).rstrip(";")
 
 
-def expected_sql() -> dict[str, str]:
+def expected_sql(statements: tuple[str, ...]) -> dict[str, str]:
     values: dict[str, str] = {}
-    for statement in DDL:
+    for statement in statements:
         match = re.match(
             r"CREATE\s+(?:UNIQUE\s+)?(?:VIRTUAL\s+)?(?:TABLE|INDEX|TRIGGER)\s+(\S+)",
             statement,
@@ -1070,10 +1102,18 @@ def expected_sql() -> dict[str, str]:
     return values
 
 
-EXPECTED_SQL = expected_sql()
+EXPECTED_SQL = expected_sql(DDL)
+V5_EXPECTED_SQL = dict(EXPECTED_SQL)
+V5_EXPECTED_SQL["thread"] = normalize_sql(V5_THREAD_DDL)
 
 
-def verify_schema(connection: sqlite3.Connection) -> None:
+def verify_schema(
+    connection: sqlite3.Connection,
+    *,
+    definitions: Optional[dict[str, str]] = None,
+    version: int = SCHEMA_VERSION,
+) -> None:
+    expected_definitions = definitions or EXPECTED_SQL
     actual_objects = object_names(connection)
     if actual_objects != EXPECTED_OBJECTS:
         missing = sorted(EXPECTED_OBJECTS - actual_objects)
@@ -1084,17 +1124,17 @@ def verify_schema(connection: sqlite3.Connection) -> None:
         if extra:
             details.append("unexpected " + ", ".join(extra))
         raise TaskError(
-            f"schema objects do not match version {SCHEMA_VERSION}: "
+            f"schema objects do not match version {version}: "
             + "; ".join(details)
         )
 
-    for name, expected in EXPECTED_SQL.items():
+    for name, expected in expected_definitions.items():
         row = connection.execute(
             "SELECT sql FROM sqlite_master WHERE name=?", (name,)
         ).fetchone()
         if row is None or row[0] is None or normalize_sql(row[0]) != expected:
             raise TaskError(
-                f"schema definition does not match version {SCHEMA_VERSION}: {name}"
+                f"schema definition does not match version {version}: {name}"
             )
 
     thread_columns = [
@@ -1114,7 +1154,7 @@ def verify_schema(connection: sqlite3.Connection) -> None:
         ("closed", "TEXT", 0, None, 0),
         ("status", "TEXT", 1, None, 0),
     ]:
-        raise TaskError(f"thread columns do not match schema version {SCHEMA_VERSION}")
+        raise TaskError(f"thread columns do not match schema version {version}")
 
     rollout_columns = [
         (row[1], row[2], row[3], row[4], row[5])
@@ -1128,7 +1168,7 @@ def verify_schema(connection: sqlite3.Connection) -> None:
         ("role", "TEXT", 1, None, 0),
         ("message", "TEXT", 1, None, 0),
     ]:
-        raise TaskError(f"rollout columns do not match schema version {SCHEMA_VERSION}")
+        raise TaskError(f"rollout columns do not match schema version {version}")
 
     merge_claim_columns = [
         (row[1], row[2], row[3], row[4], row[5])
@@ -1144,13 +1184,13 @@ def verify_schema(connection: sqlite3.Connection) -> None:
         ("prior_status", "TEXT", 1, None, 0),
     ]:
         raise TaskError(
-            f"project_merge_claim columns do not match schema version {SCHEMA_VERSION}"
+            f"project_merge_claim columns do not match schema version {version}"
         )
 
     foreign_keys = [tuple(row[2:8]) for row in connection.execute("PRAGMA foreign_key_list(rollout)")]
     if foreign_keys != [("thread", "thread_id", "id", "NO ACTION", "CASCADE", "NONE")]:
         raise TaskError(
-            f"rollout foreign key does not match schema version {SCHEMA_VERSION}"
+            f"rollout foreign key does not match schema version {version}"
         )
     merge_claim_foreign_keys = [
         tuple(row[2:8])
@@ -1160,7 +1200,7 @@ def verify_schema(connection: sqlite3.Connection) -> None:
         ("thread", "owner_thread_id", "id", "NO ACTION", "CASCADE", "NONE")
     ]:
         raise TaskError(
-            f"project_merge_claim foreign key does not match schema version {SCHEMA_VERSION}"
+            f"project_merge_claim foreign key does not match schema version {version}"
         )
 
 
@@ -1192,6 +1232,53 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
         raise
 
 
+def migrate_v5_schema(connection: sqlite3.Connection) -> None:
+    verify_schema(connection, definitions=V5_EXPECTED_SQL, version=5)
+    thread_columns = (
+        "id,session_id,parent_session_id,kind,project,title,description,"
+        "created,updated,closed,status"
+    )
+    connection.execute("PRAGMA foreign_keys=OFF")
+    connection.execute("PRAGMA legacy_alter_table=ON")
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        for name in (
+            "thread_ai",
+            "thread_ad",
+            "thread_au",
+            "thread_session_id_idx",
+            "thread_created_idx",
+            "thread_status_updated_idx",
+            "thread_parent_session_idx",
+            "thread_project_merging_idx",
+        ):
+            connection.execute(f"DROP {'TRIGGER' if name.startswith('thread_a') else 'INDEX'} {name}")
+        connection.execute("ALTER TABLE thread RENAME TO thread_v5")
+        connection.execute(THREAD_DDL)
+        connection.execute(
+            f"INSERT INTO thread(rowid,{thread_columns}) "
+            f"SELECT rowid,{thread_columns} FROM thread_v5"
+        )
+        connection.execute("DROP TABLE thread_v5")
+        for statement in DDL[1:6]:
+            connection.execute(statement)
+        for statement in DDL[-3:]:
+            connection.execute(statement)
+        connection.execute("INSERT INTO thread_fts(thread_fts) VALUES('rebuild')")
+        connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+        foreign_key_errors = connection.execute("PRAGMA foreign_key_check").fetchall()
+        if foreign_key_errors:
+            raise TaskError("schema migration failed foreign-key validation")
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.execute("PRAGMA legacy_alter_table=OFF")
+        connection.execute("PRAGMA foreign_keys=ON")
+    verify_schema(connection)
+
+
 def readonly_probe(path: Path) -> str:
     try:
         # Immutable read-only probing avoids SQLite creating WAL/SHM sidecars merely
@@ -1206,6 +1293,9 @@ def readonly_probe(path: Path) -> str:
             if version == SCHEMA_VERSION:
                 verify_schema(connection)
                 return "current"
+            if version == 5:
+                verify_schema(connection, definitions=V5_EXPECTED_SQL, version=5)
+                return "migrate_v5"
             if version == 0 and not objects:
                 return "empty"
             raise TaskError(
@@ -1257,6 +1347,9 @@ def open_database(*, initialize: bool, hook_mode: bool = False) -> Optional[sqli
     connection = sqlite3.connect(path, timeout=BUSY_TIMEOUT_MS / 1000)
     configure_connection(connection)
     try:
+        if existing_state == "migrate_v5":
+            migrate_v5_schema(connection)
+            existing_state = "current"
         if initialize:
             initialize_schema(connection)
         elif existing_state in {None, "empty"}:
@@ -1756,7 +1849,7 @@ def transition_thread(
     if current == target:
         return False
     timestamp = now or utc_now()
-    closed = timestamp if target == "done" else None
+    closed = timestamp if target in TERMINAL_STATUSES else None
     connection.execute(
         "UPDATE thread SET status=?,updated=?,closed=? WHERE id=?",
         (target, timestamp, closed, thread_id),
@@ -1782,8 +1875,11 @@ def transition_manual_status(
     ).fetchone()
     if row is None:
         raise TaskError(f"thread is not tracked: {thread_id}")
-    if row["status"] == "done":
-        raise StatusConflict("done threads must be reopened explicitly")
+    if row["status"] == target:
+        return False
+    if row["status"] in TERMINAL_STATUSES:
+        label = "dropped" if row["status"] == "drop" else row["status"]
+        raise StatusConflict(f"{label} threads must be reopened explicitly")
     if row["status"] == "merging":
         raise StatusConflict("merging threads must be closed or released explicitly")
     return transition_thread(connection, thread_id=thread_id, target=target)
@@ -2129,7 +2225,7 @@ def claim_merge_slot(
     if thread is None:
         raise TaskError(f"thread is not tracked: {thread_id}")
     project = thread["project"]
-    if thread["status"] == "done":
+    if thread["status"] in TERMINAL_STATUSES:
         return merge_claim_result(connection, project=project, state="not_applicable")
 
     now = utc_now()
@@ -2377,7 +2473,7 @@ def record_turn(
             (target, thread_id),
         )
         connection.execute("UPDATE thread SET updated=? WHERE id=?", (now, thread_id))
-    elif current != "done" and not preserve_assistant_state:
+    elif current not in TERMINAL_STATUSES and not preserve_assistant_state:
         transitioned = transition_thread(
             connection, thread_id=thread_id, target=target, now=now
         )
@@ -3540,7 +3636,7 @@ def command_reopen(args: argparse.Namespace) -> None:
         connection.execute("BEGIN IMMEDIATE")
         thread_id = selected_thread_id(connection, args)
         row = connection.execute("SELECT status FROM thread WHERE id=?", (thread_id,)).fetchone()
-        if row["status"] == "done":
+        if row["status"] in TERMINAL_STATUSES:
             transition_thread(connection, thread_id=thread_id, target="active")
         connection.commit()
         emit(thread_dict(connection, thread_id), args.json)
@@ -3638,10 +3734,10 @@ def command_close(args: argparse.Namespace) -> None:
             result["merge_claim"] = claim
             emit(result, args.json)
             return
-        closed = row["status"] != "done"
+        closed = row["status"] not in TERMINAL_STATUSES
         if closed:
             if not args.merge_token:
-                raise TaskError("closing a non-done thread requires --merge-token")
+                raise TaskError("closing a non-terminal thread requires --merge-token")
             claim = require_merge_token(
                 connection, thread_id=thread_id, token=args.merge_token
             )
@@ -3989,7 +4085,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     list_parser = subparsers.add_parser("list")
     list_parser.add_argument(
-        "--status", choices=("todo", "active", "blocked", "merging", "done")
+        "--status", choices=DASHBOARD_STATUSES
     )
     list_parser.add_argument("--limit", type=int, default=50)
     add_common_json(list_parser)

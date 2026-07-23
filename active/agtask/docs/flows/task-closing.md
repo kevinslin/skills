@@ -24,9 +24,9 @@ orchestration-owned Codex prompts.
 ```mermaid
 graph TD
     subgraph Prepare["Prepare close"]
-        A["close --prepare --if-tracked"] --> B{"Tracked and not done?"}
+        A["close --prepare --if-tracked"] --> B{"Tracked and nonterminal?"}
         B -->|no tracked task| C["Return untracked with no prompts"]
-        B -->|already done| D["Return done with no prompts"]
+        B -->|already done or dropped| D["Return terminal state with no prompts"]
         B -->|yes| E{"Live project claim exists?"}
         E -->|yes| F["Return waiting state and randomized retry hint"]
         E -->|no| G["Create claim; transition to merging"]
@@ -68,7 +68,7 @@ claiming the exact project.
 
 ```ts
 result := close(session_id, if_tracked=true, prepare=true)
-if task is untracked or done
+if task is untracked or terminal
   return result_without_prompts
 if another live project claim exists
   return waiting_with_jitter
@@ -143,7 +143,7 @@ else
 return result
 ```
 
-An idempotent already-done retry is token-free and prompt-free.
+An idempotent already-terminal retry is token-free and prompt-free.
 
 ## Notes
 
@@ -153,9 +153,9 @@ An idempotent already-done retry is token-free and prompt-free.
   either logical `--id` or Codex `--session-id`.
 - Ordinary turns received during `merging` update the claim's underlying status
   so cancellation restores the latest lifecycle state.
-- `reopen` is the only operation that changes `done` back to `active`; it clears
-  `closed` and records a new transition. A later close creates a new
-  finalization pair.
+- `reopen` is the only operation that changes `done` or `drop` back to
+  `active`; it clears `closed` and records a new transition. A later close
+  creates a new finalization pair.
 - Prompt strings are data crossing from the CLI to orchestration. They are never
   shell commands.
 
