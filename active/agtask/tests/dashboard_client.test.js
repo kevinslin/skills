@@ -1,0 +1,475 @@
+"use strict";
+
+const assert = require("node:assert/strict");
+const vm = require("node:vm");
+
+class FakeElement {
+  constructor(tagName, ownerDocument) {
+    this.tagName = tagName.toUpperCase();
+    this.ownerDocument = ownerDocument;
+    this.children = [];
+    this.parentNode = null;
+    this.listeners = new Map();
+    this.attributes = new Map();
+    this._text = "";
+    this.className = "";
+    this.hidden = false;
+    this.value = "";
+    this.title = "";
+    this.type = "";
+  }
+
+  set textContent(value) {
+    this._text = String(value);
+    this.children = [];
+  }
+
+  get textContent() {
+    return this._text + this.children.map(child => child.textContent).join("");
+  }
+
+  append(...children) {
+    for (const child of children) {
+      child.parentNode = this;
+      this.children.push(child);
+    }
+  }
+
+  replaceChildren(...children) {
+    this.children = [];
+    this._text = "";
+    this.append(...children);
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, String(value));
+  }
+
+  getAttribute(name) {
+    return this.attributes.has(name) ? this.attributes.get(name) : null;
+  }
+
+  addEventListener(type, callback) {
+    const listeners = this.listeners.get(type) || [];
+    listeners.push(callback);
+    this.listeners.set(type, listeners);
+  }
+
+  dispatchEvent(event) {
+    event.target ||= this;
+    event.currentTarget = this;
+    event.preventDefault ||= () => { event.defaultPrevented = true; };
+    event.stopPropagation ||= () => {};
+    for (const callback of this.listeners.get(event.type) || []) callback(event);
+  }
+
+  click() {
+    this.dispatchEvent({type:"click"});
+  }
+
+  focus() {
+    this.ownerDocument.activeElement = this;
+  }
+
+  contains(target) {
+    return target === this || this.children.some(child => child.contains(target));
+  }
+
+  querySelectorAll(selector) {
+    const wantedRoles = Array.from(selector.matchAll(/role="([^"]+)"/g), match => match[1]);
+    const matches = [];
+    const visit = node => {
+      if (wantedRoles.includes(node.getAttribute("role"))) matches.push(node);
+      node.children.forEach(visit);
+    };
+    this.children.forEach(visit);
+    return matches;
+  }
+}
+
+class FakeDocument {
+  constructor(ids) {
+    this.listeners = new Map();
+    this.activeElement = null;
+    this.elements = Object.fromEntries(ids.map(id => [id, new FakeElement("div", this)]));
+  }
+
+  getElementById(id) {
+    return this.elements[id];
+  }
+
+  createElement(tagName) {
+    return new FakeElement(tagName, this);
+  }
+
+  addEventListener(type, callback) {
+    const listeners = this.listeners.get(type) || [];
+    listeners.push(callback);
+    this.listeners.set(type, listeners);
+  }
+
+  dispatchEvent(event) {
+    event.preventDefault ||= () => { event.defaultPrevented = true; };
+    event.stopPropagation ||= () => {};
+    for (const callback of this.listeners.get(event.type) || []) callback(event);
+  }
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function snapshotFor(base, requestUrl) {
+  const query = new URL(requestUrl, "http://dashboard.test/").searchParams;
+  const snapshot = clone(base);
+  const projects = query.getAll("project");
+  const parents = query.getAll("parent_session_id");
+  const root = query.get("root_parent") === "1";
+  const statuses = query.getAll("status");
+  const search = (query.get("search") || "").toLocaleLowerCase();
+  const allThreads = base.groups.flatMap(group => group.threads);
+  const visible = allThreads.filter(thread =>
+    (!projects.length || projects.includes(thread.project)) &&
+    ((!parents.length && !root) || parents.includes(thread.parent_session_id) || (root && thread.parent_session_id === null)) &&
+    (!statuses.length || statuses.includes(thread.status)) &&
+    (!search || thread.title.toLocaleLowerCase().includes(search))
+  );
+  const groupOrder = statuses.length ? ["todo", "active", "blocked", "merging", "done"].filter(status => statuses.includes(status)) : ["todo", "active", "blocked", "merging", "done"];
+  snapshot.filters = {projects,parent_session_ids:parents,include_root:root,statuses};
+  snapshot.search = query.get("search") || "";
+  snapshot.sort = {field:query.get("sort") || "updated",direction:query.get("direction") || "desc"};
+  snapshot.visible_count = visible.length;
+  snapshot.groups = groupOrder.map(status => ({status,count:visible.filter(thread => thread.status === status).length,threads:visible.filter(thread => thread.status === status)}));
+  return snapshot;
+}
+
+function menuButton(document, label) {
+  const list = document.getElementById("filter-menu-list");
+  const buttons = list.querySelectorAll('[role="menuitem"],[role="menuitemcheckbox"]');
+  return buttons.find(button => button.children[0]?.textContent === label);
+}
+
+function statusButton(document, label) {
+  const options = document.getElementById("status-options");
+  return options.querySelectorAll('[role="option"]').find(
+    button => button.textContent.includes(label)
+  );
+}
+
+function allNodes(root) {
+  return [root,...root.children.flatMap(allNodes)];
+}
+
+async function settle() {
+  await new Promise(resolve => setImmediate(resolve));
+  await new Promise(resolve => setImmediate(resolve));
+}
+
+async function main() {
+  const input = JSON.parse(await new Promise(resolve => {
+    let value = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", chunk => { value += chunk; });
+    process.stdin.on("end", () => resolve(value));
+  }));
+  const ids = [
+    "search", "sort", "direction", "refresh", "filter-trigger", "filter-menu",
+    "filter-menu-title", "filter-menu-back", "filter-menu-close", "filter-menu-search",
+    "filter-menu-list", "filter-bar", "active-filters", "add-filter", "notice",
+    "groups", "summary", "status-modal", "status-task-title", "status-close",
+    "status-search", "status-options", "status-error"
+  ];
+  const document = new FakeDocument(ids);
+  document.getElementById("filter-menu").hidden = true;
+  document.getElementById("filter-menu-back").hidden = true;
+  document.getElementById("status-modal").hidden = true;
+  document.getElementById("sort").value = "updated";
+  document.getElementById("direction").value = "desc";
+  const location = {
+    search:"",pathname:"/token/",assigned:[],
+    assign(value) { this.assigned.push(value); }
+  };
+  const history = {
+    urls:[],
+    replaceState(_state,_title,url) {
+      this.urls.push(url);
+      location.search = url.startsWith("?") ? url : "";
+    }
+  };
+  const requests = [];
+  const statusUpdates = [];
+  const dashboardSnapshot = clone(input.snapshot);
+  let statusFailure = null;
+  let deferNextStatus = false;
+  let resolveDeferredStatus = null;
+  global.document = document;
+  global.location = location;
+  global.history = history;
+  global.fetch = async (requestUrl, options={}) => {
+    requests.push(requestUrl);
+    if(options.method === "PATCH"){
+      const match = requestUrl.match(/^api\/tasks\/~([^/]+)\/status$/);
+      assert.ok(match,"status update uses the token-scoped task status route");
+      const sessionId = decodeURIComponent(match[1]);
+      const payload = JSON.parse(options.body);
+      assert.deepEqual(Object.keys(payload),["expected_status","status"]);
+      const task = dashboardSnapshot.groups.flatMap(group => group.threads).find(
+        thread => thread.session_id === sessionId
+      );
+      assert.ok(task,"status update targets a rendered task");
+      assert.equal(payload.expected_status,task.status,"status updates guard against stale rows");
+      if(statusFailure){
+        const message = statusFailure;
+        statusFailure = null;
+        return {ok:false,status:409,json:async()=>({error:message})};
+      }
+      const succeed = () => {
+        task.status = payload.status;
+        statusUpdates.push({sessionId,status:payload.status});
+        return {ok:true,status:200,json:async()=>({changed:true,task:clone(task)})};
+      };
+      if(deferNextStatus){
+        deferNextStatus = false;
+        return await new Promise(resolve => {
+          resolveDeferredStatus = () => resolve(succeed());
+        });
+      }
+      return succeed();
+    }
+    return {ok:true,status:200,json:async()=>snapshotFor(dashboardSnapshot,requestUrl)};
+  };
+  vm.runInThisContext(input.source,{filename:"served-dashboard-app.js"});
+  await settle();
+
+  const menu = document.getElementById("filter-menu");
+  const trigger = document.getElementById("filter-trigger");
+  const plus = document.getElementById("add-filter");
+  const chips = document.getElementById("active-filters");
+
+  const firstTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" && node.getAttribute("data-task-id")
+  );
+  assert.ok(firstTaskRow,"dashboard renders task rows");
+  assert.equal(firstTaskRow.getAttribute("role"),null,"task row keeps native table semantics");
+  const firstTaskLink = firstTaskRow.children[0].children[0];
+  assert.equal(firstTaskLink.tagName,"A","task title is a real link");
+  assert.equal(
+    firstTaskLink.href,
+    `codex://threads/${encodeURIComponent(firstTaskRow.getAttribute("data-session-id"))}`,
+    "task title links to the Codex session"
+  );
+  firstTaskRow.dispatchEvent({type:"click",target:firstTaskRow.children[1]});
+  assert.equal(
+    location.assigned.at(-1),
+    `tasks/~${encodeURIComponent(firstTaskRow.getAttribute("data-session-id"))}`,
+    "clicking a non-title cell opens the task detail page"
+  );
+  firstTaskLink.dispatchEvent({type:"keydown",key:" "});
+  assert.equal(location.assigned.at(-1),firstTaskLink.href,"Space on the title link opens the Codex session");
+
+  const statusModal = document.getElementById("status-modal");
+  firstTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:firstTaskRow});
+  assert.equal(statusModal.hidden,false,"S opens the status picker for the hovered task");
+  assert.equal(
+    document.getElementById("status-task-title").textContent,
+    firstTaskLink.textContent,
+    "the picker identifies the hovered task"
+  );
+  assert.equal(document.activeElement,document.getElementById("status-search"));
+  assert.deepEqual(
+    ["Todo","Active","Blocked"].map(label=>Boolean(statusButton(document,label))),
+    [true,true,true],
+    "the picker exposes the ledger's user-settable statuses"
+  );
+  statusButton(document,"Blocked").click();
+  await settle();
+  await settle();
+  assert.deepEqual(
+    statusUpdates,
+    [{sessionId:firstTaskRow.getAttribute("data-session-id"),status:"blocked"}],
+    "choosing a status persists the hovered task selection"
+  );
+  assert.equal(statusModal.hidden,true,"a successful status update closes the picker");
+
+  let refreshedTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" &&
+      node.getAttribute("data-session-id") === firstTaskRow.getAttribute("data-session-id")
+  );
+  assert.equal(
+    refreshedTaskRow.getAttribute("data-status"),
+    "blocked",
+    "the refreshed dashboard renders the task in its persisted status"
+  );
+  refreshedTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"S",target:refreshedTaskRow});
+  assert.equal(statusModal.hidden,false,"the shortcut is case-insensitive");
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+  assert.equal(statusModal.hidden,true,"Escape dismisses the status picker");
+
+  statusFailure = "task status changed; refresh and try again";
+  refreshedTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:refreshedTaskRow});
+  statusButton(document,"Todo").click();
+  await settle();
+  assert.equal(statusModal.hidden,false,"a failed update keeps the picker open");
+  assert.match(document.getElementById("status-error").textContent,/refresh and try again/);
+  assert.equal(statusUpdates.length,1,"a failed update does not move the task");
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+
+  deferNextStatus = true;
+  refreshedTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:refreshedTaskRow});
+  statusButton(document,"Todo").click();
+  assert.equal(typeof resolveDeferredStatus,"function","status request is deferred");
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+  const otherTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" &&
+      node.getAttribute("data-status") === "active" &&
+      node.getAttribute("data-session-id") !== refreshedTaskRow.getAttribute("data-session-id")
+  );
+  otherTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:otherTaskRow});
+  const otherTaskTitle = otherTaskRow.children[0].children[0].textContent;
+  assert.equal(document.getElementById("status-task-title").textContent,otherTaskTitle);
+  resolveDeferredStatus();
+  await settle();
+  await settle();
+  assert.equal(statusModal.hidden,false,"an older response does not close a newer picker");
+  assert.equal(
+    document.getElementById("status-task-title").textContent,
+    otherTaskTitle,
+    "an older response does not overwrite the newer picker"
+  );
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+  refreshedTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" &&
+      node.getAttribute("data-session-id") === firstTaskRow.getAttribute("data-session-id")
+  );
+
+  refreshedTaskRow.dispatchEvent({type:"mouseenter"});
+  document.getElementById("search").focus();
+  document.dispatchEvent({
+    type:"keydown",key:"s",target:document.getElementById("search")
+  });
+  assert.equal(statusModal.hidden,true,"typing in a dashboard control does not open the picker");
+  document.getElementById("search").value = "";
+
+  refreshedTaskRow.dispatchEvent({type:"mouseleave"});
+  refreshedTaskRow.dispatchEvent({type:"focusin",target:refreshedTaskRow.children[0].children[0]});
+  document.dispatchEvent({
+    type:"keydown",key:"s",target:refreshedTaskRow.children[0].children[0]
+  });
+  assert.equal(statusModal.hidden,false,"a focused task link can use the same shortcut");
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+
+  const doneTaskRow = allNodes(document.getElementById("groups")).find(
+    node => node.tagName === "TR" && node.getAttribute("data-status") === "done"
+  );
+  doneTaskRow.dispatchEvent({type:"mouseenter"});
+  document.dispatchEvent({type:"keydown",key:"s",target:doneTaskRow});
+  assert.match(
+    document.getElementById("status-error").textContent,
+    /must be reopened explicitly/,
+    "workflow-owned statuses explain why manual status changes are unavailable"
+  );
+  assert.equal(
+    statusButton(document,"Active").disabled,
+    true,
+    "done tasks cannot bypass the reopen workflow"
+  );
+  statusModal.dispatchEvent({type:"keydown",key:"Escape"});
+
+  assert.equal(menu.hidden,true,"menu starts closed");
+  trigger.click();
+  assert.equal(menu.hidden,false,"toolbar trigger opens the filter menu");
+  assert.equal(trigger.getAttribute("aria-expanded"),"true");
+  assert.equal(document.activeElement,document.getElementById("filter-menu-search"));
+  assert.deepEqual(["Project","Parent task","Status"].map(label=>Boolean(menuButton(document,label))),[true,true,true]);
+
+  menu.dispatchEvent({type:"keydown",key:"ArrowUp"});
+  assert.equal(document.activeElement.textContent.startsWith("Status"),true,"ArrowUp enters at the last menu item");
+  menu.dispatchEvent({type:"keydown",key:"Home"});
+  assert.equal(document.activeElement.textContent.startsWith("Project"),true,"Home focuses the first item");
+  menu.dispatchEvent({type:"keydown",key:"End"});
+  assert.equal(document.activeElement.textContent.startsWith("Status"),true,"End focuses the last item");
+  document.getElementById("filter-menu-search").focus();
+
+  menuButton(document,"Project").click();
+  assert.equal(document.getElementById("filter-menu-title").textContent,"Project");
+  assert.equal(document.getElementById("filter-menu-search").getAttribute("aria-label"),"Search Project values");
+  menu.dispatchEvent({type:"keydown",key:"ArrowLeft"});
+  assert.equal(document.getElementById("filter-menu-title").textContent,"Add filter","ArrowLeft returns to fields");
+  menuButton(document,"Project").click();
+  menuButton(document,"beta").focus();
+  menu.dispatchEvent({type:"keydown",key:"Enter"});
+  await settle();
+  assert.equal(menu.hidden,true,"choosing a value dismisses the menu predictably");
+  assert.equal(history.urls.at(-1),"?project=beta");
+  assert.match(chips.textContent,/Projectisbeta×/);
+
+  plus.click();
+  menuButton(document,"Project").click();
+  menuButton(document,"alpha").focus();
+  menu.dispatchEvent({type:"keydown",key:" "});
+  await settle();
+  assert.equal(history.urls.at(-1),"?project=alpha&project=beta","out-of-order selection is canonicalized");
+  assert.match(chips.textContent,/Projectis any ofalpha or beta×/);
+
+  plus.click();
+  menuButton(document,"Status").click();
+  menuButton(document,"Active").click();
+  await settle();
+  assert.equal(history.urls.at(-1),"?project=alpha&project=beta&status=active","multiple fields synchronize to the canonical query");
+  assert.match(chips.textContent,/Projectis any ofalpha or beta×StatusisActive×/);
+  assert.equal(document.getElementById("summary").textContent,"1 visible · 4 total","rendered results match the selected filters");
+
+  plus.click();
+  menuButton(document,"Status").click();
+  menuButton(document,"Merging").click();
+  await settle();
+  assert.equal(history.urls.at(-1),"?project=alpha&project=beta&status=active&status=merging","merging status is preserved in the canonical query");
+  assert.match(chips.textContent,/Statusis any ofActive or Merging×/);
+
+  const removeProject = allNodes(chips).find(node => node.getAttribute("aria-label") === "Remove Project filter");
+  removeProject.click();
+  await settle();
+  assert.equal(history.urls.at(-1),"?status=active&status=merging","chip removal updates the query immediately");
+  assert.doesNotMatch(chips.textContent,/Project/);
+  assert.match(chips.textContent,/Statusis any ofActive or Merging×/);
+
+  const search = document.getElementById("search");
+  search.value = "does-not-exist";
+  search.dispatchEvent({type:"input"});
+  await new Promise(resolve => setTimeout(resolve,220));
+  await settle();
+  const groups = document.getElementById("groups");
+  assert.match(groups.textContent,/No tasks match this view/);
+  const clearView = allNodes(groups).find(node => node.textContent === "Clear filters and search");
+  clearView.click();
+  await settle();
+  assert.equal(history.urls.at(-1),"/token/","the no-results recovery clears filters and search");
+  assert.equal(document.getElementById("summary").textContent,"4 visible · 4 total");
+
+  plus.click();
+  assert.equal(menu.hidden,false,"the chip-bar plus opens the same menu");
+  menu.dispatchEvent({type:"keydown",key:"ArrowDown"});
+  assert.equal(document.activeElement.textContent.startsWith("Project"),true,"ArrowDown moves focus into menu items");
+  menu.dispatchEvent({type:"keydown",key:"Escape"});
+  assert.equal(menu.hidden,true,"Escape dismisses the menu");
+  assert.equal(document.activeElement,plus,"Escape restores focus to the invoking plus button");
+
+  trigger.click();
+  document.dispatchEvent({type:"pointerdown",target:new FakeElement("div",document)});
+  assert.equal(menu.hidden,true,"an outside pointer action dismisses the menu");
+  plus.click();
+  menu.dispatchEvent({type:"keydown",key:"Tab"});
+  assert.equal(menu.hidden,true,"Tab dismisses the menu without trapping focus");
+  assert.ok(requests.length >= 5,"interactions issued fresh dashboard requests");
+  process.stdout.write("dashboard client interactions passed\n");
+}
+
+main().catch(error => {
+  console.error(error.stack || error);
+  process.exitCode = 1;
+});

@@ -1,0 +1,267 @@
+#!/usr/bin/env python3
+"""Register this source tree in skillz.json and perform a scoped sync."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+from typing import Any
+
+
+class InstallError(RuntimeError):
+    pass
+
+
+def atomic_write_json(path: Path, document: dict[str, Any]) -> bool:
+    original = path.read_bytes()
+    original_document = json.loads(original)
+    if original_document == document:
+        return False
+    if path.read_bytes() != original:
+        raise InstallError(f"concurrent modification detected: {path}")
+    stamp = dt.datetime.now().strftime("%Y%m%dT%H%M%S.%f")
+    backup = path.with_name(f"{path.name}.agtask.{stamp}.bak")
+    backup.write_bytes(original)
+    os.chmod(backup, path.stat().st_mode & 0o777)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        os.chmod(temporary, path.stat().st_mode & 0o777)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(document, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return True
+
+
+def dedicated_agtask_source(entry: Any) -> bool:
+    if not isinstance(entry, dict) or not isinstance(entry.get("localPath"), str):
+        return False
+    root = Path(entry["localPath"]).expanduser()
+    if not root.is_dir():
+        return False
+    packaged = sorted(
+        path.name for path in root.iterdir() if (path / "SKILL.md").is_file()
+    )
+    return packaged == ["agtask"]
+
+
+def replace_agtask_sources(
+    directories: list[Any], source_path: Path
+) -> list[Any]:
+    candidates = [
+        index
+        for index, entry in enumerate(directories)
+        if dedicated_agtask_source(entry)
+    ]
+    if not candidates:
+        return directories
+    replacement = dict(directories[candidates[0]])
+    replacement["localPath"] = str(source_path)
+    candidate_set = set(candidates)
+    updated: list[Any] = []
+    for index, entry in enumerate(directories):
+        if index == candidates[0]:
+            updated.append(replacement)
+        elif index not in candidate_set:
+            updated.append(entry)
+    return updated
+
+
+def configure(
+    config_path: Path,
+    source_dir: Path,
+    *,
+    replace_existing_source: bool = False,
+) -> dict[str, Any]:
+    try:
+        document = json.loads(config_path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise InstallError(f"cannot read valid skillz config {config_path}: {error}") from error
+    if not isinstance(document, dict):
+        raise InstallError("skillz config root must be an object")
+    directories = document.get("skillDirectories")
+    if not isinstance(directories, list):
+        raise InstallError("skillz config skillDirectories must be an array")
+    source_path = source_dir.resolve()
+    source_text = str(source_path)
+    if replace_existing_source:
+        directories = replace_agtask_sources(directories, source_path)
+        document["skillDirectories"] = directories
+    matches = [
+        entry
+        for entry in directories
+        if isinstance(entry, dict)
+        and Path(str(entry.get("localPath", ""))).expanduser().resolve() == source_path
+    ]
+    if not matches:
+        relocation_candidates = [
+            (index, entry)
+            for index, entry in enumerate(directories)
+            if isinstance(entry, dict)
+            and isinstance(entry.get("localPath"), str)
+            and not Path(entry["localPath"]).expanduser().exists()
+            and Path(entry["localPath"]).expanduser().name == source_path.name
+        ]
+        if len(relocation_candidates) > 1:
+            raise InstallError(
+                "skillz config contains multiple missing source entries named "
+                f"{source_path.name}"
+            )
+        if relocation_candidates:
+            index, previous = relocation_candidates[0]
+            replacement = dict(previous)
+            replacement["localPath"] = source_text
+            directories[index] = replacement
+        else:
+            directories.append({"localPath": source_text})
+    elif len(matches) > 1:
+        raise InstallError(f"skillz config contains duplicate source entries for {source_text}")
+    atomic_write_json(config_path, document)
+    return document
+
+
+def find_skillz() -> str:
+    resolved = shutil.which("skillz")
+    if resolved:
+        return resolved
+    fallback = Path.home() / ".nvm/versions/node/v22.15.1/bin/skillz"
+    if fallback.is_file() and os.access(fallback, os.X_OK):
+        return str(fallback)
+    raise InstallError("skillz is not on PATH and the verified Node 22 fallback is unavailable")
+
+
+def tree_digest(root: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        values[str(path.relative_to(root))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return values
+
+
+def runtime_target(config: dict[str, Any]) -> Path:
+    targets = config.get("targets")
+    if not isinstance(targets, list) or not targets or not isinstance(targets[0], dict):
+        raise InstallError("skillz config must contain at least one target")
+    destination = targets[0].get("destination")
+    if not isinstance(destination, str):
+        raise InstallError("skillz target destination must be a string")
+    return Path(destination).expanduser()
+
+
+def runtime_root(config: dict[str, Any]) -> Path:
+    return runtime_target(config) / "agtask"
+
+
+def installed_skill_manifest(target: Path, exclude: str) -> dict[str, dict[str, str]]:
+    """Hash every installed skill except the one this installer owns."""
+    if not target.exists():
+        return {}
+    if not target.is_dir():
+        raise InstallError(f"skillz target is not a directory: {target}")
+    manifest: dict[str, dict[str, str]] = {}
+    for skill in sorted(target.iterdir()):
+        if skill.name == exclude or not skill.is_dir():
+            continue
+        manifest[skill.name] = tree_digest(skill)
+    return manifest
+
+
+def describe_manifest_change(
+    before: dict[str, dict[str, str]], after: dict[str, dict[str, str]]
+) -> str:
+    names = sorted(set(before) | set(after))
+    changed = [name for name in names if before.get(name) != after.get(name)]
+    return ", ".join(changed)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=Path, default=Path.home() / "skillz.json")
+    parser.add_argument(
+        "--source-dir",
+        type=Path,
+        default=Path(__file__).resolve().parents[2],
+        help="directory containing the agtask skill folder",
+    )
+    parser.add_argument("--config-only", action="store_true")
+    parser.add_argument(
+        "--replace-existing-source",
+        action="store_true",
+        help="replace dedicated existing agtask source entries with --source-dir",
+    )
+    args = parser.parse_args()
+    try:
+        config_path = args.config.expanduser().resolve()
+        source_dir = args.source_dir.expanduser().resolve()
+        skill_source = source_dir / "agtask"
+        if not (skill_source / "SKILL.md").is_file():
+            raise InstallError(f"agtask source is missing: {skill_source}")
+        config = configure(
+            config_path,
+            source_dir,
+            replace_existing_source=args.replace_existing_source,
+        )
+        if args.config_only:
+            print(json.dumps({"config": str(config_path), "source": str(source_dir)}))
+            return 0
+
+        skillz = find_skillz()
+        target = runtime_target(config)
+        unrelated_before = installed_skill_manifest(target, "agtask")
+        base = [skillz, "sync", "--only", "agtask", "--force", "--verbose"]
+        dry_run = subprocess.run(
+            [*base, "--dry-run"], cwd=config_path.parent, text=True, capture_output=True
+        )
+        sys.stdout.write(dry_run.stdout)
+        sys.stderr.write(dry_run.stderr)
+        if dry_run.returncode != 0:
+            raise InstallError("scoped skillz dry run failed")
+        synced = subprocess.run(base, cwd=config_path.parent, text=True, capture_output=True)
+        sys.stdout.write(synced.stdout)
+        sys.stderr.write(synced.stderr)
+        if synced.returncode != 0:
+            raise InstallError("scoped skillz sync failed")
+
+        unrelated_after = installed_skill_manifest(target, "agtask")
+        if unrelated_after != unrelated_before:
+            changed = describe_manifest_change(unrelated_before, unrelated_after)
+            raise InstallError(
+                "scoped skillz sync changed unrelated installed skills: " + changed
+            )
+
+        runtime = runtime_root(config)
+        if not runtime.is_dir():
+            raise InstallError(f"runtime skill was not created: {runtime}")
+        if tree_digest(skill_source) != tree_digest(runtime):
+            raise InstallError("runtime skill does not match canonical source byte-for-byte")
+        smoke = subprocess.run(
+            ["python3", str(runtime / "scripts/agtask"), "--help"],
+            text=True,
+            capture_output=True,
+        )
+        if smoke.returncode != 0:
+            raise InstallError(f"runtime CLI smoke test failed: {smoke.stderr.strip()}")
+        print(json.dumps({"runtime": str(runtime), "source": str(skill_source), "verified": True}))
+        return 0
+    except (InstallError, OSError, json.JSONDecodeError) as error:
+        print(f"install-skill: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
